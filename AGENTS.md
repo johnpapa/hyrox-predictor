@@ -79,6 +79,10 @@ npm run docs:screenshots   # regenerates docs/tutorial/*.png (Playwright "tutori
 - **Inputs:** numbers use `app-number-input`, times use `app-time-input`. Both have −/+ steppers, arrow keys and inline
   range checks. Give every new field a `range` (from `FALLBACK.ranges`), a `step` and a `start`. Any range the UI
   shows must also be enforced in the model (`resolve.ts` `ok()` or `sanitizeRanges()`).
+- **Quick vs Detailed:** Quick (`store.mode`) shows at most 10 inputs, the biggest drivers in RESEARCH.md "Quick view".
+  They're the same components and units as Detailed. A new field goes in Detailed unless it outranks one of those;
+  keep `QUICK_ABILITIES`, `detailOnlyInputs()` and `e2e/quick.spec.ts` in sync. E2E tests default to Detailed via the
+  `formMode` fixture option.
 - **Every model number is sourced** in `RESEARCH.md`. Estimates are labelled as estimates.
 - **The in-app "How the prediction works" section** (`components/methodology.html`) is user-facing documentation of the
   model. Update it in the same change whenever model behaviour changes.

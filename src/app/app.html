@@ -17,6 +17,16 @@
     </nav>
     <button type="button" class="btn ghost reset" (click)="reset()">Reset</button>
   </div>
+  @if (view() === 'predictor') {
+    <!-- Phones and tablets: the finish time lives in the sticky top bar, where the on-screen keyboard can't cover it. -->
+    <div class="topdock" role="region" aria-label="Predicted finish">
+      <span class="td-main">
+        <span class="label">{{ store.prediction().division.name }} · predicted finish</span>
+        <span class="td-row"><span class="mono topdock-time">{{ fmt(store.prediction().total, true) }}</span><app-change-chip /></span>
+      </span>
+      <button type="button" class="btn primary small" (click)="scrollToResults()">Splits</button>
+    </div>
+  }
 </header>
 
 @if (view() === 'simulator') {
@@ -65,6 +75,7 @@
 
 @let pr = store.prediction();
 @if (view() === 'predictor') {
+<!-- Desktop only: a floating pill when the board's clock scrolls out of view (no on-screen keyboard there). -->
 <div class="dock" [class.show-desktop]="!clockVisible()" role="region" aria-label="Predicted finish summary">
   <div>
     <span class="label">{{ pr.division.name }} · predicted finish</span>

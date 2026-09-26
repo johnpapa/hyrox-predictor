@@ -37,7 +37,7 @@ const QUALITY_LABEL: Record<Quality, string> = {
         </details>
       }
 
-      @if (anchors().length) {
+      @if (showLevels() && anchors().length) {
         <div class="levels">
           <span class="label">{{ levelPrompt() }}</span>
           <div class="chips" role="group" [attr.aria-label]="heading() + ' self-assessment'">
@@ -70,6 +70,8 @@ export class AbilityCard {
   readonly level = input<Level | null>(null);
   readonly levelPrompt = input('Or rate yourself');
   readonly hasAlternatives = input(true);
+  /** Hide the Weak…Elite self-rating (the Quick view shows only the most useful input per card). */
+  readonly showLevels = input(true);
   readonly altOpen = input(false);
   readonly warnings = input<string[]>([]);
   readonly levelChange = output<Level | null>();

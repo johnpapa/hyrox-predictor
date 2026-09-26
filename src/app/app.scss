@@ -86,20 +86,23 @@
 
 @media (max-width: 1023px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
-  .results { position: static; max-height: none; overflow: visible; }
-  .foot { padding-bottom: 110px; }
-  .dock {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    background: rgba(10, 10, 10, 0.94);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top: 2px solid var(--accent);
-    > div { display: flex; flex-direction: column; }
-    .label { font-size: 0.7rem; }
+  .results { position: static; max-height: none; overflow: visible; scroll-margin-top: 130px; }
+  .dock { display: none !important; }
+}
+
+.topdock { display: none; }
+@media (max-width: 1023px) {
+  .topdock {
+    display: flex; align-items: center; gap: 10px;
+    max-width: 1320px; margin: 0 auto; padding: 6px 16px 8px;
+    border-top: 1px solid var(--line);
+    .td-main { display: flex; flex-direction: column; min-width: 0; }
+    .td-row { display: flex; align-items: center; gap: 8px; }
+    .label { font-size: 0.64rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    app-change-chip { white-space: nowrap; font-size: 0.85em; }
+    .btn { margin-left: auto; min-height: 36px; padding: 0 14px; }
   }
-  .dock-time { font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1.1; }
+  .topdock-time { font-size: 1.45rem; font-weight: 700; color: var(--accent); line-height: 1.1; white-space: nowrap; }
 }
 
 @media (max-width: 600px) {

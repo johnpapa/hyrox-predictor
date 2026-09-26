@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Quick view** (the default for new visitors): only the 10 inputs that drive the prediction most. They're the same
+  fields and units as the Detailed view, which shows everything. Values entered in Detailed keep counting and are
+  listed in Quick. Saved data with details opens in Detailed.
 - **− / + steppers on every number and time field.** Press and hold to repeat. Arrow keys step too (Shift × 10), and
   each field has a sensible step (e.g. 5K ±5 s, bodyweight ±0.5 kg / 1 lb, lifts ±2.5 kg / 5 lb) and starting value.
   Fields are spinbuttons for screen readers.
@@ -27,6 +30,8 @@ All notable changes to this project are documented here. The format follows
 - **"Runs straight after stations":** most people can't answer it reliably.
 
 ### Fixed
+- **The always-visible finish time could be hidden by the iPhone keyboard.** On phones and tablets it now sits in the
+  sticky top bar (the keyboard covers the bottom of the screen). Desktop keeps the floating pill. Regression test added.
 - **Doubles could predict slower than your singles time with a strong partner.** The doubles Roxzone took the slower
   partner's full singles Roxzone. It now sits between the two partners (weighted 60/40 towards the slower) and
   allows for resting while your partner works. Regression test added.
