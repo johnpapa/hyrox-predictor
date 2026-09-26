@@ -161,14 +161,14 @@ test.describe('athlete inputs & fallbacks', () => {
     await expect(app.card('Running').locator('.anchor')).toContainText('5K');
   });
 
-  test('VO₂max and resting HR estimate running when no race time is known', async ({ app, page }) => {
+  test('VO₂max estimates running when no race time is known; resting HR is no longer asked for', async ({ app, page }) => {
     await page.getByLabel('VO₂max (ml/kg/min)').fill('52');
     await expect(app.card('Running').locator('.src')).toContainText('VO₂max 52');
-    await page.getByLabel('VO₂max (ml/kg/min)').fill('');
     await page.getByLabel('Age', { exact: true }).fill('41');
-    await page.getByLabel('Resting heart rate (bpm)').fill('52');
-    await expect(app.card('Running').locator('.src')).toContainText('resting HR 52');
     await expect(page.getByText('HYROX age group 40–44')).toBeVisible();
+    // REGRESSION: "Let's not make people enter information that is not valuable."
+    await expect(page.getByLabel('Resting heart rate (bpm)')).toHaveCount(0);
+    await expect(page.getByLabel('Runs straight after stations')).toHaveCount(0);
   });
 
   test('leg strength: rating, then a lift with reps (est. 1RM), then conversions from other lifts', async ({ app, page }) => {
@@ -272,17 +272,31 @@ test.describe('athlete inputs & fallbacks', () => {
 });
 
 test.describe('team tactics', () => {
-  test('doubles: manual work split, auto toggle and auto-all', async ({ app, page }) => {
+  test('REGRESSION: doubles start at 50/50, sliders stay within 20–80%, suggest and reset work', async ({ app, page }) => {
+    // User: "it set some splits to 0% or 100%… by default split everything 50/50 and let us adjust."
     await app.division("Men's Doubles").click();
     const tactics = page.locator('app-team-tactics');
     await expect(tactics.getByRole('heading', { name: 'Work split' })).toBeVisible();
+    for (const s of await tactics.locator('input[type=range]').all()) {
+      await expect(s).toHaveValue('50');
+      await expect(s).toHaveAttribute('min', '20');
+      await expect(s).toHaveAttribute('max', '80');
+    }
+    await expect(tactics.getByRole('button', { name: 'Reset to 50/50' })).toBeDisabled();
     const slider = tactics.getByLabel('Wall Balls share for Athlete 1');
-    await slider.fill('80');
-    const auto = tactics.locator('.srow').filter({ hasText: 'Wall Balls' }).getByRole('button', { name: 'Auto' });
-    await expect(auto).toHaveAttribute('aria-pressed', 'false');
-    await expect(app.splitRow('Wall Balls')).toContainText('Athlete 1 80%');
-    await tactics.getByRole('button', { name: 'Auto all' }).click();
-    await expect(auto).toHaveAttribute('aria-pressed', 'true');
+    await slider.fill('70');
+    await expect(app.splitRow('Wall Balls')).toContainText('Athlete 1 70%');
+    await tactics.getByRole('button', { name: 'Reset to 50/50' }).click();
+    await expect(slider).toHaveValue('50');
+    // A strong partner: the suggestion gives them more of the sleds, but never beyond 70%.
+    await app.tab(1).click();
+    await app.card('Leg strength').getByRole('button', { name: 'Elite', exact: true }).click();
+    await tactics.getByRole('button', { name: 'Suggest a split' }).click();
+    const push = Number(await tactics.getByLabel('Sled Push share for Athlete 1').inputValue());
+    expect(push).toBeGreaterThanOrEqual(30);
+    expect(push).toBeLessThan(50);
+    // Runs are paced by the slower partner; an assumed pace says so.
+    await expect(tactics.locator('.run-note')).toContainText('Runs are paced by');
   });
 
   test('doubles: each partner has their own inputs', async ({ app, page }) => {
@@ -333,7 +347,7 @@ test.describe('results board', () => {
     // Keep the in-app methodology in sync with the model (see CLAUDE.md rule 5).
     const body = page.locator('app-methodology .body');
     for (const phrase of ['5K, 10K, half marathon, marathon', 'Weekly running distance', 'mostly fitness, not inexperience',
-      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed', 'Runs straight after stations', 'hand-over tips']) {
+      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed', 'hand-over tips', 'Suggest a split']) {
       await expect(body).toContainText(phrase);
     }
   });

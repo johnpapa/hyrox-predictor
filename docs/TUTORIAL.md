@@ -26,9 +26,11 @@ Type a value, or use the **− / +** buttons (hold to repeat) or the arrow keys.
 on the field and ignored.
 Anything you don't know can stay on **Not sure**.
 Age shows your HYROX age group, and your field position is also estimated within it (e.g. **Top 17% of Men
-50–54**). Under **Physiology** you can add body fat %, VO₂max (lab or watch) and resting heart rate:
+50–54**). Under **Physiology** you can add body fat % and VO₂max (lab or watch):
 - **Body fat:** a lean athlete is assumed stronger when lifts are unknown.
-- **VO₂max and resting HR:** cross-checked against your race times, which are used when you have them.
+- **VO₂max:** estimates your running without a race time, and gets a small weight when you have one.
+
+Under every field, **Used for** shows which parts of the race it feeds (e.g. weekly running → all 8 runs).
 
 ![Profile](tutorial/03-profile.png)
 
@@ -123,8 +125,10 @@ Press **Simulate** to play your race back along the run / station / Roxzone time
 
 ## 11. Doubles: split the work
 
-In doubles, fill in both partners using the athlete tabs. You run together, and for each station the app picks the
-fastest work split (**Auto**). You can also drag the slider to plan your own split.
+In doubles, fill in both partners using the athlete tabs. You run every kilometre together, so **the slower runner sets
+the pace**; the app tells you who that is, and says so if their pace is only assumed. Every station starts at
+**50/50**. Drag a slider (20–80%) to plan your own split, or tap **Suggest a split** for a practical plan that gives
+each of you more of what you're faster at.
 
 ![Doubles work split](tutorial/12-doubles.png)
 

@@ -8,7 +8,7 @@
  */
 import { AthleteProfile, Level, defaultAthlete, emptyLevels, emptyLifts, migrateAthlete } from './athlete';
 import { DIVISIONS, weightForAthlete } from './divisions';
-import { Prediction, loadMultiplier, predict } from './predictor';
+import { Prediction, loadMultiplier, predict, suggestDoublesShares } from './predictor';
 import { STATION_IDS, StationId } from './stations';
 
 const min = (m: number, s = 0) => m * 60 + s;
@@ -187,9 +187,9 @@ describe('team formats', () => {
   it('mixed doubles: the stronger partner takes more of the heavy sleds', () => {
     const man = athlete('male', { fiveKSec: min(22), lv: { legs: 4, hinge: 4 } });
     const woman = athlete('female', { fiveKSec: min(24) });
-    const d = run('mixed-doubles', man, woman);
-    expect(d.doublesShares!.sledPush).toBeGreaterThan(0.5);
-    expect(d.doublesShares!.sledPull).toBeGreaterThan(0.5);
+    const s = suggestDoublesShares({ divisionId: 'mixed-doubles', athletes: [man, woman] });
+    expect(s.sledPush).toBeGreaterThan(0.5);
+    expect(s.sledPull).toBeGreaterThan(0.5);
   });
 
   it('relay: each leg run is quicker than the same athlete\'s solo average', () => {
@@ -265,7 +265,6 @@ describe('fuzz: random athletes never produce impossible splits', () => {
       otherTrainingHours: maybe(Math.round(rand() * 12)),
       fiveKSec: rand() < 0.8 ? five : null,
       vo2max: maybe(30 + rand() * 45),
-      restingHr: maybe(40 + rand() * 40),
       row2kSec: maybe(min(6) + rand() * min(4)),
       skiErg1kSec: maybe(min(3, 20) + rand() * min(2, 30)),
       lifts: { ...emptyLifts(), backSquat: { kg: maybe(40 + rand() * 180), reps: pick([1, 3, 5, 8]) } },
@@ -388,10 +387,13 @@ describe('race times, height and age (research-backed inputs)', () => {
     expect((short.total - tall.total) / short.total).toBeLessThan(0.025); // 31 cm apart ⇒ < 2.5%
   });
 
-  it('doubles: the much taller partner takes more of the lunges and burpee broad jumps', () => {
-    const p = run('men-doubles', athlete('male', { fiveKSec: min(21), heightCm: 170 }), athlete('male', { fiveKSec: min(21), heightCm: 201 }));
-    expect(p.doublesShares!.sandbagLunges).toBeLessThan(0.5); // share of athlete 1 (the shorter one)
-    expect(p.doublesShares!.burpeeBroadJump).toBeLessThan(0.5);
+  it('doubles: the suggested split gives the much taller partner more of the lunges and burpee broad jumps', () => {
+    const s = suggestDoublesShares({
+      divisionId: 'men-doubles',
+      athletes: [athlete('male', { fiveKSec: min(21), heightCm: 170 }), athlete('male', { fiveKSec: min(21), heightCm: 201 })],
+    });
+    expect(s.sandbagLunges).toBeLessThan(0.5); // share of athlete 1 (the shorter one)
+    expect(s.burpeeBroadJump).toBeLessThan(0.5);
   });
 
   it('masters: a small extra station/Roxzone penalty from 50, not on the runs', () => {
@@ -487,7 +489,7 @@ describe('first race vs fitness (user question: does inexperience or fitness dri
 describe('age groups, body fat and VO₂max (user question)', () => {
   const john = (p: Partial<AthleteProfile> = {}) =>
     athlete('male', {
-      fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, vo2max: 53, restingHr: 53, bodyweightKg: 73.5, bodyFatPct: 14,
+      fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, vo2max: 53, bodyweightKg: 73.5, bodyFatPct: 14,
       age: 54, heightCm: 170, experience: 'first', runningKmPerWeek: 64, otherTrainingHours: 5.5, ...p,
     });
 
@@ -522,8 +524,9 @@ describe('age groups, body fat and VO₂max (user question)', () => {
     expect(st(run('men-open', john({ bodyFatPct: 12, lifts })), 'sledPush')).toBeCloseTo(st(run('men-open', john({ bodyFatPct: 28, lifts })), 'sledPush'), 5);
   });
 
-  it('REGRESSION: with race times, VO₂max still has a small, capped say; resting HR has none', () => {
+  it('REGRESSION: with race times, VO₂max still has a small, capped say', () => {
     // User: "Is it really true that VO2 max and resting heart rate have no effect if you include race times?"
+    // (Resting HR was then removed from the app entirely: "Let's not make people enter information that is not valuable.")
     const p = run('men-open', john());
     expect(p.solos[0].resolved.sources.run).toContain('watch VO₂max 53 consistent with your races');
     const none = run('men-open', john({ vo2max: null })).total;
@@ -538,8 +541,5 @@ describe('age groups, body fat and VO₂max (user question)', () => {
     const labHigh = run('men-open', john({ vo2max: 70, vo2maxSource: 'lab' })).total;
     expect(labHigh).toBeLessThan(high);
     expect((none - labHigh) / none).toBeLessThan(0.05);
-    // Resting HR: too rough next to a race, so no effect.
-    expect(run('men-open', john({ restingHr: 40 })).total).toBeCloseTo(p.total, 5);
-    expect(run('men-open', john({ restingHr: 80 })).total).toBeCloseTo(p.total, 5);
   });
 });

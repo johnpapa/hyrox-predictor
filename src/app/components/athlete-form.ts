@@ -64,7 +64,7 @@ export class AthleteForm {
     };
   });
 
-  /** VO₂max and resting HR only estimate running when there's no race time. */
+  /** VO₂max only gets a small weight once there's a race time. */
   protected readonly hasRace = computed(() => {
     const a = this.a();
     return [a.fiveKSec, a.tenKSec, a.halfMarathonSec, a.marathonSec].some((x) => x != null);
@@ -81,12 +81,6 @@ export class AthleteForm {
     return `Estimated strength ${pct >= 0 ? '+' : '−'}${Math.abs(pct)}% vs a typical ${ref}% athlete of your weight`;
   });
 
-  protected readonly compromisedOptions = [
-    { id: '', label: 'Not sure' },
-    { id: 'never', label: 'Rarely or never' },
-    { id: 'sometimes', label: 'Sometimes (1–3× a month)' },
-    { id: 'weekly', label: 'Weekly or more' },
-  ];
 
   protected readonly experiences: { id: Experience; label: string }[] = [
     { id: 'unknown', label: 'Not sure' },

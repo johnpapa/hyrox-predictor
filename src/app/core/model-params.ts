@@ -28,14 +28,6 @@ export const PARAMS = {
     // Race craft only (same fitness): most of the gain seen between races is training, which the
     // fitness inputs already capture. See RESEARCH.md "Input weighting review".
     experience: { unknown: 0.015, first: 0, some: 0.015, experienced: 0.005, competitive: -0.01 } satisfies Record<Experience, number>,
-    /**
-     * Compromised-running practice (runs straight after stations): a small run-factor change,
-     * plus an offset on the first-race "unfamiliar" penalty. Estimates; see RESEARCH.md.
-     */
-    compromised: {
-      adj: { never: 0.01, sometimes: 0, weekly: -0.012 },
-      firstRaceOffset: { never: 0, sometimes: 0.2, weekly: 0.4 },
-    },
     firstRace: {
       pacing: 0.015,
       unfamiliar: 0.035,
@@ -148,7 +140,16 @@ export const PARAMS = {
     runCompromiseShare: 0.8,
     /** Running together at the slower partner's pace costs a little extra. */
     pairRunPenalty: 1.01,
-    roxzoneFactor: 1.0,
+    /**
+     * Roxzone: you move together, so the slower partner sets the pace (weight 0.6 on the slower
+     * one, 0.4 on the faster), but each of you rests while the other works (× 0.95).
+     */
+    roxzoneSlowerWeight: 0.6,
+    roxzoneFactor: 0.95,
+    /** Nobody does all or none of a station: shares are kept in this range. */
+    shareRange: [0.2, 0.8] as const,
+    /** "Suggest a split" stays practical: between these shares, in 5% steps. */
+    suggestRange: [0.3, 0.7] as const,
   },
 
   // ── Relay ──────────────────────────────────────────────────────────────────────────

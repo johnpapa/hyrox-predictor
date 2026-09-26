@@ -218,12 +218,16 @@ test.describe('expert review: doubles tips and new inputs', () => {
     await expect(panel.locator('.tips.doubles')).toHaveCount(0);
   });
 
-  test('compromised-running practice changes the prediction; VO₂max says when it is only a cross-check', async ({ app, page }) => {
+  test('VO₂max says it only gets a small weight once a race time is entered', async ({ page }) => {
     await page.getByLabel('5K', { exact: true }).fill('23:00');
-    const before = await app.total();
-    await page.getByLabel('Runs straight after stations').selectOption({ label: 'Weekly or more' });
-    await expect.poll(() => app.total()).toBeLessThan(before);
     await expect(page.locator('app-number-input').filter({ hasText: 'VO₂max' })).toContainText('Small weight');
-    await expect(page.locator('app-number-input').filter({ hasText: 'Resting heart rate' })).toContainText('Not used');
+  });
+
+  test('every input says which part of the race it is used for', async ({ app, page }) => {
+    await expect(page.locator('app-number-input').filter({ has: page.getByLabel('Weekly running (km)') })).toContainText('Used for: All 8 runs');
+    await expect(page.locator('app-number-input').filter({ has: page.getByLabel('Bodyweight (kg)') })).toContainText('Used for: Sleds');
+    await expect(app.card('Pulling strength').locator('.uses')).toContainText('Sled Pull · Farmers Carry');
+    await expect(app.card('Wall balls').locator('.uses')).toContainText('Wall Balls');
+    expect(await page.locator('app-ability-card .uses').count()).toBe(10);
   });
 });

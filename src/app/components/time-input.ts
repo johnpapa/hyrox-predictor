@@ -42,11 +42,14 @@ let nextId = 0;
       } @else if (hint()) {
         <span class="hint" [id]="id + '-hint'">{{ hint() }}</span>
       }
+      @if (uses()) { <span class="uses">Used for: <b>{{ uses() }}</b></span> }
     </div>
   `,
   styles: `
     .invalid { border-color: var(--warn) !important; }
     .warn { color: var(--warn) !important; }
+    .uses { font-size: 0.74rem; color: var(--text-faint); }
+    .uses b { color: var(--accent); font-weight: 600; }
     .stepper { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; }
     .stepper input { border-radius: 0; text-align: center; padding-left: 4px; padding-right: 4px; }
     .step {
@@ -65,6 +68,8 @@ export class TimeInput {
   readonly seconds = input<number | null>(null);
   readonly placeholder = input('mm:ss');
   readonly hint = input<string>('');
+  /** Which parts of the race this value feeds (shown under the field). */
+  readonly uses = input('');
   /** Plausible range (seconds); times outside it are ignored by the model, so say so. */
   readonly range = input<readonly [number, number] | null>(null);
   /** −/+ step in seconds. */

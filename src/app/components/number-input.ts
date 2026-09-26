@@ -51,11 +51,14 @@ let nextId = 0;
       </div>
       @if (rangeMsg(); as m) { <span class="hint warn" [id]="id + '-hint'" role="alert">{{ m }}</span> }
       @else if (hint()) { <span class="hint" [id]="id + '-hint'">{{ hint() }}</span> }
+      @if (uses()) { <span class="uses">Used for: <b>{{ uses() }}</b></span> }
     </div>
   `,
   styles: `
     .invalid { border-color: var(--warn) !important; }
     .warn { color: var(--warn); }
+    .uses { font-size: 0.74rem; color: var(--text-faint); }
+    .uses b { color: var(--accent); font-weight: 600; }
     .stepper { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; }
     .stepper input { border-radius: 0; text-align: center; padding-left: 4px; padding-right: 4px; }
     .step {
@@ -88,6 +91,8 @@ export class NumberInput {
   readonly allowZero = input(false);
   readonly placeholder = input('Not sure');
   readonly hint = input('');
+  /** Which parts of the race this value feeds (shown under the field). */
+  readonly uses = input('');
   readonly valueChange = output<number | null>();
   /** When set, shows an inline kg/lb switch (weights only). */
   readonly units = input<'kg' | 'lb' | null>(null);

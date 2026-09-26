@@ -140,3 +140,6 @@ legend {
 /* A lift (weight, reps and effort) needs more room than a single field. */
 .cards .grid app-lift-input { grid-column: span 2; }
 @media (max-width: 480px) { .cards .grid app-lift-input { grid-column: 1 / -1; } }
+
+.field .uses { font-size: 0.74rem; color: var(--text-faint); }
+.field .uses b { color: var(--accent); font-weight: 600; }
