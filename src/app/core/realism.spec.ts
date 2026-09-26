@@ -347,11 +347,57 @@ describe('user-reported scenario: 54-year-old, 162 lb, VO₂max 53, 21:08 5K, 3:
     const fading = run('men-open', john({ marathonSec: 3 * 3600 + 50 * 60 }));
     expect(durable.runTotal).toBeLessThan(fading.runTotal);
     // …but only modestly: the 5K stays the anchor
-    expect(fading.runTotal / durable.runTotal).toBeLessThan(1.08);
+    expect(fading.runTotal / durable.runTotal).toBeLessThan(1.12); // 38 min marathon spread ⇒ ≤ ~10% laps
   });
 
   it('a marathon alone (no 5K) still predicts sensible running', () => {
     const p = run('men-open', john({ fiveKSec: null }));
     within(p.avgRun, min(4, 45), min(5, 40));
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+describe('race times, height and age (research-backed inputs)', () => {
+  it('all four races can be entered together and are blended (10K/half weigh most)', () => {
+    const five = athlete('male', { fiveKSec: min(21) });
+    const all = athlete('male', { fiveKSec: min(21), tenKSec: min(44), halfMarathonSec: min(98), marathonSec: 3 * 3600 + 30 * 60 });
+    const p = run('men-open', all);
+    expect(p.solos[0].resolved.fiveK.source).toContain('5K 21:00 + 10K 44:00 + half 1:38:00 + marathon 3:30:00');
+    // slower-than-Riegel long races pull the estimate slower than the 5K alone
+    expect(p.total).toBeGreaterThan(run('men-open', five).total);
+  });
+
+  it('a 10K alone is enough, and endurance can come from 10K + marathon without a 5K', () => {
+    const tenOnly = run('men-open', athlete('male', { tenKSec: min(46) }));
+    within(tenOnly.avgRun, min(4, 50), min(5, 50));
+    const fading = run('men-open', athlete('male', { tenKSec: min(46), marathonSec: 4 * 3600 }));
+    expect(fading.solos[0].runFactor).toBeGreaterThan(tenOnly.solos[0].runFactor);
+  });
+
+  it('REGRESSION: the 1-mile and Cooper inputs were removed (too anaerobic / not a race)', () => {
+    const a = athlete('male') as unknown as Record<string, unknown>;
+    expect('mileSec' in a).toBe(false);
+    expect('cooperMeters' in a).toBe(false);
+  });
+
+  it('height: taller is slightly faster on ergs, lunges and BBJ; overall effect stays small', () => {
+    const short = run('men-open', athlete('male', { fiveKSec: min(21), heightCm: 170 }));
+    const tall = run('men-open', athlete('male', { fiveKSec: min(21), heightCm: 201 }));
+    for (const id of ['skierg', 'row', 'sandbagLunges', 'burpeeBroadJump'] as const) expect(st(tall, id)).toBeLessThan(st(short, id));
+    expect(st(tall, 'wallBalls')).toBeCloseTo(st(short, 'wallBalls'), 5);
+    expect((short.total - tall.total) / short.total).toBeLessThan(0.025); // 31 cm apart ⇒ < 2.5%
+  });
+
+  it('doubles: the much taller partner takes more of the lunges and burpee broad jumps', () => {
+    const p = run('men-doubles', athlete('male', { fiveKSec: min(21), heightCm: 170 }), athlete('male', { fiveKSec: min(21), heightCm: 201 }));
+    expect(p.doublesShares!.sandbagLunges).toBeLessThan(0.5); // share of athlete 1 (the shorter one)
+    expect(p.doublesShares!.burpeeBroadJump).toBeLessThan(0.5);
+  });
+
+  it('masters: a small extra station/Roxzone penalty from 50, not on the runs', () => {
+    const young = run('men-open', athlete('male', { fiveKSec: min(21), age: 40 }));
+    const older = run('men-open', athlete('male', { fiveKSec: min(21), age: 58 }));
+    expect(older.runTotal).toBeCloseTo(young.runTotal, 5);
+    within(older.workTotal / young.workTotal, 1.01, 1.05);
   });
 });

@@ -250,6 +250,18 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     farmersCarry: !!r.tests.farmers, sandbagLunges: !!r.tests.lunges, wallBalls: !!r.tests.wallBalls100,
     skierg: !!skiTT, row: !!rowTT,
   };
+  // Height (optional, small) and masters recovery (from 50) ────────────────────────────
+  if (r.heightCm) {
+    const H = PARAMS.height;
+    const tens = (r.heightCm - H.refCm[sex]) / 10;
+    for (const [id, per] of Object.entries(H.perTenCm) as [StationId, number][]) {
+      if (tested[id]) continue;
+      st[id] *= 1 + clamp(per * tens, -H.cap, H.cap);
+    }
+  }
+  const masters = a.age && a.age > 50 ? Math.min(PARAMS.mastersStationCap, (a.age - 50) * PARAMS.mastersStationPerYear) : 0;
+  if (masters) for (const id of STATION_IDS) if (!tested[id]) st[id] *= 1 + masters;
+
   const [lo, hi] = PARAMS.personalMultRange;
   for (const id of STATION_IDS) {
     if (tested[id]) continue;
@@ -264,6 +276,7 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
   // A transitions self-rating describes how you actually move, so it replaces the
   // experience-based allowance instead of stacking with it.
   let roxzone =
+    (1 + masters) *
     band.roxzone * (a.levels.transitions ? 1 : PARAMS.roxzoneExperienceMult[a.experience]) * r.transitions.value;
 
   // Calibration from a previous result ───────────────────────────────────────────────
@@ -291,19 +304,19 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
 
 /** Riegel exponent between the 5K and the longest other race entered (null if none). */
 export function enduranceExponent(a: AthleteProfile): number | null {
-  if (!a.fiveKSec || a.fiveKSec <= 0) return null;
-  const races: [number | null, number][] = [
-    [a.marathonSec, 42195],
-    [a.halfMarathonSec, 21097.5],
+  // Shortest and longest races entered.
+  const races = ([
+    [a.fiveKSec, 5000],
     [a.tenKSec, 10000],
-  ];
-  for (const [t, d] of races) {
-    if (t && t > a.fiveKSec) {
-      const k = Math.log(t / a.fiveKSec) / Math.log(d / 5000);
-      if (k > 0.95 && k < 1.3) return k; // ignore implausible combinations
-    }
-  }
-  return null;
+    [a.halfMarathonSec, 21097.5],
+    [a.marathonSec, 42195],
+  ] as [number | null, number][]).filter(([t]) => t != null && t > 0) as [number, number][];
+  if (races.length < 2) return null;
+  const [t1, d1] = races[0];
+  const [t2, d2] = races[races.length - 1];
+  if (t2 <= t1) return null;
+  const k = Math.log(t2 / t1) / Math.log(d2 / d1);
+  return k > 0.95 && k < 1.3 ? k : null; // ignore implausible combinations
 }
 
 /**

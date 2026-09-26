@@ -13,7 +13,7 @@ test.describe('first visit', () => {
   });
 
   test('stores nothing and sets no cookies by default', async ({ app, page, context }) => {
-    await page.getByLabel('Current 5K best').fill('22:00');
+    await page.getByLabel('5K', { exact: true }).fill('22:00');
     expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
     expect(await context.cookies()).toEqual([]);
     expect(app).toBeTruthy();
@@ -53,7 +53,7 @@ test.describe('divisions', () => {
   }
 
   test('Pro weights are slower than Open for the same athlete and show Pro loads', async ({ app, page }) => {
-    await page.getByLabel('Current 5K best').fill('22:00');
+    await page.getByLabel('5K', { exact: true }).fill('22:00');
     const open = await app.total();
     await expect(app.splitRow('Sled Push')).toContainText('152 kg');
     await app.division("Men's Pro").click();
@@ -83,16 +83,16 @@ test.describe('divisions', () => {
 test.describe('athlete inputs & fallbacks', () => {
   test('entering a 5K updates the prediction and marks running as measured', async ({ app, page }) => {
     const before = await app.confidencePct();
-    await page.getByLabel('Current 5K best').fill('19:30');
+    await page.getByLabel('5K', { exact: true }).fill('19:30');
     const fast = await app.total();
-    await page.getByLabel('Current 5K best').fill('29:00');
+    await page.getByLabel('5K', { exact: true }).fill('29:00');
     expect(await app.total()).toBeGreaterThan(fast);
     await expect(app.card('Running').locator('.q')).toHaveText('Measured');
     expect(await app.confidencePct()).toBeLessThan(before);
   });
 
   test('typing a time key by key keeps exactly what was typed', async ({ app, page }) => {
-    const input = page.getByLabel('Current 5K best');
+    const input = page.getByLabel('5K', { exact: true });
     await input.pressSequentially('23:30', { delay: 30 });
     await expect(input).toHaveValue('23:30');
     await expect(app.card('Running').locator('.src')).toHaveText('5K 23:30');
@@ -122,13 +122,13 @@ test.describe('athlete inputs & fallbacks', () => {
   });
 
   test('implausible entries are ignored with a warning', async ({ app, page }) => {
-    await page.getByLabel('Current 5K best').fill('0:05');
+    await page.getByLabel('5K', { exact: true }).fill('0:05');
     await expect(app.card('Running').locator('.warn')).toContainText('ignored');
     await expect(app.clock).toHaveText(/\d{2}:\d{2}:\d{2}/);
   });
 
   test('invalid time input is flagged and does not break the prediction', async ({ app, page }) => {
-    const input = page.getByLabel('Current 5K best');
+    const input = page.getByLabel('5K', { exact: true });
     await input.fill('4:75');
     await expect(input).toHaveClass(/invalid/);
     await expect(app.clock).toHaveText(/\d{2}:\d{2}:\d{2}/);
@@ -136,12 +136,14 @@ test.describe('athlete inputs & fallbacks', () => {
     await expect(input).not.toHaveClass(/invalid/);
   });
 
-  test('running falls back to 10K, then a self-rating', async ({ app, page }) => {
-    await app.openAlternatives('Running');
+  test('running uses any race times entered, then a self-rating', async ({ app, page }) => {
     await app.card('Running').getByLabel('10K', { exact: true }).fill('48:00');
-    await expect(app.card('Running').locator('.src')).toContainText('from 10K');
-    await expect(app.card('Running').locator('.q')).toHaveText('Estimated');
+    await expect(app.card('Running').locator('.src')).toContainText('10K 48:00');
+    await expect(app.card('Running').locator('.q')).toHaveText('Measured');
+    await app.card('Running').getByLabel('Half marathon').fill('1:45:00');
+    await expect(app.card('Running').locator('.src')).toContainText('10K 48:00 + half 1:45:00 → 5K-equivalent');
     await app.card('Running').getByLabel('10K', { exact: true }).fill('');
+    await app.card('Running').getByLabel('Half marathon').fill('');
     await app.card('Running').getByRole('button', { name: 'Strong', exact: true }).click();
     await expect(app.card('Running').locator('.q')).toHaveText('Self-rated');
     await expect(app.card('Running').locator('.anchor')).toContainText('5K');
@@ -199,12 +201,12 @@ test.describe('athlete inputs & fallbacks', () => {
 
   test('confidence panel suggests the most valuable next input', async ({ page }) => {
     await expect(page.locator('.conf-tip')).toContainText('5K');
-    await page.getByLabel('Current 5K best').fill('23:00');
+    await page.getByLabel('5K', { exact: true }).fill('23:00');
     await expect(page.locator('.conf-tip')).not.toContainText('5K time');
   });
 
   test('previous HYROX result calibrates the prediction', async ({ app, page }) => {
-    await page.getByLabel('Current 5K best').fill('23:00');
+    await page.getByLabel('5K', { exact: true }).fill('23:00');
     const base = await app.total();
     await page.getByLabel('Previous HYROX finish (singles, same weights)').fill('1:45:00');
     expect(await app.total()).toBeGreaterThan(base);
@@ -275,23 +277,23 @@ test.describe('results board', () => {
 
 test.describe('saving & reset', () => {
   test('opt-in save survives a reload; opting out deletes it', async ({ page }) => {
-    await page.getByLabel('Current 5K best').fill('21:45');
+    await page.getByLabel('5K', { exact: true }).fill('21:45');
     await page.getByText('Save my inputs on this device').click();
     expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(['hyrox-predictor:saved']);
     await page.reload();
-    await expect(page.getByLabel('Current 5K best')).toHaveValue('21:45');
+    await expect(page.getByLabel('5K', { exact: true })).toHaveValue('21:45');
     await expect(page.getByRole('checkbox', { name: /Save my inputs/ })).toBeChecked();
     await page.getByText('Save my inputs on this device').click();
     expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
     await page.reload();
-    await expect(page.getByLabel('Current 5K best')).toHaveValue('');
+    await expect(page.getByLabel('5K', { exact: true })).toHaveValue('');
   });
 
   test('reset clears inputs after confirmation', async ({ page }) => {
-    await page.getByLabel('Current 5K best').fill('21:45');
+    await page.getByLabel('5K', { exact: true }).fill('21:45');
     page.once('dialog', (d) => d.accept());
     await page.getByRole('button', { name: 'Reset' }).click();
-    await expect(page.getByLabel('Current 5K best')).toHaveValue('');
+    await expect(page.getByLabel('5K', { exact: true })).toHaveValue('');
   });
 });
 

@@ -48,6 +48,9 @@
       <app-number-input [label]="'Bodyweight (' + unit() + ')'" [value]="ath.bodyweightKg" [factor]="weightFactor()"
         [decimals]="unit() === 'kg' ? 1 : 0" [units]="unit()" (unitsChange)="store.units.set($event)"
         (valueChange)="patch({ bodyweightKg: $event })" />
+      <app-number-input [label]="unit() === 'kg' ? 'Height (cm)' : 'Height (in)'" [value]="ath.heightCm"
+        [factor]="unit() === 'kg' ? 1 : 1 / 2.54" [decimals]="0" (valueChange)="patch({ heightCm: $event })"
+        [hint]="heightHint()" />
       <app-number-input label="Age" [value]="ath.age" [integer]="true"
         [hint]="ageGroup() ? 'HYROX age group ' + ageGroup() : ''" (valueChange)="patch({ age: $event })" />
       <label class="field">
@@ -109,23 +112,20 @@
 
   <div class="cards">
     <!-- Running -->
-    <app-ability-card heading="Running" [source]="res.sources.run" [warnings]="res.warnings.run ?? []" [quality]="res.quality.run" [anchors]="an.run"
-      [level]="ath.levels.run" levelPrompt="No recent race? Rate your running"
-      [altOpen]="any(ath.tenKSec, ath.mileSec, ath.halfMarathonSec, ath.marathonSec, ath.cooperMeters)"
+    <app-ability-card heading="Running" [source]="res.sources.run" [warnings]="res.warnings.run ?? []" [quality]="res.quality.run"
+      [anchors]="an.run" [level]="ath.levels.run" levelPrompt="No recent race? Rate your running" [hasAlternatives]="false"
       (levelChange)="level('run', $event)">
       <div primary class="grid">
-        <app-time-input label="Current 5K best" [seconds]="ath.fiveKSec" placeholder="e.g. 23:30" [hint]="runHint()"
-          (secondsChange)="patch({ fiveKSec: $event })" />
-      </div>
-      <div alternatives class="grid">
+        <app-time-input label="5K" [seconds]="ath.fiveKSec" placeholder="e.g. 23:30" (secondsChange)="patch({ fiveKSec: $event })" />
         <app-time-input label="10K" [seconds]="ath.tenKSec" placeholder="e.g. 49:00" (secondsChange)="patch({ tenKSec: $event })" />
-        <app-time-input label="1 mile" [seconds]="ath.mileSec" placeholder="e.g. 6:45" (secondsChange)="patch({ mileSec: $event })" />
         <app-time-input label="Half marathon" [seconds]="ath.halfMarathonSec" placeholder="h:mm:ss"
           (secondsChange)="patch({ halfMarathonSec: $event })" />
         <app-time-input label="Marathon" [seconds]="ath.marathonSec" placeholder="h:mm:ss"
-          hint="With a 5K, also shows how well you hold pace" (secondsChange)="patch({ marathonSec: $event })" />
-        <app-number-input label="Cooper test (m in 12 min)" placeholder="e.g. 2600" [value]="ath.cooperMeters" [integer]="true"
-          (valueChange)="patch({ cooperMeters: $event })" />
+          (secondsChange)="patch({ marathonSec: $event })" />
+        <p class="note span-all">
+          Enter any recent races you know. More is better: 10K and half marathon best match a HYROX effort, the 5K
+          reflects your top-end fitness, and a longer race shows how well you hold pace. {{ runHint() }}
+        </p>
       </div>
     </app-ability-card>
 

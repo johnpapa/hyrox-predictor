@@ -25,7 +25,7 @@ const ABILITY_NAMES: Record<AbilityId, string> = {
 };
 
 const NEXT_STEP: Record<AbilityId, string> = {
-  run: 'a recent 5K time (or 10K, mile, half marathon, VO₂max)',
+  run: 'a recent race time (5K, 10K, half or marathon)',
   erg: 'a 1000m row or SkiErg time',
   legs: 'a squat (any reps)',
   hinge: 'a deadlift or trap-bar deadlift',
@@ -92,6 +92,12 @@ export class AthleteForm {
   });
 
   protected readonly ageGroup = computed(() => hyroxAgeGroup(this.a().age));
+
+  protected readonly heightHint = computed(() => {
+    const h = this.a().heightCm;
+    if (!h) return 'Optional · small effect';
+    return this.unit() === 'kg' ? '' : `${Math.floor(h / 30.48)}′${Math.round((h / 2.54) % 12)}″`;
+  });
 
   protected readonly runHint = computed(() => {
     const s = this.solo();

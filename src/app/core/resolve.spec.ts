@@ -34,12 +34,11 @@ describe('level tables', () => {
 });
 
 describe('running fallbacks', () => {
-  it('uses 5K first, then 10K, then mile, then a self-level, then an assumption', () => {
+  it('uses race times first (blended), then a self-level, then an assumption', () => {
     expect(resolveAthlete(man()).fiveK.quality).toBe('measured');
     const tenK = resolveAthlete(man({ fiveKSec: null, tenKSec: 50 * 60 })).fiveK;
-    expect(tenK.quality).toBe('converted');
+    expect(tenK.quality).toBe('measured'); // a real race result
     expect(tenK.value / 60).toBeCloseTo(24, 0);
-    expect(resolveAthlete(man({ fiveKSec: null, mileSec: 7 * 60 })).fiveK.quality).toBe('converted');
     const rated = resolveAthlete(man({ fiveKSec: null, levels: { ...defaultAthlete('male').levels, run: 4 } })).fiveK;
     expect(rated.quality).toBe('rated');
     expect(resolveAthlete(man({ fiveKSec: null })).fiveK.quality).toBe('assumed');

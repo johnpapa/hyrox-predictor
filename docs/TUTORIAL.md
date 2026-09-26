@@ -28,10 +28,10 @@ rate. These are only used when you have no race time.
 
 ## 3. Running: the strongest predictor
 
-Enter your current 5K best. No recent 5K? Open **Don't have that? Other ways to estimate** and enter a 10K, mile, half
-marathon, marathon or Cooper test instead. If you enter a 5K *and* a longer race, the app also judges your endurance
-(how well you hold pace over long efforts) and adjusts your HYROX laps a little. The hint shows your projected HYROX run
-pace.
+Enter any recent races you know: **5K, 10K, half marathon and marathon**, as many as you have. The app blends them.
+10K and half marathon count most because they match a HYROX effort; the 5K reflects your top-end fitness; the
+marathon counts least. A short plus a long race also tells it how well you hold pace, which nudges your HYROX laps.
+(The 1-mile and Cooper tests were removed: research shows they're too anaerobic to reflect a HYROX effort.)
 
 ![Running](tutorial/04-running.png)
 
@@ -81,8 +81,12 @@ Roxzone Time, Run Total, Work Total and Overall Time. At the top you get a likel
 ## 8b. Read your Insights
 
 Under the results, **Insights** compares each station with athletes who run at your pace on the same weights. It shows
-your biggest limiters and strengths. **Fastest time savings** re-runs the whole prediction with one improvement at a
-time (a faster 5K, a heavier squat, more unbroken wall balls, and so on) and ranks what saves the most. You also get
+your biggest limiters and strengths. Then:
+- **Realistic gains in 8–12 weeks:** only for things you actually entered or rated, sized for your level and age (a
+  well-trained 54-year-old gets about 1% on the 5K, not "a minute faster"). Each one re-runs the whole prediction.
+- **Worth measuring:** anything you left on "Not sure", ranked by how much the answer could move your finish time. The
+  app never invents a squat or deadlift for you.
+- **Practical tips:** technique and race-craft for your weakest stations, plus pacing and Roxzone advice. You also get
 notes on your running and race-day pacing, including whether your laps or your station work is your relative
 strength. In doubles and relay, switch between athletes at the top of the panel.
 Everything is calculated in your browser; no AI and no data leaves your device.

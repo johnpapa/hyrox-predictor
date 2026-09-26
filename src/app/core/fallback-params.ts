@@ -23,7 +23,12 @@ export const FALLBACK = {
     female: [36 * 60, 30 * 60 + 30, 26 * 60 + 30, 23 * 60, 19 * 60 + 30],
   } as BySex<ByLevel>,
   /** Riegel exponents: recreational runners fade more than 1.06 from short → long. */
-  riegelExp: { tenK: 1.06, mile: 1.07, half: 1.07, marathon: 1.07 },
+  riegelExp: { tenK: 1.06, half: 1.07, marathon: 1.07 },
+  /**
+   * How much each race counts when several are entered (research: 10K and half marathon best
+   * match a HYROX effort; 5K ≈ VO₂max proxy; marathon noisy). The mile was dropped as too anaerobic.
+   */
+  raceWeights: { tenK: 1.0, half: 0.9, fiveK: 0.7, marathon: 0.4 },
   /**
    * Age only matters when running ability is unknown: typical 5K slows ~0.7%/yr from 35 to 55
    * and ~1.1%/yr beyond (approximating WMA age-grading factors).
@@ -35,12 +40,12 @@ export const FALLBACK = {
   watchVo2Offset: 4,
   /** Plausible input ranges (seconds unless noted); values outside are ignored with a warning. */
   ranges: {
-    fiveK: [12 * 60, 90 * 60], tenK: [26 * 60, 3 * 3600], mile: [3.6 * 60, 20 * 60], half: [58 * 60, 4 * 3600],
+    fiveK: [12 * 60, 90 * 60], tenK: [26 * 60, 3 * 3600], half: [58 * 60, 4 * 3600],
     marathon: [2 * 3600, 7 * 3600],
     erg500: [70, 300], erg1k: [150, 600], erg2k: [330, 1200], erg5k: [900, 2700],
     sled: [30, 15 * 60], bbj: [90, 20 * 60], farmers: [45, 10 * 60], lunges: [90, 20 * 60],
     wallBalls100: [150, 25 * 60], karen: [240, 40 * 60],
-    cooperM: [1000, 5000], vo2: [20, 90], restingHr: [30, 110], bodyweightKg: [35, 200],
+    heightCm: [135, 225], vo2: [20, 90], restingHr: [30, 110], bodyweightKg: [35, 200],
   },
 
   // ── Ergs ────────────────────────────────────────────────────────────────────────────
@@ -99,6 +104,25 @@ export const FALLBACK = {
     burpeeBroadJump: 1.2,
     sandbagLunges: 1.25,
     wallBalls: 1.22,
+  },
+
+  // ── Realistic gains for an 8–12 week training block (Insights) ────────────────────
+  realisticGains: {
+    /** 5K improvement fraction by current running level (Weak … Elite): big early gains, tiny at the top. */
+    fiveKPctByLevel: [0.09, 0.05, 0.03, 0.015, 0.008] as ByLevel,
+    /**
+     * Strength gain fraction by current strength level: novices +20–35%, intermediates +5–10%,
+     * advanced +1–3% (meta-analyses). Masters gain similar percentages, so no age scaling.
+     */
+    strengthPctByLevel: [0.25, 0.15, 0.08, 0.04, 0.02] as ByLevel,
+    /** Endurance adaptation is slower for masters: ~60–75% of the gains over 50, less over 60. */
+    masters50: 0.7,
+    masters60: 0.55,
+    wallBallsAddPct: 0.4,
+    wallBallsAddMax: 12,
+    burpeesAdd: 3,
+    deadHangAdd: 15,
+    ergPct: 0.025,
   },
 
   // ── Confidence ──────────────────────────────────────────────────────────────────────

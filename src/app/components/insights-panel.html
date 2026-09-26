@@ -35,8 +35,8 @@
   <p class="legend"><span class="fast">■</span> faster than typical <span class="slow">■</span> slower than typical</p>
 
   @if (i.whatIfs.length) {
-    <h3>Fastest time savings</h3>
-    <p class="sub">Each change re-runs the full prediction on its own.</p>
+    <h3>Realistic gains in 8–12 weeks</h3>
+    <p class="sub">Only for what you told us. Sized for your current level{{ i.masters ? ' and age' : '' }}; each re-runs the full prediction.</p>
     <ol class="whatifs">
       @for (w of i.whatIfs; track w.id) {
         <li>
@@ -46,6 +46,26 @@
       }
     </ol>
   }
+
+  @if (i.unknowns.length) {
+    <h3>Worth measuring</h3>
+    <p class="sub">You left these on "Not sure". Depending on the answer, your finish could move by about this much.</p>
+    <ul class="unknowns">
+      @for (u of i.unknowns; track u.id) {
+        <li>
+          <span class="wl"><strong>{{ u.label }}</strong><small>{{ u.how }}</small></span>
+          <span class="us mono">±{{ fmt(u.swing) }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  <h3>Practical tips</h3>
+  <ul class="tips">
+    @for (t of i.tips; track t.id) {
+      <li><strong>{{ t.title }}</strong><span>{{ t.text }}</span></li>
+    }
+  </ul>
 
   <h3>Running</h3>
   <p class="txt">

@@ -55,13 +55,18 @@ export interface ResolvedAthlete {
   warnings: Partial<Record<AbilityId, string[]>>;
   /** Whether the bodyweight used was entered (and plausible). */
   bodyweightKnown: boolean;
+  /** Height in cm if entered and plausible. */
+  heightCm: number | null;
 }
 
 const fmtKg = (kg: number) => `${Math.round(kg)} kg`;
 const fmtT = (s: number) => {
-  const m = Math.floor(s / 60);
-  const sec = Math.round(s % 60);
-  return `${m}:${String(sec).padStart(2, '0')}`;
+  const t = Math.round(s);
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const sec = t % 60;
+  const mm = h ? String(m).padStart(2, '0') : String(m);
+  return `${h ? h + ':' : ''}${mm}:${String(sec).padStart(2, '0')}`;
 };
 const levelName = (l: Level) => FALLBACK.levelNames[l - 1];
 const pos = (x: number | null | undefined): x is number => x != null && isFinite(x) && x > 0;
@@ -112,36 +117,36 @@ function levelMult(level: number): number {
 // Running
 // ─────────────────────────────────────────────────────────────────────────────────────
 
-function resolveFiveK(a: AthleteProfile): Resolved {
-  if (ok(a.fiveKSec, 'fiveK', 'run', '5K')) return { value: a.fiveKSec, quality: 'measured', source: `5K ${fmtT(a.fiveKSec)}` };
+/**
+ * Race results → one 5K-equivalent. Every race entered is converted with Riegel and blended by
+ * how well that distance reflects a HYROX effort (60–120 min near threshold): 10K and half
+ * marathon count most, the 5K (a VO₂max proxy) a little less, the marathon least (it also
+ * depends on long-run training, fuelling and heat). See RESEARCH.md.
+ */
+function resolveRaces(a: AthleteProfile): Resolved | null {
+  const W = FALLBACK.raceWeights;
+  const races: { name: string; sec: number; eq: number; w: number }[] = [];
+  if (ok(a.fiveKSec, 'fiveK', 'run', '5K')) races.push({ name: '5K', sec: a.fiveKSec, eq: a.fiveKSec, w: W.fiveK });
   if (ok(a.tenKSec, 'tenK', 'run', '10K')) {
-    return { value: riegel(a.tenKSec, 10000, 5000, FALLBACK.riegelExp.tenK), quality: 'converted', source: `from 10K ${fmtT(a.tenKSec)} (Riegel)` };
-  }
-  if (ok(a.mileSec, 'mile', 'run', 'Mile')) {
-    return { value: riegel(a.mileSec, 1609.34, 5000, FALLBACK.riegelExp.mile), quality: 'converted', source: `from mile ${fmtT(a.mileSec)} (Riegel)` };
+    races.push({ name: '10K', sec: a.tenKSec, eq: riegel(a.tenKSec, 10000, 5000, FALLBACK.riegelExp.tenK), w: W.tenK });
   }
   if (ok(a.halfMarathonSec, 'half', 'run', 'Half marathon')) {
-    return {
-      value: riegel(a.halfMarathonSec, 21097.5, 5000, FALLBACK.riegelExp.half),
-      quality: 'converted',
-      source: `from half marathon ${fmtT(a.halfMarathonSec)} (Riegel)`,
-    };
+    races.push({ name: 'half', sec: a.halfMarathonSec, eq: riegel(a.halfMarathonSec, 21097.5, 5000, FALLBACK.riegelExp.half), w: W.half });
   }
   if (ok(a.marathonSec, 'marathon', 'run', 'Marathon')) {
-    return {
-      value: riegel(a.marathonSec, 42195, 5000, FALLBACK.riegelExp.marathon),
-      quality: 'converted',
-      source: `from marathon ${fmtT(a.marathonSec)} (Riegel)`,
-    };
+    races.push({ name: 'marathon', sec: a.marathonSec, eq: riegel(a.marathonSec, 42195, 5000, FALLBACK.riegelExp.marathon), w: W.marathon });
   }
-  if (ok(a.cooperMeters, 'cooperM', 'run', 'Cooper test', (v) => `${Math.round(v)} m`)) {
-    const vo2 = (a.cooperMeters - 504.9) / 44.73;
-    return {
-      value: raceTimeFromVdot(vo2, 5000),
-      quality: 'converted',
-      source: `from Cooper test ${Math.round(a.cooperMeters)} m (VO₂max ≈ ${vo2.toFixed(0)})`,
-    };
-  }
+  if (!races.length) return null;
+  const total = races.reduce((acc, r) => acc + r.w, 0);
+  const eq = races.reduce((acc, r) => acc + r.eq * r.w, 0) / total;
+  if (races.length === 1 && races[0].name === '5K') return { value: eq, quality: 'measured', source: `5K ${fmtT(eq)}` };
+  const list = races.map((r) => `${r.name} ${fmtT(r.sec)}`).join(' + ');
+  return { value: eq, quality: 'measured', source: `${list} → 5K-equivalent ${fmtT(eq)}` };
+}
+
+function resolveFiveK(a: AthleteProfile): Resolved {
+  const races = resolveRaces(a);
+  if (races) return races;
   if (ok(a.vo2max, 'vo2', 'run', 'VO₂max', plain)) {
     const lab = a.vo2maxSource === 'lab';
     // Wearables read high vs race-derived VDOT, and are loose, so they count like a self-rating.
@@ -372,5 +377,6 @@ export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
     transitions: transitions.source,
   };
 
-  return { sources, warnings, bodyweightKnown, bodyweightKg: bw, fiveK, ski1k, row1k, ergMult, squat, deadlift, grip, burpees, sled, lunges, wallBalls, transitions, tests, wallBallsUnbroken: wbU, quality };
+  const heightCm = ok(a.heightCm, 'heightCm', 'legs', 'Height', (v) => `${Math.round(v)} cm`) ? a.heightCm : null;
+  return { sources, warnings, bodyweightKnown, heightCm, bodyweightKg: bw, fiveK, ski1k, row1k, ergMult, squat, deadlift, grip, burpees, sled, lunges, wallBalls, transitions, tests, wallBallsUnbroken: wbU, quality };
 }

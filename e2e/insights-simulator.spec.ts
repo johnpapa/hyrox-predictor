@@ -5,12 +5,13 @@ test.describe('insights panel', () => {
     const panel = page.locator('app-insights-panel');
     await expect(panel.locator('.bar-row')).toHaveCount(9);
     await expect(panel.locator('.hint')).toBeVisible(); // nothing entered yet
-    await page.getByLabel('Current 5K best').fill('22:30');
+    await page.getByLabel('5K', { exact: true }).fill('22:30');
     await page.getByLabel('Max unbroken wall balls').fill('12');
     await expect(panel.locator('.headline')).toContainText('Wall Balls');
     await expect(panel.locator('.hint')).toBeHidden();
     await expect(panel.locator('.whatifs li').first()).toBeVisible();
-    await expect(panel.locator('.whatifs')).toContainText('+15 unbroken wall balls');
+    await expect(panel.locator('.whatifs')).toContainText('12 → 17 unbroken');
+    await expect(panel.locator('.tips li').first()).toContainText('Wall balls');
     await expect(panel.locator('.pacing')).toContainText('Run 1');
   });
 
@@ -25,7 +26,7 @@ test.describe('insights panel', () => {
 
 test.describe('race simulator page', () => {
   test('opens from the header, starts at the prediction, and sliders change the total', async ({ app, page }) => {
-    await page.getByLabel('Current 5K best').fill('23:00');
+    await page.getByLabel('5K', { exact: true }).fill('23:00');
     const predicted = await app.total();
     await page.getByRole('link', { name: 'Simulator' }).click();
     await expect(page).toHaveURL(/#simulator$/);
@@ -81,8 +82,8 @@ test.describe('live total & units', () => {
   });
 
   test('every change flashes how much it moved the finish time', async ({ page }) => {
-    await page.getByLabel('Current 5K best').fill('24:00');
-    await page.getByLabel('Current 5K best').fill('22:00');
+    await page.getByLabel('5K', { exact: true }).fill('24:00');
+    await page.getByLabel('5K', { exact: true }).fill('22:00');
     await expect(page.locator('app-results-board app-change-chip .chip')).toContainText('faster');
     await page.getByLabel('Max unbroken wall balls').fill('10');
     await expect(page.locator('app-results-board app-change-chip .chip')).toContainText('slower');
@@ -97,16 +98,41 @@ test.describe('live total & units', () => {
       await expect(dock).toBeHidden(); // board clock is on screen
       await page.locator('aside.results').evaluate((el) => el.scrollTo(0, 5000));
       await expect(dock).toBeVisible();
-      await page.getByLabel('Current 5K best').fill('21:08');
+      await page.getByLabel('5K', { exact: true }).fill('21:08');
       await expect(dock.locator('.dock-time')).toHaveText(/\d{2}:\d{2}:\d{2}/);
       await expect(dock.locator('app-change-chip .chip')).toBeVisible();
     }
   });
 
   test('marathon time is accepted and shapes the running estimate', async ({ app, page }) => {
-    await page.getByLabel('Current 5K best').fill('21:08');
-    await app.openAlternatives('Running');
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
     await app.card('Running').getByLabel('Marathon', { exact: true }).fill('3:24:00');
     await expect(app.card('Running')).toContainText('Endurance: typical');
+    await expect(app.card('Running').locator('.src')).toContainText('5K 21:08 + marathon 3:24:00');
+  });
+});
+
+test.describe('honest suggestions & height (user feedback)', () => {
+  test('REGRESSION: "Not sure" strength shows as worth measuring, never as a made-up kg target', async ({ page }) => {
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    const panel = page.locator('app-insights-panel');
+    await expect(panel.locator('.unknowns')).toContainText('Test your deadlift');
+    await expect(panel.locator('.unknowns')).toContainText('Test your squat');
+    await expect(panel.locator('.whatifs')).not.toContainText('kg');
+  });
+
+  test('height can be entered in cm or inches', async ({ app, page }) => {
+    await page.getByLabel('Height (cm)').fill('170');
+    await page.getByRole('button', { name: 'LB', exact: true }).click();
+    await expect(page.getByLabel('Height (in)')).toHaveValue('67');
+    await expect(page.locator('app-number-input').filter({ hasText: 'Height' })).toContainText('5′7″');
+    expect(app).toBeTruthy();
+  });
+
+  test('all four race distances can be entered; the mile and Cooper test are gone', async ({ app }) => {
+    const card = app.card('Running');
+    for (const label of ['5K', '10K', 'Half marathon', 'Marathon']) await expect(card.getByLabel(label, { exact: true })).toBeVisible();
+    await expect(card.getByLabel('1 mile')).toHaveCount(0);
+    await expect(card.getByText('Cooper')).toHaveCount(0);
   });
 });
