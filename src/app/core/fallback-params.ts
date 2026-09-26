@@ -33,6 +33,14 @@ export const FALLBACK = {
   uth: { factor: 15.3, hrMaxBase: 208, hrMaxPerYear: 0.7, defaultAge: 35 },
   /** Wearable VO₂max estimates run high vs race-derived VDOT; subtract this many points. */
   watchVo2Offset: 4,
+  /** Plausible input ranges (seconds unless noted); values outside are ignored with a warning. */
+  ranges: {
+    fiveK: [12 * 60, 90 * 60], tenK: [26 * 60, 3 * 3600], mile: [3.6 * 60, 20 * 60], half: [58 * 60, 4 * 3600],
+    erg500: [70, 300], erg1k: [150, 600], erg2k: [330, 1200], erg5k: [900, 2700],
+    sled: [30, 15 * 60], bbj: [90, 20 * 60], farmers: [45, 10 * 60], lunges: [90, 20 * 60],
+    wallBalls100: [150, 25 * 60], karen: [240, 40 * 60],
+    cooperM: [1000, 5000], vo2: [20, 90], restingHr: [30, 110], bodyweightKg: [35, 200],
+  },
 
   // ── Ergs ────────────────────────────────────────────────────────────────────────────
   /** Same athlete: SkiErg is ~8–12 s/500 m (men) / 5–10 s/500 m (women) slower than rowing. */
@@ -45,15 +53,15 @@ export const FALLBACK = {
   } as BySex<ByLevel>,
   deadliftPerBw: {
     male: [1.0, 1.5, 2.0, 2.5, 3.0],
-    female: [0.5, 1.0, 1.5, 1.75, 2.25],
+    female: [0.5, 1.0, 1.25, 1.75, 2.5],
   } as BySex<ByLevel>,
   /**
-   * Typical strength of a HYROX athlete when nothing is known. This is also the model's
-   * reference athlete, so "not sure" never moves the prediction.
+   * Typical strength of a HYROX athlete when nothing is known — equal to "Solid" so that
+   * "Not sure" and "Solid" mean the same. This is also the model's reference athlete.
    */
   typicalPerBw: {
-    legs: { male: 1.35, female: 1.05 },
-    hinge: { male: 1.7, female: 1.35 },
+    legs: { male: 1.5, female: 1.25 },
+    hinge: { male: 2.0, female: 1.25 },
   } as Record<'legs' | 'hinge', BySex<number>>,
   liftRatios: {
     /** Front squat ≈ 0.80–0.85 × back squat. */

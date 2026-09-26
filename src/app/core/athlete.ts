@@ -49,6 +49,8 @@ export interface AthleteProfile {
   halfMarathonSec: number | null;
   /** VO₂max estimate, e.g. from a sports watch (ml/kg/min). */
   vo2max: number | null;
+  /** Lab tests are trusted as-is; watch estimates are discounted. */
+  vo2maxSource: 'watch' | 'lab';
   /** Cooper test: metres covered in 12 minutes. */
   cooperMeters: number | null;
   /** Resting heart rate (bpm) — with age, gives a rough VO₂max estimate. */
@@ -129,6 +131,7 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
     mileSec: null,
     halfMarathonSec: null,
     vo2max: null,
+    vo2maxSource: 'watch',
     cooperMeters: null,
     restingHr: null,
     skiErg1kSec: null,
@@ -155,32 +158,53 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
   };
 }
 
+const EXPERIENCES: readonly Experience[] = ['unknown', 'first', 'some', 'experienced', 'competitive'];
+const LIFT_IDS: readonly LiftId[] = ['backSquat', 'frontSquat', 'legPress', 'deadlift', 'trapBar', 'romanianDeadlift', 'benchPress'];
+const ABILITY_IDS: readonly AbilityId[] = ['run', 'erg', 'legs', 'hinge', 'grip', 'burpees', 'sled', 'lunges', 'wallBalls', 'transitions'];
+
+const numOrNull = (v: unknown): number | null => (typeof v === 'number' && isFinite(v) && v >= 0 ? v : null);
+
 /**
- * Upgrade a stored athlete from an older save format, filling in any missing fields.
+ * Validate and upgrade a stored athlete (saved data is untrusted: it may come from an older
+ * version or have been edited by hand). Unknown or malformed fields fall back to defaults.
  * v1 stored `backSquatKg`/`deadliftKg` and 1–5 `ratings` (3 = average) — carried over, with
  * a neutral 3 treated as "not sure".
  */
 export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
-  const r = (raw ?? {}) as Record<string, any>;
-  const base = defaultAthlete(r['sex'] === 'female' ? 'female' : 'male', index);
-  const out: AthleteProfile = {
-    ...base,
-    ...r,
-    lifts: { ...emptyLifts(), ...(r['lifts'] ?? {}) },
-    levels: { ...emptyLevels(), ...(r['levels'] ?? {}) },
-  } as AthleteProfile;
-  if (r['backSquatKg'] && !out.lifts.backSquat.kg) out.lifts.backSquat = { kg: r['backSquatKg'], reps: 1 };
-  if (r['deadliftKg'] && !out.lifts.deadlift.kg) out.lifts.deadlift = { kg: r['deadliftKg'], reps: 1 };
-  const old = r['ratings'] as Record<string, number> | undefined;
-  if (old && !r['levels']) {
-    const lv = (v: number | undefined) => (v && v !== 3 ? (v as Level) : null);
-    out.levels = {
-      ...out.levels,
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, any>;
+  const out = defaultAthlete(r['sex'] === 'female' ? 'female' : 'male', index);
+  if (typeof r['name'] === 'string') out.name = r['name'].slice(0, 24);
+  if (EXPERIENCES.includes(r['experience'])) out.experience = r['experience'];
+  if (r['vo2maxSource'] === 'lab') out.vo2maxSource = 'lab';
+  const numeric: (keyof AthleteProfile)[] = [
+    'age', 'bodyweightKg', 'trainingHours', 'fiveKSec', 'tenKSec', 'mileSec', 'halfMarathonSec', 'vo2max',
+    'cooperMeters', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
+    'row5kSec', 'deadHangSec', 'pullUps', 'burpees1Min', 'sledPushTestSec', 'sledPullTestSec', 'bbjTestSec',
+    'farmersTestSec', 'lungesTestSec', 'wallBalls100Sec', 'wallBallsUnbroken', 'karenSec', 'previousHyroxSec',
+  ];
+  for (const k of numeric) (out as any)[k] = numOrNull(r[k]);
+  const lifts = r['lifts'] ?? {};
+  for (const id of LIFT_IDS) {
+    const l = lifts[id] ?? {};
+    const reps = numOrNull(l.reps);
+    out.lifts[id] = { kg: numOrNull(l.kg), reps: reps && reps >= 1 ? Math.min(12, Math.round(reps)) : 1 };
+  }
+  const levels = r['levels'] ?? {};
+  for (const id of ABILITY_IDS) {
+    const v = levels[id];
+    out.levels[id] = [1, 2, 3, 4, 5].includes(v) ? (v as Level) : null;
+  }
+  // v1 → v2
+  if (numOrNull(r['backSquatKg']) && !out.lifts.backSquat.kg) out.lifts.backSquat = { kg: r['backSquatKg'], reps: 1 };
+  if (numOrNull(r['deadliftKg']) && !out.lifts.deadlift.kg) out.lifts.deadlift = { kg: r['deadliftKg'], reps: 1 };
+  const old = r['ratings'];
+  if (old && typeof old === 'object' && !r['levels']) {
+    const lv = (v: unknown) => ([1, 2, 4, 5].includes(v as number) ? (v as Level) : null);
+    Object.assign(out.levels, {
       sled: lv(old['sled']), burpees: lv(old['burpees']), grip: lv(old['grip']),
       lunges: lv(old['lunges']), wallBalls: lv(old['wallBalls']), transitions: lv(old['transitions']),
-    };
+    });
   }
-  for (const k of ['backSquatKg', 'deadliftKg', 'ratings']) delete (out as any)[k];
   return out;
 }
 

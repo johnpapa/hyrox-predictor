@@ -32,6 +32,13 @@ export const PARAMS = {
    * 1.13–1.21 × Run 1; Run 8 is 1.24–1.41 × Run 1 (it includes the finish straight).
    */
   runShape: [1.0, 1.15, 1.2, 1.17, 1.18, 1.16, 1.15, 1.3],
+  /**
+   * Elites run far more evenly (runs within ~15 s/km). The shape above is scaled towards flat
+   * as the run factor drops: full shape at ≥ 1.20, 40% of it at ≤ 1.10.
+   */
+  runShapeFlatten: { fullAt: 1.2, flatAt: 1.1, minScale: 0.4 },
+  /** Combined skill multipliers (self-level × race-craft) never go below this. */
+  minSkillMult: 0.9,
 
   // ── Ergs ───────────────────────────────────────────────────────────────────────────
   /** In-race 1000 m station time ÷ fresh 1000 m time-trial (race runs at ~85–90% of TT pace). */
@@ -71,7 +78,7 @@ export const PARAMS = {
      * pull ≈ 0.62, BBJ ≈ 0.57, row ≈ 0.93, farmers ≈ 0.78, lunges ≈ 0.68, wall balls ≈ 0.66).
      */
     intensityFloor: {
-      skierg: 0.76, sledPush: 0.06, sledPull: 0.2, burpeeBroadJump: 0.1,
+      skierg: 0.76, sledPush: 0.16, sledPull: 0.26, burpeeBroadJump: 0.14,
       row: 0.82, farmersCarry: 0.52, sandbagLunges: 0.32, wallBalls: 0.28,
     } satisfies Record<StationId, number>,
     /** Seconds lost to partner changeovers per station (only when both partners contribute). */
@@ -79,6 +86,11 @@ export const PARAMS = {
       skierg: 6, sledPush: 4, sledPull: 6, burpeeBroadJump: 3,
       row: 10, farmersCarry: 4, sandbagLunges: 4, wallBalls: 5,
     } satisfies Record<StationId, number>,
+    /**
+     * Elites gain less from splitting (they already work near their limit): the intensity floor
+     * moves this far towards 1 for a pair whose run factor is ≤ 1.10, scaling to 0 at ≥ 1.20.
+     */
+    eliteFloorShift: 0.4,
     /** Share of the solo running compromise that remains when stations are split. */
     runCompromiseShare: 0.8,
     /** Running together at the slower partner's pace costs a little extra. */
@@ -89,9 +101,11 @@ export const PARAMS = {
   // ── Relay ──────────────────────────────────────────────────────────────────────────
   relay: {
     /** 1 km run ÷ 5K pace for each athlete's first and second run. */
-    runFactorLeg: [1.05, 1.12],
-    /** Stations done on fresh legs. */
-    stationFreshness: 0.9,
+    runFactorLeg: [1.03, 1.08],
+    /** Stations done on fresh legs (≈ inverse of the 1.15–1.25 race-fatigue factors). */
+    stationFreshness: 0.83,
+    /** Fresh athletes move through the Roxzone faster. */
+    roxzoneFactor: 0.75,
     handoverSec: 5,
   },
 

@@ -7,9 +7,13 @@ time. It covers every division: Open, Pro, Elite 15, Adaptive, Doubles (Men/Wome
 (Men/Women/Mixed/Corporate). The look follows the dark, results-page style of HYROX timing, with a race-simulator timeline
 you can play back.
 
-| Desktop | iPhone |
-|---|---|
-| ![desktop](docs/desktop.png) | ![iphone](docs/iphone.png) |
+![Overview](docs/tutorial/01-overview.png)
+
+**New here? Read the [screenshot tutorial](docs/TUTORIAL.md).**
+
+| Results board | Confidence & fallbacks | iPhone |
+|---|---|---|
+| ![results](docs/tutorial/09-results.png) | ![confidence](docs/tutorial/08-confidence.png) | ![iphone](docs/tutorial/16-iphone-results.png) |
 
 ## Features
 
@@ -48,10 +52,17 @@ Static Web Apps, or any static file host.
 
 ```bash
 npm install
-npm start          # http://localhost:4200
-npm test           # vitest unit tests
-npm run build      # production build in dist/
+npm start                  # http://localhost:4200
+npm test                   # unit tests (Vitest): model, conversions, review regressions
+npm run e2e                # Playwright end-to-end tests on desktop + iPhone (production build)
+npm run docs:screenshots   # regenerate the tutorial screenshots in docs/tutorial
+npm run build              # production build in dist/
 ```
+
+The end-to-end suite runs every user path against the production build (strict CSP, served under `/hyrox-predictor/`
+like GitHub Pages) on desktop and iPhone viewports. It covers all 16 divisions, every input and fallback, key-by-key
+typing, doubles and relay tactics, locked splits, the simulator, opt-in saving, reset, privacy (no cookies or
+third-party requests) and responsive layout.
 
 Requires Node 20.19+ / 22.12+ / 24+. Built with Angular 21: standalone components, signals, zoneless change detection
 and the new control flow.

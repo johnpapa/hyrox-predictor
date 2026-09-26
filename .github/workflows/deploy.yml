@@ -1,6 +1,5 @@
 # Tests, builds and publishes the app to GitHub Pages on every push to main.
-# If the first run can't enable Pages itself, do it once in:
-# Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# One-time setup: Settings → Pages → Build and deployment → Source: "GitHub Actions".
 name: Deploy to GitHub Pages
 
 on:
@@ -26,8 +25,20 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx ng test --watch=false
-      - run: npx ng build
+      - name: Unit tests
+        run: npx ng test --watch=false
+      - name: Build
+        run: npx ng build
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end tests (desktop + iPhone)
+        run: npx playwright test --project=desktop --project=iphone
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
         with:
@@ -44,8 +55,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - id: deployment
         uses: actions/deploy-pages@v4

@@ -73,7 +73,7 @@ describe('strength fallbacks', () => {
     const blank = predict({ divisionId: 'men-open', athletes: [man()] }).total;
     const typical = predict({
       divisionId: 'men-open',
-      athletes: [man({ lifts: lifts({ backSquat: { kg: 82 * 1.35, reps: 1 }, deadlift: { kg: 82 * 1.7, reps: 1 } }) })],
+      athletes: [man({ lifts: lifts({ backSquat: { kg: 82 * 1.5, reps: 1 }, deadlift: { kg: 82 * 2.0, reps: 1 } }) })],
     }).total;
     expect(Math.abs(blank - typical)).toBeLessThan(5);
   });

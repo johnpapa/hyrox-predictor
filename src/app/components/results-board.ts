@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { PredictorStore } from '../core/predictor.store';
 import { Segment } from '../core/predictor';
 import { StationId } from '../core/stations';
@@ -24,6 +24,8 @@ export class ResultsBoard {
   protected readonly p = this.store.prediction;
   protected readonly fmt = formatTime;
   protected readonly editing = signal<StationId | null>(null);
+  protected readonly editInvalid = signal(false);
+  private readonly editInput = viewChild<ElementRef<HTMLInputElement>>('editInput');
 
   protected readonly athleteNames = computed(() =>
     this.store.teamAthletes().map((a, i) => a.name?.trim() || `Athlete ${i + 1}`),
@@ -70,15 +72,27 @@ export class ResultsBoard {
     return this.track().find((x) => t >= x.start && t < x.start + x.sec) ?? this.track().at(-1)!;
   });
 
+  private endTimer: ReturnType<typeof setTimeout> | undefined;
+
   constructor() {
-    inject(DestroyRef).onDestroy(() => cancelAnimationFrame(this.raf));
+    inject(DestroyRef).onDestroy(() => {
+      cancelAnimationFrame(this.raf);
+      clearTimeout(this.endTimer);
+    });
+    // Move focus into the override editor as soon as it appears (autofocus doesn't fire on
+    // dynamically inserted inputs).
+    effect(() => {
+      const el = this.editInput()?.nativeElement;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    });
   }
 
   protected toggleSim(): void {
-    if (this.raf) {
-      cancelAnimationFrame(this.raf);
-      this.raf = 0;
-      this.simT.set(null);
+    if (this.simT() != null) {
+      this.stopSim();
       return;
     }
     const total = this.p().total;
@@ -87,9 +101,20 @@ export class ResultsBoard {
       const frac = Math.min(1, (now - t0) / SIM_DURATION_MS);
       this.simT.set(frac * total);
       if (frac < 1) this.raf = requestAnimationFrame(tick);
-      else this.raf = 0;
+      else {
+        this.raf = 0;
+        // Hold the finish for a moment, then return to the prediction view.
+        this.endTimer = setTimeout(() => this.simT.set(null), 1500);
+      }
     };
     this.raf = requestAnimationFrame(tick);
+  }
+
+  private stopSim(): void {
+    cancelAnimationFrame(this.raf);
+    clearTimeout(this.endTimer);
+    this.raf = 0;
+    this.simT.set(null);
   }
 
   protected pct(sec: number): number {
@@ -102,13 +127,32 @@ export class ResultsBoard {
 
   // ── Overrides ────────────────────────────────────────────────────────────────────
   protected startEdit(id: StationId | undefined): void {
-    if (id) this.editing.set(id);
+    if (!id) return;
+    this.editInvalid.set(false);
+    this.editing.set(id);
   }
 
+  /** Enter/blur: empty resets to predicted; unparseable text keeps the editor open. */
   protected commitEdit(id: StationId, value: string): void {
-    const sec = parseTime(value);
-    this.store.setOverride(id, value.trim() === '' ? null : sec);
+    if (this.editing() !== id) return; // already committed or cancelled
+    const trimmed = value.trim();
+    const sec = parseTime(trimmed);
+    if (trimmed !== '' && (sec == null || sec <= 0)) {
+      this.editInvalid.set(true);
+      return;
+    }
+    this.store.setOverride(id, trimmed === '' ? null : sec);
+    this.finishEdit(id);
+  }
+
+  protected cancelEdit(id: StationId): void {
+    if (this.editing() === id) this.finishEdit(id);
+  }
+
+  private finishEdit(id: StationId): void {
     this.editing.set(null);
+    this.editInvalid.set(false);
+    queueMicrotask(() => (document.querySelector(`[data-edit="${id}"]`) as HTMLElement | null)?.focus());
   }
 
   protected clearOverride(id: StationId, ev: Event): void {
@@ -130,6 +174,7 @@ export class ResultsBoard {
 
   protected topLabel(): string {
     const t = this.p().topPercent;
+    if (t == null) return 'n/a for this division';
     if (t < 1) return 'Top 1%';
     if (t > 50) return `Top ${Math.round(t)}% · bottom ${Math.round(100 - t)}%`;
     return `Top ${Math.round(t)}%`;

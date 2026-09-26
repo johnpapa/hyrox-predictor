@@ -1,8 +1,8 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
 import { AbilityId, AthleteProfile, Level, Lift, LiftId, defaultAthlete, migrateAthlete } from './athlete';
-import { DIVISIONS, Sex, findDivision } from './divisions';
+import { DIVISIONS, Sex, findDivision, sexIsChoosable } from './divisions';
 import { predict } from './predictor';
-import { StationId } from './stations';
+import { STATION_IDS, StationId } from './stations';
 
 export type Units = 'kg' | 'lb';
 
@@ -40,14 +40,37 @@ function load(): Persisted | null {
     store?.removeItem(LEGACY_KEY);
     const raw = store?.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const p = JSON.parse(raw) as Persisted;
-    if (p?.v !== 1 || !Array.isArray(p.athletes) || p.athletes.length < 4) return null;
-    // Upgrade older saves and fill in newly added fields.
-    p.athletes = p.athletes.map((a, i) => migrateAthlete(a, i));
-    return p;
+    return sanitize(JSON.parse(raw));
   } catch {
     return null;
   }
+}
+
+/** Saved data is untrusted input: validate every field and drop anything malformed. */
+function sanitize(raw: unknown): Persisted | null {
+  const p = raw as Partial<Persisted> | null;
+  if (!p || p.v !== 1 || !Array.isArray(p.athletes)) return null;
+  const athletes = [0, 1, 2, 3].map((i) => migrateAthlete(p.athletes![i], i));
+  const shareOk = (x: unknown) => typeof x === 'number' && isFinite(x) && x >= 0 && x <= 1;
+  const secOk = (x: unknown) => typeof x === 'number' && isFinite(x) && x > 0 && x < 3600;
+  const doublesShares: Persisted['doublesShares'] = {};
+  const overrides: Persisted['overrides'] = {};
+  for (const id of STATION_IDS) {
+    if (shareOk(p.doublesShares?.[id])) doublesShares[id] = p.doublesShares![id]!;
+    if (secOk(p.overrides?.[id])) overrides[id] = p.overrides![id]!;
+  }
+  const order = p.relayOrder;
+  const relayOrder =
+    Array.isArray(order) && order.length === 4 && [0, 1, 2, 3].every((i) => order.includes(i)) ? [...order] : null;
+  return {
+    v: 1,
+    divisionId: DIVISIONS.some((d) => d.id === p.divisionId) ? p.divisionId! : DIVISIONS[0].id,
+    athletes,
+    units: p.units === 'lb' ? 'lb' : 'kg',
+    doublesShares,
+    relayOrder,
+    overrides,
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -106,22 +129,21 @@ export class PredictorStore {
     });
   }
 
-  /** Whether athlete sex is fixed by the division (e.g. Men's Doubles) rather than chosen. */
-  readonly sexLocked = computed(() => {
-    const d = this.division();
-    return d.weights !== 'mixedOpen' && d.id !== 'corporate-relay' && d.id !== 'adaptive';
-  });
+  /**
+   * Whether athlete sex is fixed by the division: single-sex divisions, and mixed divisions
+   * whose rules fix the composition (mixed doubles 1+1, mixed relay 2+2).
+   */
+  readonly sexLocked = computed(() => !sexIsChoosable(this.division()));
 
   setDivision(id: string): void {
     const d = findDivision(id);
     this.divisionId.set(id);
     this.relayOrder.set(null);
     this.doublesShares.set({});
+    // Locked splits belong to one format (a singles split makes no sense in doubles).
+    this.overrides.set({});
     if (this.activeAthlete() >= d.teamSize) this.activeAthlete.set(0);
-    const team = this.athletes().slice(0, d.teamSize);
-    const alreadyMixed = team.some((a) => a.sex !== team[0].sex);
-    const applyDefaults = this.sexLocked() || (d.teamSize > 1 && !alreadyMixed);
-    if (!applyDefaults) return;
+    if (!this.sexLocked()) return;
     // Align athlete sexes with the division, keeping everything else the user entered.
     this.athletes.update((list) =>
       list.map((a, i) => {
