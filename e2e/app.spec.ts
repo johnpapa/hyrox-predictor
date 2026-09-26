@@ -133,7 +133,9 @@ test.describe('athlete inputs & fallbacks', () => {
 
   test('implausible entries are ignored with a warning', async ({ app, page }) => {
     await page.getByLabel('5K', { exact: true }).fill('0:05');
-    await expect(app.card('Running').locator('.warn')).toContainText('ignored');
+    // Flagged on the field itself and in the card summary.
+    await expect(page.getByRole('alert').filter({ hasText: "00:05 isn't realistic, so it's ignored (expected 12:00–01:30:00)" })).toBeVisible();
+    await expect(app.card('Running').locator('.warn').last()).toContainText('ignored');
     await expect(app.clock).toHaveText(/\d{2}:\d{2}:\d{2}/);
   });
 
@@ -159,14 +161,14 @@ test.describe('athlete inputs & fallbacks', () => {
     await expect(app.card('Running').locator('.anchor')).toContainText('5K');
   });
 
-  test('VO₂max and resting HR estimate running when no race time is known', async ({ app, page }) => {
+  test('VO₂max estimates running when no race time is known; resting HR is no longer asked for', async ({ app, page }) => {
     await page.getByLabel('VO₂max (ml/kg/min)').fill('52');
     await expect(app.card('Running').locator('.src')).toContainText('VO₂max 52');
-    await page.getByLabel('VO₂max (ml/kg/min)').fill('');
     await page.getByLabel('Age', { exact: true }).fill('41');
-    await page.getByLabel('Resting heart rate (bpm)').fill('52');
-    await expect(app.card('Running').locator('.src')).toContainText('resting HR 52');
     await expect(page.getByText('HYROX age group 40–44')).toBeVisible();
+    // REGRESSION: "Let's not make people enter information that is not valuable."
+    await expect(page.getByLabel('Resting heart rate (bpm)')).toHaveCount(0);
+    await expect(page.getByLabel('Runs straight after stations')).toHaveCount(0);
   });
 
   test('leg strength: rating, then a lift with reps (est. 1RM), then conversions from other lifts', async ({ app, page }) => {
@@ -270,17 +272,31 @@ test.describe('athlete inputs & fallbacks', () => {
 });
 
 test.describe('team tactics', () => {
-  test('doubles: manual work split, auto toggle and auto-all', async ({ app, page }) => {
+  test('REGRESSION: doubles start at 50/50, sliders stay within 20–80%, suggest and reset work', async ({ app, page }) => {
+    // User: "it set some splits to 0% or 100%… by default split everything 50/50 and let us adjust."
     await app.division("Men's Doubles").click();
     const tactics = page.locator('app-team-tactics');
     await expect(tactics.getByRole('heading', { name: 'Work split' })).toBeVisible();
+    for (const s of await tactics.locator('input[type=range]').all()) {
+      await expect(s).toHaveValue('50');
+      await expect(s).toHaveAttribute('min', '20');
+      await expect(s).toHaveAttribute('max', '80');
+    }
+    await expect(tactics.getByRole('button', { name: 'Reset to 50/50' })).toBeDisabled();
     const slider = tactics.getByLabel('Wall Balls share for Athlete 1');
-    await slider.fill('80');
-    const auto = tactics.locator('.srow').filter({ hasText: 'Wall Balls' }).getByRole('button', { name: 'Auto' });
-    await expect(auto).toHaveAttribute('aria-pressed', 'false');
-    await expect(app.splitRow('Wall Balls')).toContainText('Athlete 1 80%');
-    await tactics.getByRole('button', { name: 'Auto all' }).click();
-    await expect(auto).toHaveAttribute('aria-pressed', 'true');
+    await slider.fill('70');
+    await expect(app.splitRow('Wall Balls')).toContainText('Athlete 1 70%');
+    await tactics.getByRole('button', { name: 'Reset to 50/50' }).click();
+    await expect(slider).toHaveValue('50');
+    // A strong partner: the suggestion gives them more of the sleds, but never beyond 70%.
+    await app.tab(1).click();
+    await app.card('Leg strength').getByRole('button', { name: 'Elite', exact: true }).click();
+    await tactics.getByRole('button', { name: 'Suggest a split' }).click();
+    const push = Number(await tactics.getByLabel('Sled Push share for Athlete 1').inputValue());
+    expect(push).toBeGreaterThanOrEqual(30);
+    expect(push).toBeLessThan(50);
+    // Runs are paced by the slower partner; an assumed pace says so.
+    await expect(tactics.locator('.run-note')).toContainText('Runs are paced by');
   });
 
   test('doubles: each partner has their own inputs', async ({ app, page }) => {
@@ -331,7 +347,7 @@ test.describe('results board', () => {
     // Keep the in-app methodology in sync with the model (see CLAUDE.md rule 5).
     const body = page.locator('app-methodology .body');
     for (const phrase of ['5K, 10K, half marathon, marathon', 'Weekly running distance', 'mostly fitness, not inexperience',
-      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed', 'Runs straight after stations', 'hand-over tips']) {
+      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed', 'hand-over tips', 'Suggest a split']) {
       await expect(body).toContainText(phrase);
     }
   });
@@ -379,5 +395,68 @@ test.describe('responsive layout', () => {
     await expect(page.getByRole('region', { name: 'Predicted finish summary' })).toBeHidden();
     await page.getByText('How the prediction works').scrollIntoViewIfNeeded();
     await expect(page.locator('app-results-board .clock')).toBeInViewport();
+  });
+});
+
+test.describe('steppers and validation (user: "freeform text boxes… plus or minus, and validation")', () => {
+  const field = (page: import('@playwright/test').Page, label: string) =>
+    page.locator('app-number-input, app-time-input').filter({ has: page.getByLabel(label, { exact: true }) });
+
+  test('− / + buttons step numbers from a sensible start, snap to the step and stop at the limits', async ({ page }) => {
+    const age = field(page, 'Age');
+    await age.getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Age', { exact: true })).toHaveValue('35');
+    await age.getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Age', { exact: true })).toHaveValue('36');
+    await age.getByRole('button', { name: 'Decrease' }).click();
+    await expect(page.getByLabel('Age', { exact: true })).toHaveValue('35');
+    await expect(page.getByLabel('Age', { exact: true })).toHaveAttribute('role', 'spinbutton');
+    await page.getByLabel('Age', { exact: true }).fill('95');
+    await expect(age.getByRole('button', { name: 'Increase' })).toBeDisabled();
+
+    const bw = field(page, 'Bodyweight (kg)');
+    await page.getByLabel('Bodyweight (kg)').fill('73.3');
+    await bw.getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('73.5'); // snaps to 0.5 kg
+    await page.getByRole('button', { name: 'LB', exact: true }).click();
+    await field(page, 'Bodyweight (lb)').getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Bodyweight (lb)')).toHaveValue('163'); // 1 lb steps
+  });
+
+  test('arrow keys step (Shift × 10) and time fields step in seconds', async ({ app, page }) => {
+    const fiveK = page.getByLabel('5K', { exact: true });
+    await field(page, '5K').getByRole('button', { name: 'Increase' }).click();
+    await expect(fiveK).toHaveValue('25:00');
+    await fiveK.press('ArrowUp');
+    await expect(fiveK).toHaveValue('25:05');
+    await fiveK.press('Shift+ArrowDown');
+    await expect(fiveK).toHaveValue('24:15');
+    await expect(app.card('Running').locator('.src')).toContainText('5K 24:15');
+    const hours = page.getByLabel('Other training (hrs / week)');
+    await hours.fill('5');
+    await hours.press('ArrowUp');
+    await expect(hours).toHaveValue('5.5');
+  });
+
+  test('press and hold repeats', async ({ page }) => {
+    const plus = field(page, 'Max unbroken wall balls').getByRole('button', { name: 'Increase' });
+    await plus.scrollIntoViewIfNeeded();
+    const box = (await plus.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(1000);
+    await page.mouse.up();
+    const v = Number(await page.getByLabel('Max unbroken wall balls').inputValue());
+    expect(v).toBeGreaterThanOrEqual(30 + 5 * 3); // starts at 30, then repeats every 70 ms after 450 ms
+  });
+
+  test('out-of-range numbers are flagged on the field and ignored', async ({ app, page }) => {
+    await page.getByLabel('5K', { exact: true }).fill('23:00');
+    const before = await app.total();
+    await page.getByLabel('Age', { exact: true }).fill('150');
+    await expect(page.getByRole('alert').filter({ hasText: "150 isn't realistic, so it's ignored (expected 16–95)" })).toBeVisible();
+    await page.getByLabel('Max unbroken wall balls').fill('900');
+    await expect(page.getByRole('alert').filter({ hasText: '900 isn' })).toBeVisible();
+    expect(await app.total()).toBe(before);
   });
 });

@@ -1,4 +1,4 @@
-import { AbilityId, AthleteProfile, Level, LiftId, RIR_OPTIONS } from './athlete';
+import { AbilityId, AthleteProfile, Level, LiftId, RIR_OPTIONS, sanitizeRanges } from './athlete';
 import { Sex } from './divisions';
 import { oneRepMax, paulsLaw, raceTimeFromVdot, riegel } from './formulas';
 import { FALLBACK } from './fallback-params';
@@ -152,7 +152,6 @@ function resolveFiveK(a: AthleteProfile): Resolved {
   const races = resolveRaces(a);
   if (races) {
     // Race times beat VO₂max for predicting running, but VO₂max keeps a small, capped say.
-    // Resting HR is not used here: its VO₂max estimate is far noisier than any race.
     if (pos(a.vo2max) && a.vo2max >= FALLBACK.ranges.vo2[0] && a.vo2max <= FALLBACK.ranges.vo2[1]) {
       const src = a.vo2maxSource === 'lab' ? 'lab' : 'watch';
       const vdot = src === 'lab' ? a.vo2max : a.vo2max - FALLBACK.watchVo2Offset;
@@ -178,16 +177,6 @@ function resolveFiveK(a: AthleteProfile): Resolved {
       value: raceTimeFromVdot(vdot, 5000),
       quality: lab ? 'converted' : 'rated',
       source: `from ${lab ? 'lab' : 'watch'} VO₂max ${a.vo2max} (Daniels VDOT)`,
-    };
-  }
-  if (ok(a.restingHr, 'restingHr', 'run', 'Resting HR', plain)) {
-    const U = FALLBACK.uth;
-    const hrMax = U.hrMaxBase - U.hrMaxPerYear * (a.age ?? U.defaultAge);
-    const vo2 = (U.factor * hrMax) / a.restingHr;
-    return {
-      value: raceTimeFromVdot(vo2 - FALLBACK.watchVo2Offset, 5000),
-      quality: 'rated',
-      source: `from resting HR ${a.restingHr}${a.age ? ` & age ${a.age}` : ''} (VO₂max ≈ ${vo2.toFixed(0)}, rough)`,
     };
   }
   const lvl = a.levels.run;
@@ -342,7 +331,8 @@ function clampLevel(l: number): number {
 
 // ─────────────────────────────────────────────────────────────────────────────────────
 
-export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
+export function resolveAthlete(raw: AthleteProfile): ResolvedAthlete {
+  const a = sanitizeRanges(raw);
   const sex: Sex = a.sex;
   warnings = {};
   const bodyweightKnown = ok(a.bodyweightKg, 'bodyweightKg', 'legs', 'Bodyweight', (v) => `${Math.round(v)} kg`);

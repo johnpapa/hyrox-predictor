@@ -47,10 +47,7 @@
       <li><b>Body fat:</b> when your lifts are unknown, strength is estimated from <em>lean</em> mass, so a lean
         athlete is assumed stronger than a typical one of the same bodyweight. Measured lifts ignore it.
         <b>VO₂max</b> still counts a little when you have race times (races can be old or not all-out): up to ±1.5% on
-        your running for a watch estimate, ±4% for a lab test. <b>Resting heart rate</b> only estimates running when
-        there is no race or VO₂max: its VO₂max estimate is about ±10%, too rough next to a real race.</li>
-            <li><b>Runs straight after stations</b> ("compromised running"): weekly practice makes your laps about 1% faster
-        and halves much of the first-race penalty; rarely or never makes them about 1% slower.</li>
+        your running for a watch estimate, ±4% for a lab test.</li>
       <li><b>Other training hours</b> (gym, HYROX classes): up to ±3% on stations, never on the runs. <b>Age 50+:</b> a
         small recovery allowance, capped at 4%.</li>
       <li><b>Pro and mixed loads:</b> scaled with elasticities fitted to Pro vs Open splits at the same run pace.</li>
@@ -63,7 +60,7 @@
     <h3>3 · Missing data? Every ability has fallbacks</h3>
     <p>You can leave any field blank. Each ability uses the best information available, in this order:</p>
     <ul>
-      <li><b>Running:</b> any race times (blended) › VO₂max (lab or watch, via Daniels VDOT) › resting heart rate + age ›
+      <li><b>Running:</b> any race times (blended) › VO₂max (lab or watch, via Daniels VDOT) ›
         self-rating (Weak ≈ 32:00 … Elite ≈ 17:30 5K for men).</li>
       <li><b>Ergs:</b> 1000 m › 500 m, 2000 m or 5000 m (Paul's law: +5 s/500 m per doubling) › the other erg ± the typical
         SkiErg-vs-row gap › self-rating.</li>
@@ -95,8 +92,12 @@
       <b>Doubles:</b> partners run together at the slower partner's pace, though less compromised because each does only part
       of the stations. Splitting a station lets you work harder. The model is calibrated so an even split matches observed
       doubles-to-singles ratios (sleds about 0.55–0.6×, wall balls about 0.66×, ergs about 0.9×). Elite pairs gain a little
-      less. "Auto" finds the fastest split per station, so a much taller partner takes more of the lunges and burpee broad
-      jumps. <b>Relay:</b> each athlete runs 2 × 1 km and does 2 stations on fresh legs. The fastest order is chosen
+      less. Every station starts at <b>50/50</b>; you can move it between 20% and 80%, or tap <b>Suggest a split</b> for a
+      practical plan (30–70%, in 5% steps) that gives each partner more of what they're faster at, e.g. a much taller
+      partner takes more of the lunges and burpee broad jumps. You move through the Roxzone together, so it sits between
+      your two singles Roxzone times, weighted towards the slower one, minus a little for resting while your partner
+      works. Because you run every kilometre together, <b>the slower runner sets the pace</b>, which is why a strong but
+      slower-running partner helps less than you might expect. <b>Relay:</b> each athlete runs 2 × 1 km and does 2 stations on fresh legs. The fastest order is chosen
       automatically. Insights also gives <b>doubles hand-over tips</b>: how often to switch on each station (e.g. SkiErg
       every 100–250 m, row every 250 m, sleds every length, wall balls every 10–15 reps) and how much each of you does.
     </p>

@@ -31,7 +31,8 @@ you can play back.
   A previous HYROX result calibrates the whole prediction.
 - **Results laid out like the official page:** Running 1 … Wall Balls, then Roxzone Time, Run Total, Work Total and
   Overall Time. It also shows a confidence range and an estimated field position.
-- **Doubles:** tune both partners. Each station's work split is auto-optimised, or you can drag it yourself.
+- **Doubles:** tune both partners. Every station starts at 50/50; drag a split (20–80%) or ask for a practical
+  suggestion. The app shows which partner sets the running pace.
 - **Relay:** tune all four athletes. The fastest leg order is chosen automatically, or you can set it.
 - **Lock in known splits:** tap any station time to override it.
 - **Insights:**

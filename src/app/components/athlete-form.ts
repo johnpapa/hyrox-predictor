@@ -52,8 +52,19 @@ export class AthleteForm {
   protected readonly r = computed(() => this.solo().resolved);
   protected readonly unit = computed(() => this.store.units());
   protected readonly ranges = FALLBACK.ranges;
+  /** A previous result only calibrates between 40 min and 4 h. */
+  protected readonly previousRange = [40 * 60, 4 * 3600] as const;
+  /** Where the −/+ steppers start from on an empty field (model units, by sex). */
+  protected readonly starts = computed(() => {
+    const sex = this.a().sex;
+    return {
+      bodyweight: FALLBACK.refBodyweightKg[sex],
+      height: sex === 'male' ? 178 : 165,
+      bodyFat: FALLBACK.typicalBodyFatPct[sex],
+    };
+  });
 
-  /** VO₂max and resting HR only estimate running when there's no race time. */
+  /** VO₂max only gets a small weight once there's a race time. */
   protected readonly hasRace = computed(() => {
     const a = this.a();
     return [a.fiveKSec, a.tenKSec, a.halfMarathonSec, a.marathonSec].some((x) => x != null);
@@ -70,12 +81,6 @@ export class AthleteForm {
     return `Estimated strength ${pct >= 0 ? '+' : '−'}${Math.abs(pct)}% vs a typical ${ref}% athlete of your weight`;
   });
 
-  protected readonly compromisedOptions = [
-    { id: '', label: 'Not sure' },
-    { id: 'never', label: 'Rarely or never' },
-    { id: 'sometimes', label: 'Sometimes (1–3× a month)' },
-    { id: 'weekly', label: 'Weekly or more' },
-  ];
 
   protected readonly experiences: { id: Experience; label: string }[] = [
     { id: 'unknown', label: 'Not sure' },

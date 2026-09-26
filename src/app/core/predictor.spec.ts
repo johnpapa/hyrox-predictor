@@ -1,6 +1,6 @@
 import { defaultAthlete, AthleteProfile, emptyLifts } from './athlete';
 import { DIVISIONS, findDivision, weightForAthlete } from './divisions';
-import { doublesStationTime, loadMultiplier, optimalDoublesShare, predict, predictSolo } from './predictor';
+import { doublesStationTime, loadMultiplier, optimalDoublesShare, predict, predictSolo, suggestDoublesShares } from './predictor';
 import { parseTime, formatTime } from './time';
 
 const man = (patch: Partial<AthleteProfile> = {}) =>
@@ -105,9 +105,39 @@ describe('doubles', () => {
     expect(doubles / single).toBeLessThan(0.93);
   });
 
-  it('respects a manual share', () => {
-    const p = predict({ divisionId: 'men-doubles', athletes: [man(), man()], doublesShares: { row: 1 } });
-    expect(p.doublesShares!.row).toBe(1);
+  it('respects a manual share, but never all or nothing (20–80%)', () => {
+    const p = predict({ divisionId: 'men-doubles', athletes: [man(), man()], doublesShares: { row: 0.65, skierg: 1, sledPush: 0 } });
+    expect(p.doublesShares!.row).toBe(0.65);
+    expect(p.doublesShares!.skierg).toBe(0.8);
+    expect(p.doublesShares!.sledPush).toBe(0.2);
+  });
+
+  it('REGRESSION: defaults to 50/50 on every station; suggestions stay within 30–70%', () => {
+    // User: "it set some of the splits to 0% or 100%, which is not practical… by default split everything 50/50."
+    const strong = man({ bodyweightKg: 105, levels: { ...man().levels, legs: 5, hinge: 5, sled: 5 } });
+    const weak = man({ fiveKSec: 30 * 60, levels: { ...man().levels, legs: 1, hinge: 1, wallBalls: 1 } });
+    const p = predict({ divisionId: 'men-doubles', athletes: [strong, weak] });
+    for (const v of Object.values(p.doublesShares!)) expect(v).toBe(0.5);
+    const s = suggestDoublesShares({ divisionId: 'men-doubles', athletes: [strong, weak] });
+    for (const v of Object.values(s)) {
+      expect(v).toBeGreaterThanOrEqual(0.3);
+      expect(v).toBeLessThanOrEqual(0.7);
+      expect(Math.round(v * 20)).toBeCloseTo(v * 20, 6); // 5% steps
+    }
+    expect(s.sledPush).toBeGreaterThan(0.5);
+  });
+
+  it('REGRESSION: doubles with a strong partner beats your singles time (Roxzone no longer takes the slower partner in full)', () => {
+    // User: "given that my partner is strong, I expect we'd do better in doubles than I would in men's open."
+    const masters = man({ fiveKSec: 21 * 60 + 8, bodyweightKg: 73.5, age: 54, heightCm: 170, experience: 'first', levels: { ...man().levels, transitions: 4 } });
+    const partner = man({ fiveKSec: 24 * 60, heightCm: 201, bodyweightKg: 105, experience: 'first', levels: { ...man().levels, legs: 4, hinge: 4, sled: 4 } });
+    const single = predict({ divisionId: 'men-open', athletes: [masters] });
+    const dbl = predict({ divisionId: 'men-doubles', athletes: [masters, partner] });
+    expect(dbl.total).toBeLessThan(single.total - 60);
+    // Roxzone sits between the two partners, not at the slower one's full singles value.
+    const [a, b] = dbl.solos.map((x) => x.roxzone);
+    expect(dbl.roxzone).toBeLessThan(Math.max(a, b));
+    expect(dbl.roxzone).toBeGreaterThan(Math.min(a, b) * 0.9);
   });
 });
 

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { DEFAULT_RIR, Lift, MAX_LIFT_REPS, RIR_OPTIONS } from '../core/athlete';
+import { FALLBACK } from '../core/fallback-params';
 import { oneRepMax } from '../core/formulas';
 import { LB_PER_KG, Units } from '../core/predictor.store';
 import { NumberInput } from './number-input';
@@ -15,13 +16,14 @@ import { NumberInput } from './number-input';
   template: `
     <div class="lift">
       <app-number-input class="w" [label]="label() + ' (' + units() + ')'" placeholder="—" [value]="lift().kg"
-        [factor]="factor()" [decimals]="units() === 'kg' ? 1 : 0" [units]="units()" (unitsChange)="unitsChange.emit($event)"
+        [factor]="factor()" [decimals]="units() === 'kg' ? 1 : 0" [units]="units()" [range]="ranges.liftKg"
+        [step]="units() === 'kg' ? 2.5 : 5" [start]="60" (unitsChange)="unitsChange.emit($event)"
         (valueChange)="liftChange.emit({ kg: $event })" />
-      <app-number-input class="r" label="Reps" [ariaLabel]="label() + ' reps'" placeholder="1" [value]="lift().reps" [integer]="true"
+      <app-number-input class="r" label="Reps" [ariaLabel]="label() + ' reps'" placeholder="1" [value]="lift().reps" [integer]="true" [range]="ranges.liftReps"
         (valueChange)="onReps($event)" />
       @if (multiRep()) {
         <label class="field effort">
-          <span class="label">How hard was the set?</span>
+          <span class="label">How hard?</span>
           <select [attr.aria-label]="label() + ' effort'" (change)="liftChange.emit({ rir: +$any($event.target).value })">
             @for (o of options; track o.rir) {
               <option [value]="o.rir" [selected]="rir() === o.rir">{{ o.label }}</option>
@@ -33,8 +35,10 @@ import { NumberInput } from './number-input';
     </div>
   `,
   styles: `
-    .lift { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 4px 8px; align-items: end; }
-    .effort { grid-column: 1 / -1; }
+    .lift { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 8px; align-items: end; }
+    .w { grid-column: 1 / -1; }
+    .effort { grid-column: 2; }
+    .effort .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .hint { grid-column: 1 / -1; font-size: 0.78rem; color: var(--text-faint); }
   `,
 })
@@ -47,6 +51,7 @@ export class LiftInput {
   readonly unitsChange = output<Units>();
 
   protected readonly options = RIR_OPTIONS;
+  protected readonly ranges = FALLBACK.ranges;
   protected readonly factor = computed(() => (this.units() === 'kg' ? 1 : LB_PER_KG));
   protected readonly multiRep = computed(() => (this.lift().reps ?? 1) > 1);
   protected readonly rir = computed(() => this.lift().rir ?? DEFAULT_RIR);

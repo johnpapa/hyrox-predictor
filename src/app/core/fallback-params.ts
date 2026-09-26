@@ -44,8 +44,6 @@ export const FALLBACK = {
    * and ~1.1%/yr beyond (approximating WMA age-grading factors).
    */
   ageSlowdown: { from: 35, perYear: 0.007, lateFrom: 55, latePerYear: 0.011 },
-  /** Uth et al. 2004: VO₂max ≈ 15.3 × HRmax / HRrest; HRmax ≈ 208 − 0.7 × age (Tanaka 2001). */
-  uth: { factor: 15.3, hrMaxBase: 208, hrMaxPerYear: 0.7, defaultAge: 35 },
   /** Wearable VO₂max estimates run high vs race-derived VDOT; subtract this many points. */
   watchVo2Offset: 4,
   /**
@@ -61,7 +59,9 @@ export const FALLBACK = {
     erg500: [70, 300], erg1k: [150, 600], erg2k: [330, 1200], erg5k: [900, 2700],
     sled: [30, 15 * 60], bbj: [90, 20 * 60], farmers: [45, 10 * 60], lunges: [90, 20 * 60],
     wallBalls100: [150, 25 * 60], karen: [240, 40 * 60],
-    heightCm: [135, 225], bodyFat: [4, 50], runningKm: [0, 250], otherHours: [0, 30], vo2: [20, 90], restingHr: [30, 110], bodyweightKg: [35, 200],
+    heightCm: [135, 225], bodyFat: [4, 50], runningKm: [0, 250], otherHours: [0, 30], vo2: [20, 90], bodyweightKg: [35, 200],
+    age: [16, 95], deadHang: [1, 600], pullUps: [0, 80], burpees1Min: [1, 60], wallBallsUnbroken: [1, 300],
+    liftKg: [5, 500], liftReps: [1, 15],
   },
 
   // ── Ergs ────────────────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { AthleteProfile, Level } from './athlete';
+import { AthleteProfile, Level, sanitizeRanges } from './athlete';
 import { atLevel, levelOf, resolveAthlete } from './resolve';
 import { PredictInput, Prediction, SoloPrediction, predict } from './predictor';
 import { STATIONS, STATION_IDS, StationId } from './stations';
@@ -247,7 +247,7 @@ const UNKNOWN_HOW: Partial<Record<keyof ReturnType<typeof resolveAthlete>['quali
 
 /** For each unknown ability: how much could the answer move the prediction? */
 function unknownsWorthMeasuring(input: PredictInput, idx: number, base: number): UnknownInput[] {
-  const a = input.athletes[idx];
+  const a = sanitizeRanges(input.athletes[idx]);
   const q = resolveAthlete(a).quality;
   const out: UnknownInput[] = [];
   for (const id of Object.keys(UNKNOWN_HOW) as (keyof typeof UNKNOWN_HOW)[]) {

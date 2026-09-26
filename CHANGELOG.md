@@ -7,11 +7,35 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **− / + steppers on every number and time field.** Press and hold to repeat. Arrow keys step too (Shift × 10), and
+  each field has a sensible step (e.g. 5K ±5 s, bodyweight ±0.5 kg / 1 lb, lifts ±2.5 kg / 5 lb) and starting value.
+  Fields are spinbuttons for screen readers.
+- **Inline validation on every field:** out-of-range entries are flagged on the field ("150 isn't realistic, so it's
+  ignored (expected 16–95)"). Age, dead hang, pull-ups, burpees, unbroken wall balls and lift weights now have model
+  range checks too, so the message is always true.
+
+- **"Used for" on every input:** each field and ability card says which parts of the race it feeds.
+
+### Changed
+- **Doubles start at 50/50** on every station. Sliders stay within 20–80% (nobody does all or none of a station), and
+  **Suggest a split** gives a practical 30–70% plan instead of the old automatic optimiser, which could pick 0% or
+  100%. Team tactics shows which partner sets the running pace, and flags it if that pace is only assumed.
+
+### Removed
+- **Resting heart rate:** too rough to be worth entering (its VO₂max estimate is about ±10%, and it only mattered with
+  no race time and no VO₂max).
+- **"Runs straight after stations":** most people can't answer it reliably.
+
+### Fixed
+- **Doubles could predict slower than your singles time with a strong partner.** The doubles Roxzone took the slower
+  partner's full singles Roxzone. It now sits between the two partners (weighted 60/40 towards the slower) and
+  allows for resting while your partner works. Regression test added.
+- **Typing on a slow phone could rewrite the field**, e.g. "23:" jumping to "23:00" mid-entry, when the page's update
+  for an earlier keystroke arrived late. Fields now ignore late echoes of values they already sent. Component
+  regression tests added.
+
 - **Doubles hand-over tips** in Insights: how often to switch on each station and each partner's share of the work.
-- **Runs straight after stations** (compromised-running practice): a new input that adjusts lap pace and shrinks the
-  first-race penalty.
-- **VO₂max keeps a small, capped weight** even with race times (±1.5% watch, ±4% lab). Resting HR is still unused next
-  to a race (too rough), and the field says so.
+- **VO₂max keeps a small, capped weight** even with race times (±1.5% watch, ±4% lab).
 
 ### Changed
 - **Input weighting review:** self-ratings now move each station by how much it varies in real results (ergs less,

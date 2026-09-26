@@ -178,15 +178,6 @@ const PROFILE_FACTORS: Factor[] = [
     neutral: (a) => ({ ...a, otherTrainingHours: null }),
   },
   {
-    id: 'compromisedRuns',
-    applies: (a) => a.compromisedRuns != null,
-    label: (a) =>
-      ({ never: 'Never run straight after stations', sometimes: 'Some runs straight after stations', weekly: 'Weekly compromised-run practice' })[
-        a.compromisedRuns!
-      ],
-    neutral: (a) => ({ ...a, compromisedRuns: null }),
-  },
-  {
     id: 'runningVolume',
     applies: (a) => a.runningKmPerWeek != null,
     label: (a) => `Weekly running (${Math.round(a.runningKmPerWeek!)} km / ${Math.round(a.runningKmPerWeek! / 1.609)} mi vs typical 25 km)`,

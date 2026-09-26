@@ -22,6 +22,7 @@ const QUALITY_LABEL: Record<Quality, string> = {
         <h3>{{ heading() }}</h3>
         <span class="q" [attr.data-quality]="quality()">{{ qualityLabel() }}</span>
       </header>
+      @if (uses()) { <p class="uses">Used for: <b>{{ uses() }}</b></p> }
       <p class="src">{{ source() }}</p>
       @for (w of warnings(); track w) {
         <p class="warn" role="alert">⚠ {{ w }}</p>
@@ -61,6 +62,8 @@ const QUALITY_LABEL: Record<Quality, string> = {
 })
 export class AbilityCard {
   readonly heading = input.required<string>();
+  /** Which parts of the race this ability feeds, e.g. "Sled Push · Sandbag Lunges". */
+  readonly uses = input('');
   readonly source = input<string>('');
   readonly quality = input<Quality>('assumed');
   readonly anchors = input<string[]>([]);

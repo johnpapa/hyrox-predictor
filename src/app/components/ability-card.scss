@@ -19,6 +19,8 @@ h3 { font-size: 1.1rem; font-weight: 800; }
   &[data-quality='rated'] { color: var(--accent); border-color: var(--accent); }
 }
 .src { margin: 4px 0 12px; font-size: 0.8rem; color: var(--text-dim); }
+.uses { margin: 4px 0 0; font-size: 0.74rem; color: var(--text-faint); text-transform: none; }
+.uses b { color: var(--accent); font-weight: 600; }
 .primary:empty { display: none; }
 .warn { margin: -6px 0 10px; font-size: 0.8rem; color: var(--warn); }
 
