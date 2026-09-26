@@ -6,7 +6,7 @@
  * men's relay 45:43). Bounds are deliberately a little wider than the data so the tests
  * catch unrealistic behaviour without pinning exact numbers.
  */
-import { AthleteProfile, Level, defaultAthlete, emptyLevels, emptyLifts } from './athlete';
+import { AthleteProfile, Level, defaultAthlete, emptyLevels, emptyLifts, migrateAthlete } from './athlete';
 import { DIVISIONS, weightForAthlete } from './divisions';
 import { Prediction, loadMultiplier, predict } from './predictor';
 import { STATION_IDS, StationId } from './stations';
@@ -20,7 +20,6 @@ function athlete(sex: 'male' | 'female', p: Partial<AthleteProfile> & { lv?: Lev
     ...defaultAthlete(sex),
     bodyweightKg: sex === 'male' ? 82 : 65,
     experience: 'some',
-    trainingHours: 6,
     ...rest,
     levels: { ...emptyLevels(), ...(lv ?? {}) },
   };
@@ -41,7 +40,7 @@ const within = (x: number, lo: number, hi: number) => {
 // ─────────────────────────────────────────────────────────────────────────────────────
 describe('realistic personas', () => {
   it('elite engine (VO₂max 70 lab, 15:30 5K): every lap 3:05–4:30, never a 10-minute lap', () => {
-    const a = athlete('male', { fiveKSec: min(15, 30), vo2max: 70, vo2maxSource: 'lab', experience: 'competitive', trainingHours: 14 });
+    const a = athlete('male', { fiveKSec: min(15, 30), vo2max: 70, vo2maxSource: 'lab', experience: 'competitive', runningKmPerWeek: 100, otherTrainingHours: 6 });
     const p = run('men-open', a);
     for (const r of runs(p)) within(r, min(3, 5), min(4, 30));
     within(p.runTotal, min(27), min(34));
@@ -82,7 +81,7 @@ describe('realistic personas', () => {
   });
 
   it('first-timer beginner (35:00 5K, weak everywhere) lands in the 2–3 hour band', () => {
-    const p = run('men-open', athlete('male', { fiveKSec: min(35), experience: 'first', trainingHours: 2, lv: all(1) }));
+    const p = run('men-open', athlete('male', { fiveKSec: min(35), experience: 'first', runningKmPerWeek: 5, otherTrainingHours: 1, lv: all(1) }));
     within(p.total, min(120), min(185));
     for (const r of runs(p)) within(r, min(6, 30), min(11));
     within(st(p, 'wallBalls'), min(8), min(16));
@@ -117,8 +116,8 @@ describe('realistic personas', () => {
   });
 
   it('elite athletes stay just above world records, never below', () => {
-    const man = athlete('male', { fiveKSec: min(15), bodyweightKg: 85, experience: 'competitive', trainingHours: 15, lv: all(5) });
-    const woman = athlete('female', { fiveKSec: min(17), bodyweightKg: 63, experience: 'competitive', trainingHours: 15, lv: all(5) });
+    const man = athlete('male', { fiveKSec: min(15), bodyweightKg: 85, experience: 'competitive', runningKmPerWeek: 100, otherTrainingHours: 8, lv: all(5) });
+    const woman = athlete('female', { fiveKSec: min(17), bodyweightKg: 63, experience: 'competitive', runningKmPerWeek: 100, otherTrainingHours: 8, lv: all(5) });
     within(run('men-pro', man).total, min(51, 59), min(60));
     within(run('women-pro', woman).total, min(55), min(66));
     within(run('men-doubles', man, man).total, min(46), min(55));
@@ -262,7 +261,8 @@ describe('fuzz: random athletes never produce impossible splits', () => {
       bodyweightKg: maybe(45 + rand() * 70),
       age: maybe(18 + Math.round(rand() * 55)),
       experience: pick(['unknown', 'first', 'some', 'experienced', 'competitive'] as const),
-      trainingHours: maybe(Math.round(rand() * 20)),
+      runningKmPerWeek: maybe(Math.round(rand() * 120)),
+      otherTrainingHours: maybe(Math.round(rand() * 12)),
       fiveKSec: rand() < 0.8 ? five : null,
       vo2max: maybe(30 + rand() * 45),
       restingHr: maybe(40 + rand() * 40),
@@ -399,5 +399,65 @@ describe('race times, height and age (research-backed inputs)', () => {
     const older = run('men-open', athlete('male', { fiveKSec: min(21), age: 58 }));
     expect(older.runTotal).toBeCloseTo(young.runTotal, 5);
     within(older.workTotal / young.workTotal, 1.01, 1.05);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+describe('training volume: weekly running distance + other training hours (research-backed)', () => {
+  it('more weekly running ⇒ faster laps, with diminishing returns; unknown is neutral', () => {
+    const lap = (km: number | null) => run('men-open', athlete('male', { fiveKSec: min(22), runningKmPerWeek: km })).avgRun;
+    expect(lap(null)).toBeCloseTo(lap(25), 5); // 25 km/week is the neutral reference
+    expect(lap(10)).toBeGreaterThan(lap(25));
+    expect(lap(64)).toBeLessThan(lap(25));
+    expect(lap(100)).toBeLessThan(lap(64));
+    const first = lap(25) - lap(64);
+    const second = lap(64) - lap(103);
+    expect(second).toBeLessThan(first); // diminishing returns
+    expect(lap(250) / lap(25)).toBeGreaterThan(0.96); // capped (~3%)
+  });
+
+  it('running volume flattens the lap-to-lap fade', () => {
+    const fade = (km: number) => {
+      const r = runs(run('men-open', athlete('male', { fiveKSec: min(22), runningKmPerWeek: km })));
+      return r[2] / r[0];
+    };
+    expect(fade(100)).toBeLessThan(fade(25));
+  });
+
+  it('running volume counts half when a short + long race already measure endurance', () => {
+    const gain = (withMarathon: boolean) => {
+      const base = { fiveKSec: min(22), marathonSec: withMarathon ? 3 * 3600 + 35 * 60 : null };
+      return (
+        run('men-open', athlete('male', { ...base, runningKmPerWeek: 25 })).runTotal -
+        run('men-open', athlete('male', { ...base, runningKmPerWeek: 80 })).runTotal
+      );
+    };
+    expect(gain(true)).toBeLessThan(gain(false) * 0.7);
+  });
+
+  it('other training hours help the stations a little, never the runs', () => {
+    const p0 = run('men-open', athlete('male', { fiveKSec: min(22), otherTrainingHours: 0 }));
+    const p6 = run('men-open', athlete('male', { fiveKSec: min(22), otherTrainingHours: 6 }));
+    expect(p6.runTotal).toBeCloseTo(p0.runTotal, 5);
+    expect(p6.workTotal).toBeLessThan(p0.workTotal);
+    within(p0.workTotal / p6.workTotal, 1.03, 1.07); // ±3% around 3 h, capped
+    const p20 = run('men-open', athlete('male', { fiveKSec: min(22), otherTrainingHours: 20 }));
+    expect(p20.workTotal).toBeCloseTo(p6.workTotal, 5); // capped
+  });
+
+  it('REGRESSION: old saves with one "training hours" number migrate to running km + other hours', () => {
+    const m = migrateAthlete({ sex: 'male', trainingHours: 10 }, 0);
+    expect(m.runningKmPerWeek).toBe(48); // half the hours at ~9.5 km/h
+    expect(m.otherTrainingHours).toBe(5);
+    expect('trainingHours' in m).toBe(false);
+  });
+
+  it('user scenario: 40 mi/week + 5.5 h gym is faster than the same athlete with volume unknown', () => {
+    const base = { fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, bodyweightKg: 73.5, age: 54 };
+    const known = run('men-open', athlete('male', { ...base, runningKmPerWeek: 40 * 1.60934, otherTrainingHours: 5.5 }));
+    const unknown = run('men-open', athlete('male', base));
+    expect(known.total).toBeLessThan(unknown.total);
+    expect(unknown.total - known.total).toBeLessThan(min(3)); // modest, not a new athlete
+    expect(known.high - known.low).toBeLessThan(unknown.high - unknown.low); // more confident
   });
 });

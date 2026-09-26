@@ -101,7 +101,7 @@ test.describe('athlete inputs & fallbacks', () => {
   });
 
   test('typing decimals, pounds, zero and reps works key by key', async ({ app, page }) => {
-    const hours = page.getByLabel('Training hrs / week');
+    const hours = page.getByLabel('Other training (hrs / week)');
     await hours.pressSequentially('7.5', { delay: 30 });
     await expect(hours).toHaveValue('7.5');
     await hours.fill('');

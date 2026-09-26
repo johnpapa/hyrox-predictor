@@ -100,11 +100,24 @@ const RUN_SHAPE = (() => {
 })();
 
 /** Run shape for a given run factor: elites (low factor) pace far more evenly. */
-export function runShapeFor(runFactor: number): number[] {
+export function runShapeFor(runFactor: number, runningKm: number | null = null): number[] {
   const f = PARAMS.runShapeFlatten;
   const t = clamp((runFactor - f.flatAt) / (f.fullAt - f.flatAt), 0, 1);
-  const scale = f.minScale + (1 - f.minScale) * t;
+  const V = PARAMS.runVolumeFlatten;
+  const extra = runningKm == null ? 0 : Math.max(0, runningKm - PARAMS.runFactor.runningVolume.refKm);
+  const scale = (f.minScale + (1 - f.minScale) * t) * (1 - V.maxShare * Math.min(1, extra / V.fullAtExtraKm));
   return RUN_SHAPE.map((x) => 1 + (x - 1) * scale);
+}
+
+/** Run-factor change from weekly running volume (diminishing returns; 0 when unknown). */
+export function runningVolumeAdj(km: number | null, enduranceKnown: boolean): number {
+  if (km == null) return 0;
+  const V = PARAMS.runFactor.runningVolume;
+  const adj =
+    km >= V.refKm
+      ? -V.maxBenefit * (1 - Math.exp(-(km - V.refKm) / V.scaleKm))
+      : V.maxPenalty * ((V.refKm - km) / V.refKm);
+  return enduranceKnown ? adj * V.withEnduranceShare : adj;
 }
 
 /** Self-level × race-craft bonuses are capped so stacked multipliers stay realistic. */
@@ -151,7 +164,6 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
   const heavy = loadMult.sledPush > 1.01;
 
   // Running ────────────────────────────────────────────────────────────────────────
-  const hours = a.trainingHours ?? 6;
   const E = rf.endurance;
   const k0 = r.fiveK.quality === 'measured' ? enduranceExponent(a) : null;
   const enduranceAdj = k0 == null ? 0 : clamp((k0 - E.refExponent) * E.scale, E.min, E.max);
@@ -161,12 +173,12 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
       (rf.per5kMinSlower * (fiveK - rf.ref5kSec[sex])) / 60 +
       rf.experience[a.experience] +
       (heavy ? rf.pro : 0) +
-      clamp(rf.perTrainingHour * (hours - 6), -rf.trainingClamp, rf.trainingClamp),
+      runningVolumeAdj(r.runningKmPerWeek, k0 != null),
     rf.min,
     rf.max,
   );
   const avgRun = (fiveK / 5) * runFactor;
-  const runs = runShapeFor(runFactor).map((s) => avgRun * s);
+  const runs = runShapeFor(runFactor, r.runningKmPerWeek).map((s) => avgRun * s);
 
   // Baseline: median splits of athletes who run at this pace ─────────────────────────
   // Baselines come from the run pace *without* the Pro running penalty: heavier sleds slow
@@ -259,6 +271,14 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
       st[id] *= 1 + clamp(per * tens, -H.cap, H.cap);
     }
   }
+  if (r.otherTrainingHours != null) {
+    const O = PARAMS.otherTraining;
+    const m = clamp(-O.perHour * (r.otherTrainingHours - O.refHours), -O.cap, O.cap);
+    for (const id of STATION_IDS) {
+      if (tested[id]) continue;
+      st[id] *= 1 + (id === 'skierg' || id === 'row' ? m * O.ergShare : m);
+    }
+  }
   const masters = a.age && a.age > 50 ? Math.min(PARAMS.mastersStationCap, (a.age - 50) * PARAMS.mastersStationPerYear) : 0;
   if (masters) for (const id of STATION_IDS) if (!tested[id]) st[id] *= 1 + masters;
 
@@ -336,7 +356,8 @@ export function soloUncertainty(a: AthleteProfile, r: ResolvedAthlete = resolveA
     u += FALLBACK.abilityWeight[id] * FALLBACK.qualityFactor[r.quality[id]];
   }
   if (!r.bodyweightKnown) u += 0.005;
-  if (a.trainingHours == null) u += 0.003;
+  if (r.runningKmPerWeek == null) u += 0.004;
+  if (r.otherTrainingHours == null) u += 0.002;
   if (a.experience === 'first') u += 0.015;
   if (a.experience === 'unknown') u += 0.01;
   if (a.previousHyroxSec) u -= 0.025;
@@ -378,7 +399,7 @@ export function optimalDoublesShare(id: StationId, ta: number, tb: number, pairR
 
 function doublesRun(solo: SoloPrediction): number[] {
   const factor = 1 + (solo.runFactor - 1) * PARAMS.doubles.runCompromiseShare;
-  return runShapeFor(factor).map((s) => (solo.fiveKSec / 5) * factor * s * solo.calibration);
+  return runShapeFor(factor, solo.resolved.runningKmPerWeek).map((s) => (solo.fiveKSec / 5) * factor * s * solo.calibration);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────

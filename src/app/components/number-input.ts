@@ -14,11 +14,11 @@ let nextId = 0;
       <div class="lab-row">
         <label class="label" [for]="id">{{ label() }}</label>
         @if (units(); as u) {
-          <span class="units" role="group" aria-label="Weight units">
-            <button type="button" [class.on]="u === 'kg'" [attr.aria-pressed]="u === 'kg'" aria-label="Kilograms"
-              (click)="unitsChange.emit('kg')">kg</button>
-            <button type="button" [class.on]="u === 'lb'" [attr.aria-pressed]="u === 'lb'" aria-label="Pounds"
-              (click)="unitsChange.emit('lb')">lb</button>
+          <span class="units" role="group" aria-label="Units">
+            <button type="button" [class.on]="u === 'kg'" [attr.aria-pressed]="u === 'kg'" [attr.aria-label]="unitNames()[0]"
+              (click)="unitsChange.emit('kg')">{{ unitLabels()[0] }}</button>
+            <button type="button" [class.on]="u === 'lb'" [attr.aria-pressed]="u === 'lb'" [attr.aria-label]="unitNames()[1]"
+              (click)="unitsChange.emit('lb')">{{ unitLabels()[1] }}</button>
           </span>
         }
       </div>
@@ -67,6 +67,9 @@ export class NumberInput {
   /** When set, shows an inline kg/lb switch (weights only). */
   readonly units = input<'kg' | 'lb' | null>(null);
   readonly unitsChange = output<'kg' | 'lb'>();
+  /** Button text / accessible names for the metric and imperial options. */
+  readonly unitLabels = input<[string, string]>(['kg', 'lb']);
+  readonly unitNames = input<[string, string]>(['Kilograms', 'Pounds']);
 
   protected readonly invalid = linkedSignal(() => false);
 

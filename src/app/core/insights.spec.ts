@@ -10,7 +10,6 @@ const ath = (sex: 'male' | 'female', p: Partial<AthleteProfile> & { lv?: Partial
     fiveKSec: sex === 'male' ? 23 * 60 : 25 * 60,
     bodyweightKg: sex === 'male' ? 82 : 65,
     experience: 'some',
-    trainingHours: 6,
     ...rest,
     levels: { ...emptyLevels(), ...(lv ?? {}) } as AthleteProfile['levels'],
   };

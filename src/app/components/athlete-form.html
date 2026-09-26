@@ -61,8 +61,12 @@
           }
         </select>
       </label>
-      <app-number-input label="Training hrs / week" [value]="ath.trainingHours" [allowZero]="true"
-        (valueChange)="patch({ trainingHours: $event })" />
+      <app-number-input [label]="unit() === 'kg' ? 'Weekly running (km)' : 'Weekly running (mi)'" [value]="ath.runningKmPerWeek"
+        [factor]="unit() === 'kg' ? 1 : 0.621371" [decimals]="0" [allowZero]="true" [units]="unit()"
+        [unitLabels]="['km', 'mi']" [unitNames]="['Kilometres', 'Miles']" (unitsChange)="store.units.set($event)"
+        hint="Your usual week, all runs" (valueChange)="patch({ runningKmPerWeek: $event })" />
+      <app-number-input label="Other training (hrs / week)" [value]="ath.otherTrainingHours" [allowZero]="true"
+        hint="Gym, HYROX classes, erg or sled work" (valueChange)="patch({ otherTrainingHours: $event })" />
     </div>
   </fieldset>
 
