@@ -39,10 +39,12 @@ marathon counts least. A short plus a long race also tells it how well you hold 
 
 ![Running](tutorial/04-running.png)
 
-## 4. Strength: any lift, any reps
+## 4. Strength: your usual working set is enough
 
-Enter a back squat or deadlift as weight × reps, and the app estimates your 1RM. No squat? A front squat, deadlift,
-trap-bar, Romanian deadlift or leg press is converted for you.
+No max test needed. Enter the weight and reps of the set you usually do (e.g. 3 × 10), then pick **How hard was the
+set?**: to failure, 1–2 reps left (the default), 3–4 left or 5+ left. The app adds the reps you had left and estimates
+your 1RM (60 kg × 10 with 1–2 left ≈ 83 kg). No squat? A front squat, deadlift, trap-bar, Romanian deadlift or leg press
+is converted for you.
 
 ![Lift with reps](tutorial/05-lift-reps.png)
 
@@ -84,9 +86,13 @@ Roxzone Time, Run Total, Work Total and Overall Time. At the top you get a likel
 
 ## 8b. Read your Insights
 
-Under the results, **Insights** compares each station with athletes who run at your pace on the same weights. It shows
-your biggest limiters and strengths. **Tap a station to see why** it differs (for example: lighter bodyweight +0:33,
-first race +0:17), and read the **main reasons overall** above the bars. Then:
+Under the results, **Your build and background** shows what your bodyweight, body fat, height, age, first race, weekly
+running and other training do to your finish time (for example: 40 mi/week −1:41, age 54 +0:29).
+
+**Vs. athletes like you** then compares each station with athletes who share all of that, plus your race times, but are
+typical on everything trainable. It shows your biggest limiters and strengths. **Tap a station to see why** it differs
+(for example: wall balls, 20 unbroken +1:36; deadlift 1RM ≈ 85 kg vs ≈ 154 kg for athletes like you), and read the
+**main reasons overall** above the bars. Then:
 - **Realistic gains in 8–12 weeks:** only for things you actually entered or rated, sized for your level and age (a
   well-trained 54-year-old gets about 1% on the 5K, not "a minute faster"). Each one re-runs the whole prediction.
 - **Worth measuring:** anything you left on "Not sure", ranked by how much the answer could move your finish time. The

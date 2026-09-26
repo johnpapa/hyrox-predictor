@@ -7,6 +7,24 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Working-set lifts:** enter your usual set (weight × reps) and **How hard was the set?** (to failure, 1–2, 3–4 or 5+
+  reps left). Reps in reserve are added before the Epley 1RM estimate (capped at 15 reps to failure). Realistic
+  strength gains are shown as working sets too.
+- **Your build and background** (Insights): what bodyweight, body fat, height, age, first race, weekly running and other
+  training do to your finish time.
+
+### Changed
+- **Insights compare with "athletes like you"** instead of "athletes who run like you": the comparison athlete shares
+  your sex, age, height, weight, body fat, experience, race times and training volume and is typical only on trainable
+  abilities, so the bars show only what training can change. Strength reasons show your estimated 1RM against the one
+  assumed for athletes like you.
+- "Worth measuring" asks for a squat or deadlift working set instead of a heavy test.
+
+### Fixed
+- The "why" breakdown could credit a below-typical squat as faster when a deadlift was also entered (the cleared squat
+  was re-estimated from the deadlift). It now resets to the comparison athlete's value. Regression test added.
+
+### Added
 - AI-ready repo configuration:
   - `AGENTS.md`;
   - `.github/copilot-instructions.md` with a maintenance matrix;

@@ -1,4 +1,4 @@
-import { AbilityId, AthleteProfile, Level, LiftId } from './athlete';
+import { AbilityId, AthleteProfile, Level, LiftId, RIR_OPTIONS } from './athlete';
 import { Sex } from './divisions';
 import { oneRepMax, paulsLaw, raceTimeFromVdot, riegel } from './formulas';
 import { FALLBACK } from './fallback-params';
@@ -226,12 +226,14 @@ function resolveErg(
 
 function liftRM(a: AthleteProfile, id: LiftId): number | null {
   const l = a.lifts[id];
-  return l && pos(l.kg) ? oneRepMax(l.kg, l.reps) : null;
+  return l && pos(l.kg) ? oneRepMax(l.kg, l.reps, l.rir) : null;
 }
 
 function repsText(a: AthleteProfile, id: LiftId): string {
   const l = a.lifts[id];
-  return l.reps && l.reps > 1 ? `${fmtKg(l.kg!)} × ${l.reps}` : fmtKg(l.kg!);
+  if (!l.reps || l.reps <= 1) return fmtKg(l.kg!);
+  const left = l.rir ? ` (${RIR_OPTIONS.find((o) => o.rir === l.rir)?.label.match(/\((.*)\)/)?.[1] ?? `${l.rir} left`})` : '';
+  return `${fmtKg(l.kg!)} × ${l.reps}${left}`;
 }
 
 function resolveSquat(a: AthleteProfile, bw: number): Resolved {

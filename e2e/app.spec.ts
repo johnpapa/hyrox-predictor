@@ -177,6 +177,10 @@ test.describe('athlete inputs & fallbacks', () => {
 
     await legs.getByLabel('Back squat (kg)').fill('100');
     await legs.getByLabel('Back squat reps').fill('5');
+    // Default effort is "Hard (1–2 left)": 5 reps + 1.5 in reserve.
+    await expect(legs.getByLabel('Back squat effort')).toHaveValue('1.5');
+    await expect(legs).toContainText('Est. 1RM 122 kg');
+    await legs.getByLabel('Back squat effort').selectOption({ label: 'To failure (0 left)' });
     await expect(legs).toContainText('Est. 1RM 117 kg');
     await expect(legs.locator('.q')).toHaveText('Measured');
     await expect(legs.locator('.ignored')).toBeVisible(); // rating overridden by numbers
@@ -187,6 +191,20 @@ test.describe('athlete inputs & fallbacks', () => {
     await app.card('Pulling strength').getByLabel('Trap-bar deadlift (kg)').fill('162');
     await expect(legs.locator('.src')).toContainText('from trap-bar deadlift');
     await expect(app.card('Pulling strength').locator('.src')).toContainText('from trap-bar deadlift');
+  });
+
+  test('REGRESSION: a usual working set (no max test) estimates the 1RM from reps left in reserve', async ({ app, page }) => {
+    // User: "I never do my max... three sets of about 8 to 12 reps."
+    await page.getByRole('button', { name: 'LB', exact: true }).click();
+    const pull = app.card('Pulling strength');
+    await expect(pull).toContainText('Your usual working set is fine');
+    await expect(pull.getByLabel('Deadlift effort', { exact: true })).toHaveCount(0); // singles don't ask
+    await pull.getByLabel('Deadlift (lb)', { exact: true }).fill('135');
+    await pull.getByLabel('Deadlift reps', { exact: true }).fill('10');
+    await expect(pull).toContainText('Est. 1RM 187 lb');
+    await expect(pull.locator('.src')).toContainText('× 10 (1–2 left)');
+    await pull.getByLabel('Deadlift effort', { exact: true }).selectOption({ label: 'Easy (5+ left)' });
+    await expect(pull).toContainText(/Est\. 1RM 20[23] lb/); // 15.5 reps to failure, capped at 15
   });
 
   test('kg / lb toggle converts displayed weights', async ({ page }) => {
@@ -285,7 +303,7 @@ test.describe('results board', () => {
     // Keep the in-app methodology in sync with the model (see CLAUDE.md rule 5).
     const body = page.locator('app-methodology .body');
     for (const phrase of ['5K, 10K, half marathon, marathon', 'Weekly running distance', 'mostly fitness, not inexperience',
-      'Other training hours', 'Insights', 'Simulator']) {
+      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed']) {
       await expect(body).toContainText(phrase);
     }
   });

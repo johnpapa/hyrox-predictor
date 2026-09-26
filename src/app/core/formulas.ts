@@ -1,12 +1,16 @@
 /** Standard sports-science conversions used to fill in missing benchmarks. */
 
 /**
- * Estimated 1RM from a rep set. Epley for ≤10 reps; beyond ~10 reps every formula loses
- * accuracy, so reps are capped at 12.
+ * Estimated 1RM from a rep set (Epley). For a set that stopped short of failure, the reps left
+ * in reserve are added ("reps to failure" = reps + RIR; Helms et al. 2016, Zourdos et al. 2016).
+ * Singles are taken as the 1RM. Beyond ~10 reps to failure every formula loses accuracy, so the
+ * total is capped at 15.
  */
-export function oneRepMax(kg: number, reps: number | null | undefined): number {
-  const r = Math.min(12, Math.max(1, Math.round(reps ?? 1)));
-  return r === 1 ? kg : kg * (1 + r / 30);
+export function oneRepMax(kg: number, reps: number | null | undefined, rir: number | null | undefined = 0): number {
+  const r = Math.max(1, Math.round(reps ?? 1));
+  if (r === 1) return kg;
+  const toFailure = Math.min(15, r + Math.max(0, rir ?? 0));
+  return kg * (1 + toFailure / 30);
 }
 
 /** Riegel race-time equivalence: T2 = T1 · (D2 / D1)^1.06. */

@@ -116,8 +116,8 @@ test.describe('honest suggestions & height (user feedback)', () => {
   test('REGRESSION: "Not sure" strength shows as worth measuring, never as a made-up kg target', async ({ page }) => {
     await page.getByLabel('5K', { exact: true }).fill('21:08');
     const panel = page.locator('app-insights-panel');
-    await expect(panel.locator('.unknowns')).toContainText('Test your deadlift');
-    await expect(panel.locator('.unknowns')).toContainText('Test your squat');
+    await expect(panel.locator('.unknowns')).toContainText('Enter a deadlift working set');
+    await expect(panel.locator('.unknowns')).toContainText('Enter a squat working set');
     await expect(panel.locator('.whatifs')).not.toContainText('kg');
   });
 
@@ -156,12 +156,33 @@ test.describe('insights: why each station differs', () => {
     await page.getByLabel('Max unbroken wall balls').fill('20');
     const panel = page.locator('app-insights-panel');
     await expect(panel.locator('.why-all')).toContainText('Wall-ball capacity (20 unbroken');
-    const sled = panel.getByRole('button', { name: /Sled Push .* show why/ });
-    await sled.click();
-    await expect(sled).toHaveAttribute('aria-expanded', 'true');
-    await expect(panel.locator('.bar-item.open .why')).toContainText('Lighter bodyweight');
-    await sled.click();
+    const wb = panel.getByRole('button', { name: /Wall Balls .* show why/ });
+    await wb.click();
+    await expect(wb).toHaveAttribute('aria-expanded', 'true');
+    await expect(panel.locator('.bar-item.open .why')).toContainText('20 unbroken');
+    await wb.click();
     await expect(panel.locator('.bar-item.open')).toHaveCount(0);
+  });
+
+  test('REGRESSION: compares with athletes like you; build and background are shown separately', async ({ app, page }) => {
+    // User: "It should be versus athletes like you taking into account my height, my weight,
+    // my running times, my age, everything overall."
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('Bodyweight (kg)').fill('73.5');
+    await page.getByLabel('Age', { exact: true }).fill('54');
+    const panel = page.locator('app-insights-panel');
+    await expect(panel.getByRole('heading', { name: 'Vs. athletes like you' })).toBeVisible();
+    await expect(panel).toContainText('share your sex, age, height, weight');
+    // Bodyweight no longer makes the sled look slower; it is listed under build instead.
+    await expect(panel.getByRole('button', { name: /Sled Push ±0:00/ })).toBeDisabled();
+    await expect(panel.locator('.profile')).toContainText('Lighter bodyweight');
+    await expect(panel.locator('.profile')).toContainText('Age 54');
+    // A deadlift working set shows up with a strength comparison.
+    await app.card('Pulling strength').getByLabel('Deadlift (kg)', { exact: true }).fill('60');
+    await app.card('Pulling strength').getByLabel('Deadlift reps', { exact: true }).fill('10');
+    const pull = panel.getByRole('button', { name: /Sled Pull .* show why/ });
+    await pull.click();
+    await expect(panel.locator('.bar-item.open .why')).toContainText('for athletes like you');
   });
 });
 
@@ -178,6 +199,6 @@ test.describe('age group & body fat', () => {
     await page.getByLabel('5K', { exact: true }).fill('21:08');
     await page.getByLabel('Body fat (%)').fill('14');
     await expect(app.card('Leg strength').locator('.src')).toContainText('lean mass at 14% body fat');
-    await expect(page.locator('app-insights-panel .why-all')).toContainText('Body fat 14%');
+    await expect(page.locator('app-insights-panel .profile')).toContainText('Body fat 14%');
   });
 });

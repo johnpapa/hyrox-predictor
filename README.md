@@ -35,7 +35,8 @@ you can play back.
 - **Relay:** tune all four athletes. The fastest leg order is chosen automatically, or you can set it.
 - **Lock in known splits:** tap any station time to override it.
 - **Insights:**
-  - Limiters and strengths compared with athletes who run at your pace.
+  - Limiters and strengths compared with **athletes like you** (same build, age, experience, race times and training
+    volume), plus what your build and background do to your time.
   - Realistic 8–12 week gains, only for what you entered, sized by level and age.
   - "Worth measuring" for unknowns, showing how much each could swing your time.
   - Practical technique tips, running and race-day pacing notes.

@@ -1,4 +1,4 @@
-import { AbilityId, AthleteProfile, hyroxAgeGroup } from './athlete';
+import { AbilityId, AthleteProfile, hyroxAgeGroup, peerProfile } from './athlete';
 import { FALLBACK } from './fallback-params';
 import { ResolvedAthlete, resolveAthlete } from './resolve';
 import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, nativeOpenDivision, weightForAthlete } from './divisions';
@@ -27,7 +27,10 @@ export interface SoloPrediction {
   calibration: number;
   /** Where every input came from (measured / converted / rated / assumed). */
   resolved: ResolvedAthlete;
-  /** What a typical athlete who runs at this pace does on each station (same loads). */
+  /**
+   * What an athlete like you does on each station (same loads): same sex, age, height, weight,
+   * body fat, experience, race times and training volume, typical on every trainable ability.
+   */
   typical: StationTimes;
   typicalRoxzone: number;
   /** Typical max unbroken wall balls for this level (race ball). */
@@ -164,7 +167,7 @@ function strengthClamp(x: number): number {
 // Solo model
 // ─────────────────────────────────────────────────────────────────────────────────────
 
-export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPrediction {
+export function predictSolo(a: AthleteProfile, division: DivisionInfo, withPeer = true): SoloPrediction {
   // A previous result is a singles time on the athlete's own weights: calibrate against that race.
   const calibration = previousResultCalibration(a);
   const sex = a.sex;
@@ -322,6 +325,9 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     roxzone *= calibration;
   }
 
+  // Comparison athlete: you, minus everything trainable (scaled by the same calibration) ──
+  const peer = withPeer ? predictSolo(peerProfile(a), division, false) : null;
+
   return {
     runs,
     stations: st,
@@ -331,8 +337,10 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     uncertainty: soloUncertainty(a, r),
     calibration,
     resolved: r,
-    typical: Object.fromEntries(STATION_IDS.map((id) => [id, base[id] * loadMult[id] * calibration])) as StationTimes,
-    typicalRoxzone: band.roxzone * calibration,
+    typical: peer
+      ? (Object.fromEntries(STATION_IDS.map((id) => [id, peer.stations[id] * calibration])) as StationTimes)
+      : { ...st },
+    typicalRoxzone: peer ? peer.roxzone * calibration : roxzone,
     typicalWallBallsUnbroken: band.wbUnbroken / Math.pow(loadMult.wallBalls, PARAMS.wallBallsLoadUnbrokenExp),
     total: sum(runs) + sum(STATION_IDS.map((id) => st[id])) + roxzone,
   };
@@ -362,7 +370,7 @@ export function enduranceExponent(a: AthleteProfile): number | null {
 function previousResultCalibration(a: AthleteProfile): number {
   const prev = a.previousHyroxSec;
   if (!prev || !isFinite(prev) || prev < 40 * 60 || prev > 4 * 3600) return 1;
-  const native = predictSolo({ ...a, previousHyroxSec: null }, nativeOpenDivision(a.sex)).total;
+  const native = predictSolo({ ...a, previousHyroxSec: null }, nativeOpenDivision(a.sex), false).total;
   return clamp(1 + PARAMS.previousResultWeight * (prev / native - 1), 0.75, 1.3);
 }
 

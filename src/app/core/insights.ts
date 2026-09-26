@@ -8,13 +8,14 @@ import { loadMultiplier } from './predictor';
 import { bandForSplit, bandForWork, bandIndex } from './split-tables';
 import { FALLBACK } from './fallback-params';
 import { Tip, tipsFor } from './tips';
-import { GapExplanation, explainGaps } from './explain';
+import { GapExplanation, Reason, explainGaps, profileEffects } from './explain';
 export type { Tip } from './tips';
 
 /**
- * Deterministic "Insights": where an athlete gains or loses time versus athletes who run at
- * the same pace, and which single improvements would save the most time (by re-running the
- * model). No AI, no network — everything is computed from the prediction model.
+ * Deterministic "Insights": where an athlete gains or loses time versus athletes like them
+ * (same build, age, experience, race times and training volume; see `peerProfile`), what their
+ * build and background do to their time, and which single improvements would save the most
+ * time (by re-running the model). No AI, no network — everything comes from the model.
  */
 
 export interface StationGap {
@@ -46,8 +47,10 @@ export interface Insights {
   /** Unknown abilities, ranked by how much measuring them could change the prediction. */
   unknowns: UnknownInput[];
   tips: Tip[];
-  /** Why each station differs from athletes who run like you (per input). */
+  /** Why each station differs from athletes like you (per trainable input). */
   explanation: GapExplanation;
+  /** What your build and background do to your finish time vs. an average athlete with your race times. */
+  profile: Reason[];
   /** Whether masters (50+) scaling was applied to the realistic gains. */
   masters: boolean;
   running: { runFactorPct: number; typicalPct: number; note: string; comparison: string | null };
@@ -129,6 +132,17 @@ function realisticGains(a: AthleteProfile): Candidate[] {
     if (!known(id)) return;
     const pct = realisticStrengthGain(value, r.bodyweightKg, perBw);
     const measured = q[id] !== 'rated';
+    const set = a.lifts[lift];
+    if (set.kg && (set.reps ?? 1) > 1) {
+      // Entered as a working set: talk in working sets too (same reps and effort, more weight).
+      out.push({
+        id,
+        label: `Build your ${name}`,
+        detail: `Working set ${kgText(set.kg)} × ${set.reps} → ${kgText(set.kg * (1 + pct))} × ${set.reps} (+${Math.round(pct * 100)}%)`,
+        apply: (x) => ({ ...x, lifts: { ...x.lifts, [lift]: { ...x.lifts[lift], kg: set.kg! * (1 + pct) } } }),
+      });
+      return;
+    }
     out.push({
       id,
       label: `Build your ${name}`,
@@ -220,8 +234,8 @@ export interface UnknownInput {
 
 const UNKNOWN_HOW: Partial<Record<keyof ReturnType<typeof resolveAthlete>['quality'], [string, string]>> = {
   run: ['Run a 5K time trial', 'Or enter a recent 10K, half or marathon.'],
-  legs: ['Test your squat', 'A heavy set of 3–5 reps is enough; the app estimates your 1RM.'],
-  hinge: ['Test your deadlift', 'A heavy set of 3–5 reps, or a trap-bar deadlift.'],
+  legs: ['Enter a squat working set', 'No max needed: your usual set (e.g. 3 × 10) and how many reps you had left.'],
+  hinge: ['Enter a deadlift working set', 'Your usual set (e.g. 3 × 8), or a trap-bar deadlift; no max test needed.'],
   grip: ['Time a dead hang', 'Or count your max pull-ups.'],
   burpees: ['Count burpees in 1 minute', 'Chest to floor, full stand.'],
   wallBalls: ['Find your max unbroken wall balls', 'With your race ball and target.'],
@@ -313,15 +327,19 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   const name = a.name?.trim() || `Athlete ${idx + 1}`;
   const who = prediction.solos.length > 1 ? `${name}: ` : '';
   const headline = limiters[0]
-    ? `${who}Biggest opportunity is ${limiters[0].name} (${formatTime(limiters[0].gap)} slower than athletes who run like you).`
-    : `${who}Well balanced. No station is slower than athletes who run like you.`;
+    ? `${who}Biggest opportunity is ${limiters[0].name} (${formatTime(limiters[0].gap)} slower than athletes like you).`
+    : `${who}Well balanced. No station is slower than athletes like you.`;
 
   running.comparison = comparison;
-  if (limiters.some((l) => l.id === 'roxzone') && a.experience === 'first' && !a.levels.transitions) {
-    running.note += ' Roxzone time includes a first-race allowance (+15%); rate your transitions to replace it.';
+  if (a.experience === 'first' && !a.levels.transitions) {
+    running.note += ' Your Roxzone includes a first-race allowance (+15%); rate your transitions to replace it.';
   }
   const unknowns = unknownsWorthMeasuring(input, idx, prediction.total);
   const tips = tipsFor(limiters.map((l) => l.id), a.experience === 'first' || a.experience === 'unknown');
   const explanation = explainGaps(a, prediction.division);
-  return { athleteIndex: idx, headline, limiters, strengths, whatIfs, unknowns, tips, explanation, masters: (a.age ?? 0) >= 50, running, pacing };
+  const profile = profileEffects(a, prediction.division);
+  return {
+    athleteIndex: idx, headline, limiters, strengths, whatIfs, unknowns, tips, explanation, profile,
+    masters: (a.age ?? 0) >= 50, running, pacing,
+  };
 }

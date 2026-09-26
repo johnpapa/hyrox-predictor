@@ -208,3 +208,27 @@ A fit, high-volume first-timer now pays about +0.02; a low-volume first-timer ab
   times (ρ = +0.67, n = 11).
 - **VO₂max and resting heart rate** stay fallbacks. With race times present they are shown as a cross-check, because
   race times are the more direct measure and VO₂max did not predict station time in Brandt 2025 (ρ = −0.11).
+
+## Athletes like you, and working-set lifts (Sept 2026)
+
+**Comparison baseline.** Insights used to compare each station with the median finisher at your lap pace. That mixed
+fixed traits (a light 54-year-old is slower on sleds than an 82 kg 35-year-old at the same pace) with trainable ones,
+so almost every bar looked "slower" for a light, older runner. The comparison athlete (`peerProfile` in
+`core/athlete.ts`) now shares sex, age, height, bodyweight, body fat, experience, race times, VO₂max, resting HR,
+weekly running and other training, and is "Not sure" on every trainable ability (lifts, ergs, station tests,
+self-ratings). Fixed traits are reported separately (`profileEffects` in `core/explain.ts`) as effects on the finish
+time versus an average athlete with the same race times. Muscle mass is represented through bodyweight × lean-mass
+fraction (body fat) and, when entered, lifts.
+
+**Typical strength.** The assumed "typical" strength is 1.5× bodyweight squat and 2.0× bodyweight deadlift for men
+(1.25× / 1.25× for women), scaled by lean mass. These are close to the StrengthLevel.com "intermediate" standards (the
+median of lifters who log their lifts). They are not reduced for age: the station model already applies a masters
+allowance from 50.
+
+**Working sets and reps in reserve.** Most recreational lifters never test a 1RM. Reps in reserve (RIR) is a validated
+way to rate a submaximal set: trained lifters predict their RIR within about one rep, and accuracy is best close to
+failure (Zourdos et al. 2016; Helms et al. 2016; Halperin et al. 2022 meta-analysis). Estimated 1RM =
+weight × (1 + (reps + RIR) / 30) (Epley, with reps to failure = reps + RIR). The choices map to RIR 0, 1.5, 3.5 and
+5.5; the default "1–2 left" matches typical hypertrophy-style sets of 3 × 8–12. Rep-based estimates lose accuracy
+beyond about 10 reps to failure (LeSuer et al. 1997; Reynolds et al. 2006), so the total is capped at 15. Isolation
+lifts like biceps curls are not used: they don't predict sled, carry or lunge performance.

@@ -12,7 +12,15 @@ describe('formulas', () => {
   it('Epley 1RM', () => {
     expect(oneRepMax(100, 1)).toBe(100);
     expect(oneRepMax(100, 5)).toBeCloseTo(116.7, 1);
-    expect(oneRepMax(100, 30)).toBeCloseTo(140, 1); // capped at 12 reps
+    expect(oneRepMax(100, 30)).toBeCloseTo(150, 1); // capped at 15 reps to failure
+  });
+  it('working sets: reps left in reserve count toward the 1RM estimate (user: "I never do my max")', () => {
+    // 60 kg × 10 with 1–2 reps left ≈ 11.5 reps to failure.
+    expect(oneRepMax(60, 10, 1.5)).toBeCloseTo(60 * (1 + 11.5 / 30), 5);
+    expect(oneRepMax(60, 10, 1.5)).toBeGreaterThan(oneRepMax(60, 10, 0));
+    // A single is taken as the max whatever the effort; totals are capped at 15.
+    expect(oneRepMax(100, 1, 5.5)).toBe(100);
+    expect(oneRepMax(100, 12, 5.5)).toBeCloseTo(150, 5);
   });
   it('Riegel', () => expect(riegel(50 * 60, 10000, 5000)).toBeCloseTo(1439, 0));
   it("Paul's law: 2k → 1k is 5 s/500 m faster", () => expect(paulsLaw(480, 2000, 1000)).toBeCloseTo(230, 5));
