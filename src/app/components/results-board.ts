@@ -174,6 +174,12 @@ export class ResultsBoard {
     return '';
   }
 
+  /** Half-width of the likely range as a percentage of the predicted time. */
+  protected readonly rangePct = computed(() => {
+    const p = this.p();
+    return Math.round(((p.high - p.low) / 2 / p.total) * 100);
+  });
+
   protected topLabel(): string {
     const t = this.p().topPercent;
     if (t == null) return 'n/a for this division';

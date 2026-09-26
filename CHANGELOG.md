@@ -23,6 +23,7 @@ All notable changes to this project are documented here. The format follows
 
 - The first-race lap penalty is now mostly explained by fitness: a small pacing allowance for everyone, plus an
   unfamiliarity part that shrinks with running volume, durable race times and regular gym/HYROX training.
+- Labelled the low–high bar under the clock as **"Likely range ±X%"**, with a tooltip explaining what sets its width.
 - Rewrote the in-app "How the prediction works" section to match the current model: race blend, training volume,
   first race vs. fitness, height, age, guard rails, Insights and Simulator.
 

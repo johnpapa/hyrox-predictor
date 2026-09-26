@@ -8,6 +8,8 @@ test.describe('first visit', () => {
       await expect(page.locator('.totals')).toContainText(label);
     }
     expect(await app.confidencePct()).toBeGreaterThan(12);
+    // The low–high bar is labelled so its meaning is clear (user question), and matches the confidence panel.
+    await expect(page.locator('app-results-board .range-label')).toHaveText(/Likely range ±\d+%/);
     await expect(app.card('Running').locator('.q')).toHaveText('Assumed');
     await expect(app.card('Running').locator('.src')).toContainText('enter a run time');
   });
@@ -81,6 +83,14 @@ test.describe('divisions', () => {
 });
 
 test.describe('athlete inputs & fallbacks', () => {
+  test('the likely range narrows as benchmarks are added', async ({ page }) => {
+    const pct = async () => Number((await page.locator('app-results-board .range-label').textContent())!.replace(/\D/g, ''));
+    const before = await pct();
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('Max unbroken wall balls').fill('40');
+    expect(await pct()).toBeLessThan(before);
+  });
+
   test('entering a 5K updates the prediction and marks running as measured', async ({ app, page }) => {
     const before = await app.confidencePct();
     await page.getByLabel('5K', { exact: true }).fill('19:30');
