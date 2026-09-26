@@ -1,5 +1,5 @@
 import { AthleteProfile, Level } from './athlete';
-import { atLevel, resolveAthlete } from './resolve';
+import { atLevel, levelOf, resolveAthlete } from './resolve';
 import { PredictInput, Prediction, SoloPrediction, predict } from './predictor';
 import { STATIONS, STATION_IDS, StationId } from './stations';
 import { formatTime } from './time';
@@ -7,6 +7,8 @@ import { weightForAthlete } from './divisions';
 import { loadMultiplier } from './predictor';
 import { bandForSplit, bandForWork, bandIndex } from './split-tables';
 import { FALLBACK } from './fallback-params';
+import { Tip, tipsFor } from './tips';
+export type { Tip } from './tips';
 
 /**
  * Deterministic "Insights": where an athlete gains or loses time versus athletes who run at
@@ -38,7 +40,13 @@ export interface Insights {
   headline: string;
   limiters: StationGap[];
   strengths: StationGap[];
+  /** Realistic improvements (8–12 weeks) for abilities the athlete told us about. */
   whatIfs: WhatIf[];
+  /** Unknown abilities, ranked by how much measuring them could change the prediction. */
+  unknowns: UnknownInput[];
+  tips: Tip[];
+  /** Whether masters (50+) scaling was applied to the realistic gains. */
+  masters: boolean;
   running: { runFactorPct: number; typicalPct: number; note: string; comparison: string | null };
   pacing: string[];
 }
@@ -58,79 +66,180 @@ export function stationGaps(solo: SoloPrediction): StationGap[] {
   return gaps;
 }
 
-/** Candidate single improvements for one athlete; each returns a modified profile. */
-function improvements(a: AthleteProfile, solo: SoloPrediction): { id: string; label: string; detail: string; apply: (x: AthleteProfile) => AthleteProfile }[] {
+type Candidate = { id: string; label: string; detail: string; apply: (x: AthleteProfile) => AthleteProfile };
+
+const G = () => FALLBACK.realisticGains;
+
+/** Masters athletes adapt more slowly (research: roughly 30–50% smaller gains over 50–60). */
+function ageScale(age: number | null): number {
+  if (age == null) return 1;
+  return age >= 60 ? G().masters60 : age >= 50 ? G().masters50 : 1;
+}
+
+/** Realistic 5K improvement fraction for an 8–12 week block, by current level. */
+export function realisticRunGain(fiveKSec: number, sex: 'male' | 'female', age: number | null): number {
+  const lvl = levelOf(FALLBACK.fiveKByLevel[sex], fiveKSec); // 1 (slow) … 5 (fast)
+  return atLevel(G().fiveKPctByLevel, lvl) * ageScale(age);
+}
+
+/** Realistic strength improvement fraction, by current strength relative to bodyweight standards. */
+export function realisticStrengthGain(kg: number, bw: number, perBw: readonly number[]): number {
+  // Research: older lifters gain similar percentages, so no age scaling here.
+  return atLevel(G().strengthPctByLevel, levelOf(perBw, kg / bw));
+}
+
+const kgText = (kg: number) => `${Math.round(kg)} kg (${Math.round(kg * 2.20462)} lb)`;
+
+/**
+ * Improvements the athlete could realistically make in 8–12 weeks, only for abilities they
+ * actually told us about (measured, estimated from another test, or self-rated). Unknown
+ * abilities are handled separately as "worth measuring", never with invented numbers.
+ */
+function realisticGains(a: AthleteProfile): Candidate[] {
   const r = resolveAthlete(a);
-  const out: { id: string; label: string; detail: string; apply: (x: AthleteProfile) => AthleteProfile }[] = [];
-  const fiveK = r.fiveK.value;
-  out.push({
-    id: 'run',
-    label: 'Run a 5K 1:00 faster',
-    detail: `${formatTime(fiveK - 60)} instead of ${formatTime(fiveK)}`,
-    apply: (x) => ({ ...x, fiveKSec: fiveK - 60, tenKSec: null, mileSec: null, halfMarathonSec: null }),
-  });
-  const squat = r.squat.value;
-  out.push({
-    id: 'legs',
-    label: 'Squat 10% more',
-    detail: `≈ ${Math.round(squat * 1.1)} kg instead of ${Math.round(squat)} kg`,
-    apply: (x) => ({ ...x, lifts: { ...x.lifts, backSquat: { kg: squat * 1.1, reps: 1 } } }),
-  });
-  const dl = r.deadlift.value;
-  out.push({
-    id: 'hinge',
-    label: 'Deadlift 10% more',
-    detail: `≈ ${Math.round(dl * 1.1)} kg instead of ${Math.round(dl)} kg`,
-    apply: (x) => ({ ...x, lifts: { ...x.lifts, deadlift: { kg: dl * 1.1, reps: 1 } } }),
-  });
-  const wbU = r.wallBallsUnbroken ?? Math.round(solo.typicalWallBallsUnbroken);
-  if (!r.tests.wallBalls100) {
+  const q = r.quality;
+  const out: Candidate[] = [];
+  const known = (id: keyof typeof q) => q[id] !== 'assumed';
+
+  if (known('run')) {
+    const pct = realisticRunGain(r.fiveK.value, a.sex, a.age);
+    // Quote a race the athlete actually entered (not the blended 5K-equivalent), and improve
+    // every entered race by the same fraction.
+    const races: [keyof AthleteProfile, string][] = [['fiveKSec', '5K'], ['tenKSec', '10K'], ['halfMarathonSec', 'Half'], ['marathonSec', 'Marathon']];
+    const shown = races.find(([k]) => a[k] != null) ?? null;
+    const shownSec = shown ? (a[shown[0]] as number) : r.fiveK.value;
+    const shownName = shown ? shown[1] : '5K';
     out.push({
-      id: 'wallBalls',
-      label: '+15 unbroken wall balls',
-      detail: `${wbU + 15} instead of ${wbU}`,
-      apply: (x) => ({ ...x, wallBallsUnbroken: wbU + 15 }),
+      id: 'run',
+      label: 'Sharpen your running',
+      detail: `${shownName} ${formatTime(shownSec)} → ${formatTime(shownSec * (1 - pct))} (≈${(pct * 100).toFixed(1)}%), realistic in 8–12 weeks at your level${a.age && a.age >= 50 ? ' and age' : ''}`,
+      apply: (x) => {
+        const y = { ...x };
+        const anyRace = races.some(([k]) => x[k] != null);
+        for (const [k] of races) if (x[k] != null) (y as any)[k] = (x[k] as number) * (1 - pct);
+        if (!anyRace) y.fiveKSec = r.fiveK.value * (1 - pct);
+        return y;
+      },
     });
   }
-  const burpees = a.burpees1Min ?? Math.round(atLevel(FALLBACK.burpees1MinByLevel[a.sex], a.levels.burpees ?? 3));
-  if (!r.tests.bbj) {
+  const strength = (id: 'legs' | 'hinge', lift: 'backSquat' | 'deadlift', name: string, perBw: readonly number[], value: number) => {
+    if (!known(id)) return;
+    const pct = realisticStrengthGain(value, r.bodyweightKg, perBw);
+    const measured = q[id] !== 'rated';
     out.push({
-      id: 'burpees',
-      label: '+5 burpees per minute',
-      detail: `${burpees + 5}/min instead of ${burpees}/min`,
-      apply: (x) => ({ ...x, burpees1Min: burpees + 5 }),
+      id,
+      label: `Build your ${name}`,
+      detail: measured
+        ? `${kgText(value)} → ${kgText(value * (1 + pct))} (+${Math.round(pct * 100)}%)`
+        : `About +${Math.round(pct * 100)}% stronger than your self-rating today`,
+      apply: (x) => ({ ...x, lifts: { ...x.lifts, [lift]: { kg: value * (1 + pct), reps: 1 } } }),
+    });
+  };
+  strength('legs', 'backSquat', 'squat', FALLBACK.squatPerBw[a.sex], r.squat.value);
+  strength('hinge', 'deadlift', 'deadlift', FALLBACK.deadliftPerBw[a.sex], r.deadlift.value);
+
+  if (known('wallBalls') && !r.tests.wallBalls100) {
+    if (r.wallBallsUnbroken) {
+      const add = Math.max(3, Math.min(G().wallBallsAddMax, Math.round(r.wallBallsUnbroken * G().wallBallsAddPct)));
+      out.push({
+        id: 'wallBalls', label: 'Grow your unbroken wall balls',
+        detail: `${r.wallBallsUnbroken} → ${r.wallBallsUnbroken + add} unbroken`,
+        apply: (x) => ({ ...x, wallBallsUnbroken: r.wallBallsUnbroken! + add }),
+      });
+    } else if (a.levels.wallBalls && a.levels.wallBalls < 5) {
+      const l = a.levels.wallBalls;
+      out.push({
+        id: 'wallBalls', label: 'Wall-ball capacity work', detail: `${LEVELS[l - 1]} → ${LEVELS[l]}`,
+        apply: (x) => ({ ...x, levels: { ...x.levels, wallBalls: (l + 1) as Level } }),
+      });
+    }
+  }
+  if (known('burpees') && !r.tests.bbj) {
+    if (a.burpees1Min) {
+      out.push({
+        id: 'burpees', label: 'Burpee conditioning', detail: `${a.burpees1Min} → ${a.burpees1Min + G().burpeesAdd} burpees per minute`,
+        apply: (x) => ({ ...x, burpees1Min: a.burpees1Min! + G().burpeesAdd }),
+      });
+    } else if (a.levels.burpees && a.levels.burpees < 5) {
+      const l = a.levels.burpees;
+      out.push({
+        id: 'burpees', label: 'Burpee conditioning', detail: `${LEVELS[l - 1]} → ${LEVELS[l]}`,
+        apply: (x) => ({ ...x, levels: { ...x.levels, burpees: (l + 1) as Level } }),
+      });
+    }
+  }
+  if (known('grip') && !r.tests.farmers) {
+    if (a.deadHangSec) {
+      out.push({
+        id: 'grip', label: 'Grip endurance', detail: `Dead hang ${a.deadHangSec} s → ${a.deadHangSec + G().deadHangAdd} s`,
+        apply: (x) => ({ ...x, deadHangSec: a.deadHangSec! + G().deadHangAdd }),
+      });
+    } else if (a.levels.grip && a.levels.grip < 5) {
+      const l = a.levels.grip;
+      out.push({
+        id: 'grip', label: 'Grip endurance', detail: `${LEVELS[l - 1]} → ${LEVELS[l]}`,
+        apply: (x) => ({ ...x, levels: { ...x.levels, grip: (l + 1) as Level } }),
+      });
+    }
+  }
+  if (known('erg') && (r.ski1k || r.row1k)) {
+    const pct = G().ergPct * ageScale(a.age);
+    out.push({
+      id: 'erg', label: 'Erg fitness',
+      detail: `${r.row1k ? `Row 1000m ${formatTime(r.row1k.value)} → ${formatTime(r.row1k.value * (1 - pct))}` : `SkiErg 1000m ${formatTime(r.ski1k!.value)} → ${formatTime(r.ski1k!.value * (1 - pct))}`}`,
+      apply: (x) => ({
+        ...x,
+        row1kSec: r.row1k ? r.row1k.value * (1 - pct) : x.row1kSec,
+        skiErg1kSec: r.ski1k ? r.ski1k.value * (1 - pct) : x.skiErg1kSec,
+      }),
     });
   }
-  const hang = a.deadHangSec ?? Math.round(atLevel(FALLBACK.deadHangByLevel[a.sex], a.levels.grip ?? 3));
-  if (!r.tests.farmers) {
-    out.push({
-      id: 'grip',
-      label: 'Dead hang 30 s longer',
-      detail: `${hang + 30} s instead of ${hang} s`,
-      apply: (x) => ({ ...x, deadHangSec: hang + 30 }),
-    });
-  }
-  const rowFresh = r.row1k?.value ?? solo.stations.row / 1.13;
-  out.push({
-    id: 'erg',
-    label: 'Row & ski 10 s faster per 1000 m',
-    detail: `Row 1000m ${formatTime(rowFresh - 10)} instead of ${formatTime(rowFresh)}`,
-    apply: (x) => ({
-      ...x,
-      row1kSec: rowFresh - 10,
-      skiErg1kSec: (r.ski1k?.value ?? solo.stations.skierg / 1.13) - 10,
-    }),
-  });
+  // Transitions are pure skill: practising them is realistic for everyone.
   const tl = a.levels.transitions ?? 3;
   if (tl < 5) {
     out.push({
-      id: 'transitions',
-      label: 'Sharper Roxzone transitions',
-      detail: `One level better (${LEVELS[tl]} instead of ${LEVELS[tl - 1]})`,
+      id: 'transitions', label: 'Practise your Roxzone transitions',
+      detail: `${LEVELS[tl - 1]} → ${LEVELS[tl]}: know the layout, jog in and out, no pauses`,
       apply: (x) => ({ ...x, levels: { ...x.levels, transitions: (tl + 1) as Level } }),
     });
   }
   return out;
+}
+
+export interface UnknownInput {
+  id: string;
+  /** What to measure, e.g. "Test your deadlift". */
+  label: string;
+  how: string;
+  /** ± seconds the finish could move depending on the answer (Fair vs Strong). */
+  swing: number;
+}
+
+const UNKNOWN_HOW: Partial<Record<keyof ReturnType<typeof resolveAthlete>['quality'], [string, string]>> = {
+  run: ['Run a 5K time trial', 'Or enter a recent 10K, half or marathon.'],
+  legs: ['Test your squat', 'A heavy set of 3–5 reps is enough; the app estimates your 1RM.'],
+  hinge: ['Test your deadlift', 'A heavy set of 3–5 reps, or a trap-bar deadlift.'],
+  grip: ['Time a dead hang', 'Or count your max pull-ups.'],
+  burpees: ['Count burpees in 1 minute', 'Chest to floor, full stand.'],
+  wallBalls: ['Find your max unbroken wall balls', 'With your race ball and target.'],
+  erg: ['Do a 1000 m row or SkiErg', 'A hard, even-paced effort.'],
+};
+
+/** For each unknown ability: how much could the answer move the prediction? */
+function unknownsWorthMeasuring(input: PredictInput, idx: number, base: number): UnknownInput[] {
+  const a = input.athletes[idx];
+  const q = resolveAthlete(a).quality;
+  const out: UnknownInput[] = [];
+  for (const id of Object.keys(UNKNOWN_HOW) as (keyof typeof UNKNOWN_HOW)[]) {
+    if (q[id] !== 'assumed') continue;
+    const at = (l: Level) =>
+      predict({ ...input, athletes: input.athletes.map((x, i) => (i === idx ? { ...x, levels: { ...x.levels, [id]: l } } : x)) }).total;
+    const swing = (at(2) - at(4)) / 2;
+    if (swing < 5) continue;
+    const [label, how] = UNKNOWN_HOW[id]!;
+    out.push({ id, label, how, swing });
+  }
+  return out.sort((x, y) => y.swing - x.swing);
 }
 
 export function computeInsights(input: PredictInput, prediction: Prediction, athleteIndex = 0): Insights {
@@ -143,7 +252,7 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   const strengths = sorted.filter((g) => g.gap < -5).reverse().slice(0, 3);
 
   // What-ifs: re-run the whole prediction (so doubles/relay tactics re-optimise too).
-  const whatIfs: WhatIf[] = improvements(a, solo)
+  const whatIfs: WhatIf[] = realisticGains(a)
     .map((imp) => {
       const athletes = input.athletes.map((x, i) => (i === idx ? imp.apply(x) : x));
       const total = predict({ ...input, athletes }).total;
@@ -208,5 +317,7 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   if (limiters.some((l) => l.id === 'roxzone') && a.experience === 'first' && !a.levels.transitions) {
     running.note += ' Roxzone time includes a first-race allowance (+15%); rate your transitions to replace it.';
   }
-  return { athleteIndex: idx, headline, limiters, strengths, whatIfs, running, pacing };
+  const unknowns = unknownsWorthMeasuring(input, idx, prediction.total);
+  const tips = tipsFor(limiters.map((l) => l.id), a.experience === 'first' || a.experience === 'unknown');
+  return { athleteIndex: idx, headline, limiters, strengths, whatIfs, unknowns, tips, masters: (a.age ?? 0) >= 50, running, pacing };
 }

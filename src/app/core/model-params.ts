@@ -31,7 +31,7 @@ export const PARAMS = {
      * how well pace holds over long efforts (≈1.06 very durable … 1.12+ fades). A HYROX is a
      * 55–120 min effort, so durable athletes compromise less: factor += (k − ref)·scale.
      */
-    endurance: { refExponent: 1.07, scale: 0.8, min: -0.03, max: 0.04 },
+    endurance: { refExponent: 1.07, scale: 0.35, min: -0.02, max: 0.025 },
   },
   /**
    * Relative shape of runs 1–8 (normalised to mean 1). From the data: runs 2–7 average
@@ -120,6 +120,23 @@ export const PARAMS = {
     roxzoneFactor: 0.75,
     handoverSec: 5,
   },
+
+  /**
+   * Height (optional). Research: under 0.5% of finish time per 10 cm overall. Longer levers
+   * and strides help the ergs, lunges and burpee broad jumps; wall balls are roughly neutral
+   * (shorter throw vs. longer squat). Per 10 cm vs. the sex reference, capped per station.
+   */
+  height: {
+    refCm: { male: 178, female: 165 },
+    perTenCm: { skierg: -0.015, row: -0.015, sandbagLunges: -0.04, burpeeBroadJump: -0.03 } as Partial<Record<StationId, number>>,
+    cap: 0.08,
+  },
+  /**
+   * Masters (estimate): once a run time is known most of the age effect is already in it;
+   * add a small extra station/Roxzone recovery penalty from 50 (per year), capped.
+   */
+  mastersStationPerYear: 0.003,
+  mastersStationCap: 0.04,
 
   /** How strongly a previous HYROX result pulls the prediction (0 = ignore, 1 = trust fully). */
   previousResultWeight: 0.6,

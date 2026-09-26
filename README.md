@@ -19,7 +19,9 @@ you can play back.
 
 - **Every division**, with the correct loads per station (Open/Pro sleds, bells, sandbag, wall ball and target). Mixed
   doubles, mixed relay and corporate relay load rules are handled per athlete.
-- **Inputs that actually predict performance, with fallbacks for everything.** 5K is the anchor. Any benchmark can be
+- **Inputs that actually predict performance, with fallbacks for everything.** Enter any of your 5K / 10K / half
+  marathon / marathon times; they're blended, with 10K and half weighted most as the closest match to a HYROX effort.
+  Optional height (small effects on ergs, lunges and burpee broad jumps; used by the doubles split). Any benchmark can be
   left blank. Each ability (running, ergs, leg strength, pulling strength, grip, burpees, sleds, lunges, wall balls,
   Roxzone) falls back through related tests to a concrete Weak/Fair/Solid/Strong/Elite self-rating, then to "not sure".
   Related tests include other lifts with any rep count, other race distances, other erg distances, and dead hang or
@@ -30,8 +32,12 @@ you can play back.
 - **Doubles:** tune both partners. Each station's work split is auto-optimised, or you can drag it yourself.
 - **Relay:** tune all four athletes. The fastest leg order is chosen automatically, or you can set it.
 - **Lock in known splits:** tap any station time to override it.
-- **Insights:** limiters and strengths compared with athletes who run at your pace, and the fastest time savings
-  (each computed by re-running the model with one improvement). Also running and race-day pacing notes.
+- **Insights:**
+  - Limiters and strengths compared with athletes who run at your pace.
+  - Realistic 8–12 week gains, only for what you entered, sized by level and age.
+  - "Worth measuring" for unknowns, showing how much each could swing your time.
+  - Practical technique tips, running and race-day pacing notes.
+
   Deterministic, with no AI.
 - **Simulator page** (`#simulator`): drag a slider for every run, station and the Roxzone and watch the finish time
   and field position change. It shows which finish band each split is typical of, scales all runs or stations at
@@ -99,6 +105,11 @@ See [RESEARCH.md](RESEARCH.md) for the data and sources. In short:
 4. **Doubles / relay combination models**, calibrated to the observed doubles/singles and relay ratios.
 
 All tuning constants live in `src/app/core/model-params.ts` and `src/app/core/split-tables.ts`.
+
+## Contributing
+
+Every bug fix must include a regression test that would have caught it. See [CLAUDE.md](CLAUDE.md) for the project
+rules.
 
 ## Project layout
 

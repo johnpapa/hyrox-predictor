@@ -36,6 +36,8 @@ export interface AthleteProfile {
   sex: Sex;
   /** Age in years; null = prefer not to say / unknown. */
   age: number | null;
+  /** Height in cm; null = unknown. Small effect on ergs, lunges and burpee broad jumps. */
+  heightCm: number | null;
   /** Bodyweight in kg (always stored in kg); null = unknown. */
   bodyweightKg: number | null;
   experience: Experience;
@@ -45,7 +47,6 @@ export interface AthleteProfile {
   // ── Running (seconds) — first available wins: 5K › 10K › mile › half › VO₂max › level ──
   fiveKSec: number | null;
   tenKSec: number | null;
-  mileSec: number | null;
   halfMarathonSec: number | null;
   /** Marathon time, seconds. Also tells the model how well you hold pace over long efforts. */
   marathonSec: number | null;
@@ -53,8 +54,6 @@ export interface AthleteProfile {
   vo2max: number | null;
   /** Lab tests are trusted as-is; watch estimates are discounted. */
   vo2maxSource: 'watch' | 'lab';
-  /** Cooper test: metres covered in 12 minutes. */
-  cooperMeters: number | null;
   /** Resting heart rate (bpm) — with age, gives a rough VO₂max estimate. */
   restingHr: number | null;
 
@@ -125,17 +124,16 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
     name: `Athlete ${index + 1}`,
     sex,
     age: null,
+    heightCm: null,
     bodyweightKg: null,
     experience: 'unknown',
     trainingHours: null,
     fiveKSec: null,
     tenKSec: null,
-    mileSec: null,
     halfMarathonSec: null,
     marathonSec: null,
     vo2max: null,
     vo2maxSource: 'watch',
-    cooperMeters: null,
     restingHr: null,
     skiErg1kSec: null,
     skiErg500Sec: null,
@@ -180,8 +178,8 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   if (EXPERIENCES.includes(r['experience'])) out.experience = r['experience'];
   if (r['vo2maxSource'] === 'lab') out.vo2maxSource = 'lab';
   const numeric: (keyof AthleteProfile)[] = [
-    'age', 'bodyweightKg', 'trainingHours', 'fiveKSec', 'tenKSec', 'mileSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
-    'cooperMeters', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
+    'age', 'bodyweightKg', 'trainingHours', 'fiveKSec', 'tenKSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
+    'heightCm', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
     'row5kSec', 'deadHangSec', 'pullUps', 'burpees1Min', 'sledPushTestSec', 'sledPullTestSec', 'bbjTestSec',
     'farmersTestSec', 'lungesTestSec', 'wallBalls100Sec', 'wallBallsUnbroken', 'karenSec', 'previousHyroxSec',
   ];

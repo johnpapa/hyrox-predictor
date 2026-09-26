@@ -27,8 +27,8 @@ test('desktop walkthrough', async ({ app, page }) => {
   await page.locator('#athlete-panel fieldset').nth(0).screenshot({ path: out('03-profile') });
 
   // 3. Running
-  await page.getByLabel('Current 5K best').fill('22:40');
-  await app.openAlternatives('Running');
+  await page.getByLabel('5K', { exact: true }).fill('22:40');
+  await app.card('Running').getByLabel('Half marathon').fill('1:44:30');
   await app.card('Running').screenshot({ path: out('04-running') });
 
   // 4. Strength: a rep set plus a self-rating fallback on another ability
@@ -71,10 +71,10 @@ test('desktop walkthrough', async ({ app, page }) => {
 
   // 10. Doubles
   await app.division('Mixed Doubles').click();
-  await page.getByLabel('Current 5K best').fill('22:40');
+  await page.getByLabel('5K', { exact: true }).fill('22:40');
   await app.tab(1).click();
   await page.getByLabel('Name').fill('Jess');
-  await page.getByLabel('Current 5K best').fill('25:30');
+  await page.getByLabel('5K', { exact: true }).fill('25:30');
   await page.locator('app-team-tactics').screenshot({ path: out('12-doubles') });
 
   // 11. Relay
@@ -100,7 +100,7 @@ test.describe('iPhone', () => {
   test.use(iphone);
 
   test('iPhone walkthrough', async ({ page }) => {
-    await page.getByLabel('Current 5K best').fill('24:10');
+    await page.getByLabel('5K', { exact: true }).fill('24:10');
     await page.screenshot({ path: out('15-iphone-form') });
     await page.getByRole('button', { name: 'View splits' }).click();
     await page.waitForTimeout(800);

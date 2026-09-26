@@ -58,7 +58,7 @@ the confidence range. "Not sure" equals the model's typical athlete, so it never
 
 | Ability | Cascade | Key conversion |
 |---|---|---|
-| Running | 5K › 10K › mile › half › Cooper › watch VO₂max › level | Riegel T₂ = T₁(D₂/D₁)^1.06 (1.07 for mile/half); Daniels VDOT; Cooper VO₂ = (m − 504.9)/44.73; watch VO₂max − 4 |
+| Running | blend of 5K / 10K / half / marathon › VO₂max › resting HR + age › level | Riegel T₂ = T₁(D₂/D₁)^1.06 (1.07 for mile/half); Daniels VDOT; Cooper VO₂ = (m − 504.9)/44.73; watch VO₂max − 4 |
 | Ergs | 1k › 2k › 500 m › 5k › other erg › level | Paul's law +5 s/500 m per doubling; SkiErg ≈ row + 20 s/1k (men), +15 s (women) |
 | Leg strength | back squat › front squat › deadlift › trap bar › RDL › leg press › bench › level | Epley 1RM = w(1 + r/30), ≤12 reps; front = 0.85 × back; squat = 0.8 × DL; leg press × 0.6 (rough) |
 | Pulling strength | deadlift › trap bar › RDL › squat › front squat › leg press › bench › level | trap bar = 1.08 × DL (JSCR 2011); RDL = 0.75 × DL; DL = 1.6 × bench (men), 2.0 × (women) |
@@ -118,3 +118,41 @@ changes:
   unrealistically.
 - **Station baselines ignore the Pro running penalty.** Heavier sleds slow the runs but don't make an athlete a
   weaker skier or rower.
+
+## Race distances, height, body fat and realistic gains (Sept 2026 research)
+
+- **Which races predict HYROX?** No published study correlates road PBs directly with HYROX times. What the evidence
+  supports:
+  - **Physiology:** a HYROX takes 55–120 min with about 80% of the time above 80% of max heart rate (Brandt et al.
+    2025, n = 11). VO₂max correlates with run time (ρ ≈ −0.73) but not with station time.
+  - **10K and half marathon** best reflect that threshold-level effort. Coaches put HYROX laps at about 10K pace ×
+    1.10–1.18 and half-marathon pace × 1.05–1.12.
+  - **5K** is a VO₂max proxy. HyroxDataLab's calculator is built on it.
+  - **Marathon** adds durability information but is noisy (long-run volume, fuelling, heat).
+  - **1 mile** is too anaerobic, so it was removed. **Cooper test** was removed too.
+- **How races are combined:** each race is converted to a 5K-equivalent with Riegel and blended with weights 10K 1.0,
+  half 0.9, 5K 0.7, marathon 0.4. The shortest and longest race give a personal fatigue exponent k (≈1.06 durable …
+  1.12+ fades), which adjusts the lap factor by (k − 1.07) × 0.35, capped at −0.02…+0.025.
+- **Height:** there is no HYROX data. Rowing research links height and mass to erg power (r ≈ 0.7). Coaching claims
+  conflict on wall balls. Estimated effect per 10 cm versus the sex reference (178 / 165 cm):
+  - ski and row −1.5%, lunges −4%, burpee broad jumps −3%, each capped at ±8%;
+  - wall balls neutral;
+  - overall well under 0.5% of finish time per 10 cm.
+
+  Height is optional. In doubles it mainly changes who should take lunges and burpee broad jumps.
+- **Body fat:** ρ = +0.67 in Brandt (n = 11, unreliable), and largely redundant once a run time is known. Not
+  captured.
+- **Age:** once a run time is known, most of the effect is already in it. An estimated extra station and Roxzone
+  penalty of 0.3% per year over 50, capped at 4%, covers recovery. HyroxDataLab reports 50–54 men about 11% slower
+  than peak, mostly through fitness.
+- **Training volume** (ρ = −0.68 in Brandt) is captured as weekly training hours.
+- **Realistic gains in 8–12 weeks**, used by Insights:
+  - 5K: untrained 8–15%, recreational 3–6%, well trained 1–2%. Masters get about 60–75% of that (×0.7 over 50, ×0.55
+    over 60).
+  - Strength: novice +20–35%, intermediate +5–10%, advanced +1–3%. Masters gain similar percentages, so there is no
+    age scaling.
+  - Erg: about 2.5%. Wall-ball unbroken: +40% (max +12). Burpees: +3 per minute.
+  - Fitness-free savings: Roxzone 1–3 min (10 s per transition ≈ 80 s); a planned wall-ball set strategy about 45 s;
+    even pacing 1–3%.
+- **Unknown abilities** are never given invented numbers in suggestions. Insights instead shows how much the finish
+  could swing (Fair versus Strong) and recommends measuring that ability.
