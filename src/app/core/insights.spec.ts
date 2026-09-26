@@ -137,7 +137,7 @@ describe('realistic, honest suggestions (user feedback)', () => {
   it('measured lifts show kg (and lb) with a level-appropriate gain', () => {
     const i = run({ divisionId: 'men-open', athletes: [ath('male', { lifts: { ...emptyLifts(), backSquat: { kg: 80, reps: 1 } } })] });
     const w = i.whatIfs.find((x) => x.id === 'legs')!;
-    expect(w.detail).toMatch(/80 kg \(176 lb\) → 9\d kg/); // novice (≈1×BW) → ~+15–25%
+    expect(w.detail).toMatch(/80 kg \/ 176 lb → 9\d kg \/ \d+ lb \(\+1\d%\)/); // ≈1×BW squat is just above Fair → ~+10–15%
   });
 
   it('practical tips target the biggest limiters and always include pacing', () => {
@@ -165,7 +165,6 @@ describe('why each station differs (user question: "why am I worse than athletes
       expect(Math.abs(gap - sum)).toBeLessThan(8);
     }
     expect(i.explanation.byArea.wallBalls[0].label).toContain('20 unbroken');
-    expect(i.explanation.byArea.sledPush[0].label).toMatch(/Lighter bodyweight/);
     expect(i.explanation.overall[0].id).toBe('wallBalls');
   });
 
@@ -178,6 +177,66 @@ describe('why each station differs (user question: "why am I worse than athletes
     const rox = i.explanation.byArea.roxzone.find((r) => r.id === 'transitions')!;
     expect(rox.sec).toBeLessThan(0); // Strong ⇒ faster
     expect(Math.abs(i.explanation.unexplained.roxzone)).toBeLessThan(5);
+  });
+
+  it('REGRESSION: compares against athletes like you, so build and age do not show up as station gaps', () => {
+    // User: "It should be versus athletes like you taking into account my height, my weight,
+    // my running times, my age, everything overall." With no lifts entered, John's sleds and
+    // lunges match athletes like him; before, they showed as slower because of his lighter bodyweight.
+    const input: PredictInput = { divisionId: 'men-open', athletes: [john()] };
+    const p = predict(input);
+    const s = p.solos[0];
+    for (const id of ['sledPush', 'sledPull', 'farmersCarry', 'sandbagLunges', 'burpeeBroadJump', 'skierg', 'row'] as const) {
+      expect(Math.abs(s.stations[id] - s.typical[id])).toBeLessThan(1);
+    }
+    const i = computeInsights(input, p);
+    expect(i.headline).toContain('athletes like you');
+    expect(i.explanation.overall.map((r) => r.id).sort()).toEqual(['transitions', 'wallBalls']);
+    // Build and background are reported separately, as effects on the finish time.
+    const ids = i.profile.map((r) => r.id);
+    for (const id of ['bodyweight', 'age', 'experience', 'runningVolume']) expect(ids).toContain(id);
+    expect(i.profile.find((r) => r.id === 'bodyweight')!.label).toMatch(/Lighter bodyweight/);
+    expect(i.profile.find((r) => r.id === 'age')!.sec).toBeGreaterThan(0); // 54: masters allowance
+    expect(i.profile.find((r) => r.id === 'runningVolume')!.sec).toBeLessThan(0); // 64 km/week helps
+  });
+
+  it('entering only build and background never creates a station gap', () => {
+    const a = ath('male', { bodyweightKg: 105, heightCm: 195, age: 62, bodyFatPct: 28, otherTrainingHours: 9, runningKmPerWeek: 10, experience: 'first' });
+    const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
+    const i = computeInsights(input, predict(input));
+    expect(i.limiters).toEqual([]);
+    expect(i.strengths).toEqual([]);
+    expect(i.profile.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('strength reasons compare your estimated 1RM with athletes like you', () => {
+    const a = { ...john(), lifts: { ...emptyLifts(), deadlift: { kg: 60, reps: 10, rir: 1.5 } } };
+    const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
+    const i = computeInsights(input, predict(input));
+    const r = i.explanation.byArea.sledPull.find((x) => x.id === 'hinge')!;
+    expect(r.label).toMatch(/deadlift 1RM ≈ 83 kg .* for athletes like you/);
+  });
+
+  it('REGRESSION: a squat below athletes like you is never credited as faster (deadlift also entered)', () => {
+    // Clearing the squat used to make the model estimate it from the deadlift instead, which
+    // flipped the sign: "Leg strength (above typical: squat 85 kg vs 116 kg)" with −70 s.
+    const set = { kg: 61.2, reps: 10, rir: 1.5 };
+    const a = { ...john(), lifts: { ...emptyLifts(), backSquat: set, deadlift: set } };
+    const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
+    const i = computeInsights(input, predict(input));
+    const legs = i.explanation.overall.find((r) => r.id === 'legs')!;
+    const hinge = i.explanation.overall.find((r) => r.id === 'hinge')!;
+    expect(legs.sec).toBeGreaterThan(0);
+    expect(legs.label).toContain('below typical');
+    expect(hinge.sec).toBeGreaterThan(0);
+  });
+
+  it('realistic gains for a working set are phrased as a working set (same reps, more weight)', () => {
+    const a = { ...john(), lifts: { ...emptyLifts(), backSquat: { kg: 60, reps: 10, rir: 1.5 } } };
+    const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
+    const w = run(input).whatIfs.find((x) => x.id === 'legs')!;
+    expect(w.detail).toMatch(/^Working set 60 kg \/ 132 lb × 10 → \d+ kg \/ \d+ lb × 10/);
+    expect(w.saves).toBeGreaterThan(0);
   });
 
   it('a typical athlete has nothing to explain', () => {

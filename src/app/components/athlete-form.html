@@ -47,9 +47,9 @@
       </div>
       <app-number-input [label]="'Bodyweight (' + unit() + ')'" [value]="ath.bodyweightKg" [factor]="weightFactor()"
         [decimals]="unit() === 'kg' ? 1 : 0" [units]="unit()" (unitsChange)="store.units.set($event)"
-        (valueChange)="patch({ bodyweightKg: $event })" />
+        [range]="ranges.bodyweightKg" (valueChange)="patch({ bodyweightKg: $event })" />
       <app-number-input [label]="unit() === 'kg' ? 'Height (cm)' : 'Height (in)'" [value]="ath.heightCm"
-        [factor]="unit() === 'kg' ? 1 : 1 / 2.54" [decimals]="0" (valueChange)="patch({ heightCm: $event })"
+        [factor]="unit() === 'kg' ? 1 : 1 / 2.54" [decimals]="0" [range]="ranges.heightCm" (valueChange)="patch({ heightCm: $event })"
         [hint]="heightHint()" />
       <app-number-input label="Age" [value]="ath.age" [integer]="true"
         [hint]="ageGroup() ? 'HYROX age group ' + ageGroup() : ''" (valueChange)="patch({ age: $event })" />
@@ -64,16 +64,16 @@
       <app-number-input [label]="unit() === 'kg' ? 'Weekly running (km)' : 'Weekly running (mi)'" [value]="ath.runningKmPerWeek"
         [factor]="unit() === 'kg' ? 1 : 0.621371" [decimals]="0" [allowZero]="true" [units]="unit()"
         [unitLabels]="['km', 'mi']" [unitNames]="['Kilometres', 'Miles']" (unitsChange)="store.units.set($event)"
-        hint="Your usual week, all runs" (valueChange)="patch({ runningKmPerWeek: $event })" />
+        hint="Your usual week, all runs" [range]="ranges.runningKm" (valueChange)="patch({ runningKmPerWeek: $event })" />
       <app-number-input label="Other training (hrs / week)" [value]="ath.otherTrainingHours" [allowZero]="true"
-        hint="Gym, HYROX classes, erg or sled work" (valueChange)="patch({ otherTrainingHours: $event })" />
+        hint="Gym, HYROX classes, erg or sled work" [range]="ranges.otherHours" (valueChange)="patch({ otherTrainingHours: $event })" />
     </div>
   </fieldset>
 
   <fieldset>
     <legend>Physiology <span class="opt">optional · leave blank if unknown</span></legend>
     <div class="grid">
-      <app-number-input label="VO₂max (ml/kg/min)" [value]="ath.vo2max" (valueChange)="patch({ vo2max: $event })" />
+      <app-number-input label="VO₂max (ml/kg/min)" [value]="ath.vo2max" [range]="ranges.vo2" (valueChange)="patch({ vo2max: $event })" />
       <label class="field">
         <span class="label">VO₂max measured by</span>
         <select (change)="patch({ vo2maxSource: $any($event.target).value })">
@@ -82,10 +82,10 @@
         </select>
         <span class="hint">Watch estimates run high, so they're discounted</span>
       </label>
-      <app-number-input label="Body fat (%)" [value]="ath.bodyFatPct" hint="Used for lean mass when lifts are unknown"
+      <app-number-input label="Body fat (%)" [value]="ath.bodyFatPct" [hint]="bodyFatHint()" [range]="ranges.bodyFat"
         (valueChange)="patch({ bodyFatPct: $event })" />
       <app-number-input label="Resting heart rate (bpm)" [value]="ath.restingHr" [integer]="true"
-        hint="Morning, before getting up" (valueChange)="patch({ restingHr: $event })" />
+        hint="Morning, before getting up" [range]="ranges.restingHr" (valueChange)="patch({ restingHr: $event })" />
       <p class="note span-all">
         Used to estimate your running when you have no recent race time. A real race time always beats these estimates. Age
         also adjusts the typical athlete assumed when you give no running information.
@@ -165,6 +165,8 @@
       <div primary class="grid">
         <app-lift-input label="Back squat" [lift]="ath.lifts.backSquat" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Drives sled push & lunges"
           (liftChange)="lift('backSquat', $event)" />
+        <p class="note span-all">No max test needed: enter your usual working set (e.g. 10 reps) and how many more reps you could
+          have done. The app estimates your max from that.</p>
       </div>
       <div alternatives class="grid">
         <app-lift-input label="Front squat" [lift]="ath.lifts.frontSquat" [units]="unit()" (unitsChange)="store.units.set($event)" hint="≈ 85% of back squat"
@@ -183,6 +185,7 @@
       <div primary class="grid">
         <app-lift-input label="Deadlift" [lift]="ath.lifts.deadlift" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Drives sled pull & farmers carry"
           (liftChange)="lift('deadlift', $event)" />
+        <p class="note span-all">Your usual working set is fine, e.g. 3 × 8–12: enter the weight, the reps and how hard it felt.</p>
       </div>
       <div alternatives class="grid">
         <app-lift-input label="Trap-bar deadlift" [lift]="ath.lifts.trapBar" [units]="unit()" (unitsChange)="store.units.set($event)" hint="≈ 108% of deadlift"

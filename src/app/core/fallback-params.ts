@@ -53,13 +53,16 @@ export const FALLBACK = {
   skiSlowerThanRowPer1k: { male: 20, female: 15 } as BySex<number>,
 
   // ── Strength (1RM ÷ bodyweight) ─────────────────────────────────────────────────────
+  // Set for a recreational HYROX / functional-fitness population, not for lifters who log
+  // their lifts in strength apps (whose "intermediate" is ~1.5× squat / 2× deadlift for men).
+  // Solid = a typical mid-pack athlete; see RESEARCH.md "Strength standards".
   squatPerBw: {
-    male: [0.75, 1.25, 1.5, 2.25, 2.75],
-    female: [0.5, 0.75, 1.25, 1.5, 2.0],
+    male: [0.6, 0.9, 1.25, 1.6, 2.0],
+    female: [0.4, 0.65, 0.9, 1.2, 1.5],
   } as BySex<ByLevel>,
   deadliftPerBw: {
-    male: [1.0, 1.5, 2.0, 2.5, 3.0],
-    female: [0.5, 1.0, 1.25, 1.75, 2.5],
+    male: [0.75, 1.1, 1.5, 1.9, 2.4],
+    female: [0.5, 0.8, 1.1, 1.4, 1.8],
   } as BySex<ByLevel>,
   /**
    * Typical strength of a HYROX athlete when nothing is known — equal to "Solid" so that
@@ -71,8 +74,8 @@ export const FALLBACK = {
    */
   typicalBodyFatPct: { male: 18, female: 25 } as BySex<number>,
   typicalPerBw: {
-    legs: { male: 1.5, female: 1.25 },
-    hinge: { male: 2.0, female: 1.25 },
+    legs: { male: 1.25, female: 0.9 },
+    hinge: { male: 1.5, female: 1.1 },
   } as Record<'legs' | 'hinge', BySex<number>>,
   liftRatios: {
     /** Front squat ≈ 0.80–0.85 × back squat. */

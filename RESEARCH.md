@@ -208,3 +208,42 @@ A fit, high-volume first-timer now pays about +0.02; a low-volume first-timer ab
   times (ρ = +0.67, n = 11).
 - **VO₂max and resting heart rate** stay fallbacks. With race times present they are shown as a cross-check, because
   race times are the more direct measure and VO₂max did not predict station time in Brandt 2025 (ρ = −0.11).
+
+## Athletes like you, and working-set lifts (Sept 2026)
+
+**Comparison baseline.** Insights used to compare each station with the median finisher at your lap pace. That mixed
+fixed traits (a light 54-year-old is slower on sleds than an 82 kg 35-year-old at the same pace) with trainable ones,
+so almost every bar looked "slower" for a light, older runner. The comparison athlete (`peerProfile` in
+`core/athlete.ts`) now shares sex, age, height, bodyweight, body fat, experience, race times, VO₂max, resting HR,
+weekly running and other training, and is "Not sure" on every trainable ability (lifts, ergs, station tests,
+self-ratings). Fixed traits are reported separately (`profileEffects` in `core/explain.ts`) as effects on the finish
+time versus an average athlete with the same race times. Muscle mass is represented through bodyweight × lean-mass
+fraction (body fat) and, when entered, lifts.
+
+**Strength standards (revised after user feedback).** An earlier version used 1.5× bodyweight squat and 2.0×
+deadlift as "Solid" for men. Those match StrengthLevel.com "intermediate", but that sample is people who log their
+lifts in a strength app. A user pointed out that a 147 kg (330 lb) deadlift as "Solid" for a 73.5 kg man is far above
+what a normal gym's HYROX crowd lifts (typical working sets of 135–200 lb). The standards are now set for recreational
+HYROX / functional-fitness athletes, with Solid equal to a typical mid-pack athlete:
+
+| Level | Squat (men) | Deadlift (men) | Squat (women) | Deadlift (women) |
+|---|---|---|---|---|
+| Weak | 0.6× | 0.75× | 0.4× | 0.5× |
+| Fair | 0.9× | 1.1× | 0.65× | 0.8× |
+| **Solid (typical)** | **1.25×** | **1.5×** | **0.9×** | **1.1×** |
+| Strong | 1.6× | 1.9× | 1.2× | 1.4× |
+| Elite | 2.0× | 2.4× | 1.5× | 1.8× |
+
+These are 1RMs; the anchors also show the matching working set (10 reps with 1–2 left ≈ 72% of the max). The squat
+÷ deadlift ratio (≈0.83) matches the 0.8 conversion used elsewhere. Because the typical value is also the model's
+reference athlete, "Not sure" predictions barely change; a measured lift is now compared against a realistic peer.
+Strength is scaled by lean mass (body fat) but not by age: the station model already has a masters allowance from 50.
+These values are estimates from general strength norms, not HYROX-specific data, which doesn't exist publicly.
+
+**Working sets and reps in reserve.** Most recreational lifters never test a 1RM. Reps in reserve (RIR) is a validated
+way to rate a submaximal set: trained lifters predict their RIR within about one rep, and accuracy is best close to
+failure (Zourdos et al. 2016; Helms et al. 2016; Halperin et al. 2022 meta-analysis). Estimated 1RM =
+weight × (1 + (reps + RIR) / 30) (Epley, with reps to failure = reps + RIR). The choices map to RIR 0, 1.5, 3.5 and
+5.5; the default "1–2 left" matches typical hypertrophy-style sets of 3 × 8–12. Rep-based estimates lose accuracy
+beyond about 10 reps to failure (LeSuer et al. 1997; Reynolds et al. 2006), so the total is capped at 15. Isolation
+lifts like biceps curls are not used: they don't predict sled, carry or lunge performance.

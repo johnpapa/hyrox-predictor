@@ -50,7 +50,7 @@ const QUALITY_LABEL: Record<Quality, string> = {
           </div>
           <p class="anchor">
             @if (level(); as l) { <b>{{ labels[l - 1] }}:</b> {{ anchors()[l - 1] }} }
-            @else { Leave on "Not sure" to assume a typical athlete who runs at your pace. }
+            @else { Leave on "Not sure" to assume a typical athlete like you (same build, age and race times). }
             @if (measuredWins()) { <span class="ignored">Not used: the {{ quality() === 'measured' ? 'measured' : 'estimated' }} value above ({{ source() }}) takes priority over a self-rating.</span> }
           </p>
         </div>

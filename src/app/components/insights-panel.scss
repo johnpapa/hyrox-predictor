@@ -21,11 +21,11 @@ h3 { font-size: 1rem; font-weight: 700; margin: 18px 0 4px; color: var(--text); 
   &:not(:disabled) .bn::after { content: ' ›'; color: var(--text-faint); }
 }
 .bar-item.open .bn::after { content: ' ⌄' !important; }
-.why, .why-all ul { list-style: none; margin: 4px 0 8px; padding: 6px 10px; background: var(--bg); border-left: 2px solid var(--line-strong); }
-.why li, .why-all li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-dim); padding: 2px 0; }
-.why li b, .why-all li b { white-space: nowrap; color: var(--text-dim); }
-.why .slow, .why-all .slow { color: var(--warn); }
-.why .fast, .why-all .fast { color: var(--good); }
+.why, .why-all ul, .profile { list-style: none; margin: 4px 0 8px; padding: 6px 10px; background: var(--bg); border-left: 2px solid var(--line-strong); }
+.why li, .why-all li, .profile li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-dim); padding: 2px 0; }
+.why li b, .why-all li b, .profile li b { white-space: nowrap; color: var(--text-dim); }
+.why .slow, .why-all .slow, .profile .slow { color: var(--warn); }
+.why .fast, .why-all .fast, .profile .fast { color: var(--good); }
 .why .dim { color: var(--text-faint); }
 .why-all { margin: 4px 0 12px; }
 .why-all ul { border-left-color: var(--accent); margin-top: 6px; }
@@ -70,3 +70,4 @@ h3 { font-size: 1rem; font-weight: 700; margin: 18px 0 4px; color: var(--text); 
 .tips li { padding: 8px 0 8px 12px; border-left: 2px solid var(--run); margin-bottom: 8px; display: flex; flex-direction: column; gap: 2px; }
 .tips strong { font-weight: 600; font-size: 0.9rem; }
 .tips span { font-size: 0.82rem; color: var(--text-dim); }
+.profile { border-left-color: var(--accent); }
