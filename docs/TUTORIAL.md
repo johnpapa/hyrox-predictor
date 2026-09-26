@@ -69,6 +69,16 @@ Roxzone Time, Run Total, Work Total and Overall Time. At the top you get a likel
 
 ![Results](tutorial/09-results.png)
 
+## 8b. Read your Insights
+
+Under the results, **Insights** compares each station with athletes who run at your pace on the same weights. It shows
+your biggest limiters and strengths. **Fastest time savings** re-runs the whole prediction with one improvement at a
+time (a faster 5K, a heavier squat, more unbroken wall balls, and so on) and ranks what saves the most. You also get
+notes on your running and race-day pacing. In doubles and relay, switch between athletes at the top of the panel.
+Everything is calculated in your browser; no AI and no data leaves your device.
+
+![Insights](tutorial/09b-insights.png)
+
 ## 9. Lock in splits you already know
 
 Tap any station time to type your own. It turns green, and the total updates around it. Tap ✕ to go back to the
@@ -103,14 +113,26 @@ it to delete them. Nothing ever leaves your device.
 
 ![Save toggle](tutorial/14-save.png)
 
+## 14. Play with the Simulator page
+
+Open **Simulator** in the header, or go straight to `…/#simulator`. It starts from your prediction, with a slider (and a
+time box) for every run, every station and the Roxzone:
+- The clock, the difference from your prediction and your estimated field position update as you drag.
+- Tags such as **80–90** show which finish band each split is typical of.
+- Use **All runs** / **All stations** to scale a whole group.
+- Enter a **Target finish** and press **Hit target** to scale everything to that time.
+- **Reset to prediction** starts over.
+
+![Simulator](tutorial/17-simulator.png)
+
 ## On your phone
 
 The layout is built for iPhone. A summary bar at the bottom always shows your finish time; tap **View splits** to jump
 to the full board.
 
-| Form | Results |
-|---|---|
-| ![iPhone form](tutorial/15-iphone-form.png) | ![iPhone results](tutorial/16-iphone-results.png) |
+| Form | Results | Simulator |
+|---|---|---|
+| ![iPhone form](tutorial/15-iphone-form.png) | ![iPhone results](tutorial/16-iphone-results.png) | ![iPhone simulator](tutorial/18-iphone-simulator.png) |
 
 ---
 

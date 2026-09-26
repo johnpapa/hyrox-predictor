@@ -9,9 +9,19 @@
         <span class="brand-sub">Finish time simulator</span>
       </span>
     </div>
-    <button type="button" class="btn ghost" (click)="reset()">Reset</button>
+    <nav class="views" aria-label="Views">
+      <a href="#" [class.on]="view() === 'predictor'" [attr.aria-current]="view() === 'predictor' ? 'page' : null"
+        (click)="$event.preventDefault(); go('predictor')">Predictor</a>
+      <a href="#simulator" [class.on]="view() === 'simulator'" [attr.aria-current]="view() === 'simulator' ? 'page' : null"
+        (click)="$event.preventDefault(); go('simulator')">Simulator</a>
+    </nav>
+    <button type="button" class="btn ghost reset" (click)="reset()">Reset</button>
   </div>
 </header>
+
+@if (view() === 'simulator') {
+  <app-simulator-page />
+} @else {
 
 <main class="layout">
   <div class="config">
@@ -43,14 +53,18 @@
 
   <aside class="results" #results>
     <app-results-board />
+    <app-insights-panel />
   </aside>
 </main>
+
+}
 
 <footer class="foot">
   Unofficial fan-made tool. Not affiliated with or endorsed by HYROX. Predictions are estimates. No accounts, no tracking, and no data leaves your device.
 </footer>
 
 @let pr = store.prediction();
+@if (view() === 'predictor') {
 <div class="dock" role="region" aria-label="Predicted finish summary">
   <div>
     <span class="label">{{ pr.division.name }}</span>
@@ -58,3 +72,4 @@
   </div>
   <button type="button" class="btn primary" (click)="scrollToResults()">View splits</button>
 </div>
+}

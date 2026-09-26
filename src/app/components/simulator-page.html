@@ -1,0 +1,64 @@
+<div class="sim">
+  <section class="panel scoreboard" aria-labelledby="sim-title">
+    <div class="sb-left">
+      <span class="label">Race simulator · {{ store.division().name }}</span>
+      <h1 id="sim-title">Drag your splits</h1>
+      <p class="sub">Starts from your prediction. Move any slider (or type a time) to see what it does to your finish.</p>
+    </div>
+    <div class="sb-clock">
+      <div class="clock mono" aria-live="polite">{{ fmt(total(), true) }}</div>
+      <div class="delta mono" [class.faster]="delta() < -0.5" [class.slower]="delta() > 0.5">
+        {{ signed(delta()) }} vs prediction {{ fmt(predicted(), true) }}
+      </div>
+      <div class="pos">Est. field position <strong>{{ topLabel() }}</strong></div>
+    </div>
+    <div class="sb-stats">
+      <div><span class="label">Run total</span><span class="mono run">{{ fmt(runTotal()) }}</span></div>
+      <div><span class="label">Work total</span><span class="mono station">{{ fmt(workTotal()) }}</span></div>
+      <div><span class="label">Roxzone</span><span class="mono rox">{{ fmt(values()[16]) }}</span></div>
+    </div>
+  </section>
+
+  <section class="panel controls" aria-label="Simulator controls">
+    <label class="scale">
+      <span class="label">All runs <b class="mono">{{ runScale() > 0 ? '+' : '' }}{{ runScale() }}%</b></span>
+      <input type="range" min="-30" max="30" step="1" [value]="runScale()" aria-label="Scale all runs, percent"
+        (input)="runScale.set(+$any($event.target).value)" />
+    </label>
+    <label class="scale">
+      <span class="label">All stations <b class="mono">{{ stationScale() > 0 ? '+' : '' }}{{ stationScale() }}%</b></span>
+      <input type="range" min="-30" max="30" step="1" [value]="stationScale()" aria-label="Scale all stations, percent"
+        (input)="stationScale.set(+$any($event.target).value)" />
+    </label>
+    <div class="target">
+      <label class="field">
+        <span class="label">Target finish</span>
+        <input type="text" placeholder="h:mm:ss" [value]="targetText()" (input)="targetText.set($any($event.target).value)"
+          (keydown.enter)="hitTarget()" aria-label="Target finish time" />
+      </label>
+      <button type="button" class="btn" (click)="hitTarget()">Hit target</button>
+      <button type="button" class="btn ghost" [disabled]="!changed()" (click)="resetAll()">Reset to prediction</button>
+    </div>
+  </section>
+
+  <section class="panel rows" aria-label="Splits">
+    @for (r of rows(); track r.key; let i = $index) {
+      @let v = values()[i];
+      <div class="row" [attr.data-kind]="r.kind" [class.edited]="edits()[r.key] != null">
+        <div class="rh">
+          <span class="rl">{{ r.label }}</span>
+          @if (band(r, v); as b) { <span class="band" [title]="'Typical of ' + b + ' min finishers'">{{ b }}</span> }
+          <input class="rt mono" type="text" [value]="fmt(v)" [attr.aria-label]="r.label + ' time'"
+            (change)="typeTime(r, $any($event.target).value)" />
+          <span class="rd mono" [class.faster]="v - r.base < -0.5" [class.slower]="v - r.base > 0.5">{{ signed(v - r.base) }}</span>
+          <button type="button" class="rr" [disabled]="edits()[r.key] == null" (click)="resetRow(r)"
+            [attr.aria-label]="'Reset ' + r.label">↺</button>
+        </div>
+        <input type="range" [min]="r.min" [max]="r.max" step="1" [value]="v" [attr.aria-label]="r.label + ' slider'"
+          [attr.aria-valuetext]="fmt(v)" (input)="set(r, $any($event.target).value)" />
+      </div>
+    }
+  </section>
+  <p class="foot">Band tags show which finish-time band a split is typical of (singles, from results data).
+    The simulator doesn't change your prediction inputs.</p>
+</div>

@@ -27,6 +27,11 @@ export interface SoloPrediction {
   calibration: number;
   /** Where every input came from (measured / converted / rated / assumed). */
   resolved: ResolvedAthlete;
+  /** What a typical athlete who runs at this pace does on each station (same loads). */
+  typical: StationTimes;
+  typicalRoxzone: number;
+  /** Typical max unbroken wall balls for this level (race ball). */
+  typicalWallBallsUnbroken: number;
   total: number;
 }
 
@@ -270,6 +275,9 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     uncertainty: soloUncertainty(a, r),
     calibration,
     resolved: r,
+    typical: Object.fromEntries(STATION_IDS.map((id) => [id, base[id] * loadMult[id] * calibration])) as StationTimes,
+    typicalRoxzone: band.roxzone * calibration,
+    typicalWallBallsUnbroken: band.wbUnbroken / Math.pow(loadMult.wallBalls, PARAMS.wallBallsLoadUnbrokenExp),
     total: sum(runs) + sum(STATION_IDS.map((id) => st[id])) + roxzone,
   };
 }

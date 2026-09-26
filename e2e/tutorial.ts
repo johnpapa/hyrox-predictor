@@ -51,6 +51,9 @@ test('desktop walkthrough', async ({ app, page }) => {
   // 7. Results board
   await page.locator('app-results-board').screenshot({ path: out('09-results') });
 
+  // 7b. Insights
+  await page.locator('app-insights-panel').screenshot({ path: out('09b-insights') });
+
   // 8. Lock a station
   const wb = app.splitRow('Wall Balls');
   await wb.getByRole('button', { name: /Set your own/ }).click();
@@ -81,6 +84,14 @@ test('desktop walkthrough', async ({ app, page }) => {
   // 12. Save
   await page.locator('.privacy').screenshot({ path: out('14-save') });
   await expect(page.locator('.privacy')).toContainText('Off by default');
+
+  // 13. Simulator page
+  await app.division("Men's Open").click();
+  await page.getByRole('link', { name: 'Simulator' }).click();
+  await page.getByLabel('Wall Balls slider').fill('300');
+  await page.getByLabel('Scale all runs, percent').fill('-5');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: out('17-simulator') });
 });
 
 test.describe('iPhone', () => {
@@ -94,5 +105,10 @@ test.describe('iPhone', () => {
     await page.getByRole('button', { name: 'View splits' }).click();
     await page.waitForTimeout(800);
     await page.screenshot({ path: out('16-iphone-results') });
+    await page.getByRole('link', { name: 'Simulator' }).click();
+    await page.getByLabel('Sled Push slider').fill('150');
+    await page.evaluate(() => window.scrollTo(0, 700));
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: out('18-iphone-simulator') });
   });
 });

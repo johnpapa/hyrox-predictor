@@ -74,6 +74,28 @@ export const STATION_FLOOR: Record<Sex, Record<StationId, number>> = {
   female: { skierg: 220, sledPush: 90, sledPull: 140, burpeeBroadJump: 150, row: 215, farmersCarry: 70, sandbagLunges: 135, wallBalls: 170 },
 };
 
+/** Finish-band label for each row of MEN_OPEN / WOMEN_OPEN (same order). */
+export const BAND_LABELS = ['Elite', 'Sub-60', '60–70', '70–80', '80–90', '90–100', '100–120', '120+'] as const;
+
+/**
+ * Which finish band a single split looks like (median closest to the time), for an athlete
+ * racing their own Open weights. Heavier loads are scaled by `loadMult`.
+ */
+export function bandForSplit(sex: Sex, id: StationId | 'run', sec: number, loadMult = 1): string {
+  const table = tableFor(sex);
+  let best = 0;
+  let bestErr = Infinity;
+  table.forEach((row, i) => {
+    const ref = (id === 'run' ? row.run : row.stations[id]) * loadMult;
+    const err = Math.abs(Math.log(sec / ref));
+    if (err < bestErr) {
+      bestErr = err;
+      best = i;
+    }
+  });
+  return BAND_LABELS[best];
+}
+
 export function tableFor(sex: Sex): BandRow[] {
   return sex === 'male' ? MEN_OPEN : WOMEN_OPEN;
 }
