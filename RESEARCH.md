@@ -108,3 +108,13 @@ changes:
 - **Strength:** "Solid" now equals the typical athlete ("Not sure"). Women's deadlift standards are
   0.5 / 1.0 / 1.25 / 1.75 / 2.5 × bodyweight.
 - **Doubles rule (2026/27):** partners must stay within 10 s of each other on the runs. This is noted in the app.
+
+## Realism guards (added with the realism test suite)
+
+- **World-class floors per station** (Open weights, scaled up for heavier loads). For example: men's sled push 1:40,
+  women's 1:30; lunges 2:15; wall balls 2:50. No prediction goes below them, however strong the inputs.
+- **Combined personal adjustments are capped** at 0.65–1.5× the typical time for athletes at the same run pace
+  (strength × bodyweight × skill). Entered station tests are exempt. This stops extreme inputs from stacking
+  unrealistically.
+- **Station baselines ignore the Pro running penalty.** Heavier sleds slow the runs but don't make an athlete a
+  weaker skier or rower.
