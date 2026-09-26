@@ -7,6 +7,15 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Collapsible sections:** click a section's title (or its arrow) to collapse it:
+  - Profile, Physiology and Calibrate;
+  - every ability card (a collapsed card still shows what it's using and any warnings);
+  - Division (collapsed, it shows the selected division);
+  - Work split / Relay order;
+  - each Insights subsection.
+
+  **Collapse all / Expand all** handles the ability cards in one click. The state is kept in memory only, so nothing is
+  saved.
 - **Quick view** (the default for new visitors): only the 10 inputs that drive the prediction most. They're the same
   fields and units as the Detailed view, which shows everything. Values entered in Detailed keep counting and are
   listed in Quick. Saved data with details opens in Detailed.

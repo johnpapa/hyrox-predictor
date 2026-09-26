@@ -2,15 +2,19 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { PredictorStore } from '../core/predictor.store';
 import { formatTime } from '../core/time';
 import { stationGaps } from '../core/insights';
+import { FoldState } from '../core/fold';
+import { FoldToggle } from './fold-toggle';
 
 @Component({
   selector: 'app-insights-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FoldToggle],
   templateUrl: './insights-panel.html',
   styleUrl: './insights-panel.scss',
 })
 export class InsightsPanel {
   protected readonly store = inject(PredictorStore);
+  protected readonly fold = inject(FoldState);
   protected readonly ins = this.store.insights;
   protected readonly fmt = formatTime;
   protected readonly abs = Math.abs;

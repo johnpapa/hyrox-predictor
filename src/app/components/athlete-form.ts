@@ -9,6 +9,8 @@ import { formatTime } from '../core/time';
 import { AbilityCard } from './ability-card';
 import { LiftInput } from './lift-input';
 import { NumberInput } from './number-input';
+import { FoldToggle } from './fold-toggle';
+import { FoldState } from '../core/fold';
 import { TimeInput } from './time-input';
 
 const ABILITY_NAMES: Record<AbilityId, string> = {
@@ -22,6 +24,12 @@ const ABILITY_NAMES: Record<AbilityId, string> = {
   lunges: 'Lunges',
   wallBalls: 'Wall balls',
   transitions: 'Roxzone',
+};
+
+/** Headings of the ability cards, as shown (their fold keys derive from these). */
+const ABILITY_CARD_HEADINGS: Record<AbilityId, string> = {
+  run: 'Running', erg: 'SkiErg & Row', legs: 'Leg strength', hinge: 'Pulling strength', grip: 'Grip', sled: 'Sleds',
+  burpees: 'Burpee broad jumps', lunges: 'Sandbag lunges', wallBalls: 'Wall balls', transitions: 'Roxzone transitions',
 };
 
 const NEXT_STEP: Record<AbilityId, string> = {
@@ -48,12 +56,19 @@ const QUICK_STEP: Partial<Record<AbilityId, string>> = {
 @Component({
   selector: 'app-athlete-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TimeInput, AbilityCard, LiftInput, NumberInput],
+  imports: [TimeInput, AbilityCard, LiftInput, NumberInput, FoldToggle],
   templateUrl: './athlete-form.html',
   styleUrl: './athlete-form.scss',
 })
 export class AthleteForm {
   protected readonly store = inject(PredictorStore);
+  protected readonly fold = inject(FoldState);
+  /** Fold keys of every ability card (see AbilityCard.foldKey). */
+  private readonly cardKeys = Object.values(ABILITY_CARD_HEADINGS).map((h) => 'card:' + h);
+  protected readonly allCardsOpen = computed(() => this.fold.allOpen(this.cardKeys));
+  protected toggleAllCards(): void {
+    this.fold.set(this.cardKeys, !this.allCardsOpen());
+  }
   protected readonly idx = computed(() => Math.min(this.store.activeAthlete(), this.store.division().teamSize - 1));
   protected readonly a = computed(() => this.store.athletes()[this.idx()]);
   protected readonly solo = computed(() => this.store.prediction().solos[this.idx()]);

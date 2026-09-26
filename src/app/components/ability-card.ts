@@ -1,5 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output } from '@angular/core';
 import { Level, LEVEL_LABELS } from '../core/athlete';
+import { FoldState } from '../core/fold';
+import { FoldToggle } from './fold-toggle';
+
+let nextCard = 0;
 import { Quality } from '../core/resolve';
 
 const QUALITY_LABEL: Record<Quality, string> = {
@@ -16,18 +20,20 @@ const QUALITY_LABEL: Record<Quality, string> = {
 @Component({
   selector: 'app-ability-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FoldToggle],
   template: `
     <section class="card" [attr.data-quality]="quality()">
       <header>
-        <h3>{{ heading() }}</h3>
+        <h3><app-fold [key]="foldKey()" [controls]="bodyId">{{ heading() }}</app-fold></h3>
         <span class="q" [attr.data-quality]="quality()">{{ qualityLabel() }}</span>
       </header>
-      @if (uses()) { <p class="uses">Used for: <b>{{ uses() }}</b></p> }
       <p class="src">{{ source() }}</p>
       @for (w of warnings(); track w) {
         <p class="warn" role="alert">⚠ {{ w }}</p>
       }
 
+      <div class="body" [id]="bodyId" [hidden]="!fold.isOpen(foldKey())">
+      @if (uses()) { <p class="uses">Used for: <b>{{ uses() }}</b></p> }
       <div class="primary"><ng-content select="[primary]" /></div>
 
       @if (hasAlternatives()) {
@@ -56,11 +62,15 @@ const QUALITY_LABEL: Record<Quality, string> = {
           </p>
         </div>
       }
+      </div>
     </section>
   `,
   styleUrl: './ability-card.scss',
 })
 export class AbilityCard {
+  protected readonly fold = inject(FoldState);
+  protected readonly bodyId = `card-body-${nextCard++}`;
+  protected readonly foldKey = computed(() => 'card:' + this.heading());
   readonly heading = input.required<string>();
   /** Which parts of the race this ability feeds, e.g. "Sled Push · Sandbag Lunges". */
   readonly uses = input('');

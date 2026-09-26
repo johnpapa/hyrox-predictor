@@ -19,6 +19,8 @@ switch back, and Quick lists what it's still using.
 
 ![Quick view](tutorial/00-quick.png)
 
+Long sections collapse: click a title (▾) to fold it away, or use **Collapse all** above the ability cards.
+
 ## 1. Pick your division
 
 Choose Singles (Open, Pro, Elite 15, Adaptive), Doubles, or Relay. Loads such as sled weights, kettlebells, the sandbag

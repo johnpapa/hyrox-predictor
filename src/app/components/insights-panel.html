@@ -14,16 +14,19 @@
   <p class="headline">{{ i.headline }}</p>
 
   @if (i.profile.length) {
-    <h3>Your build and background</h3>
+    <h3><app-fold key="ins-build" controls="fold-ins-build">Your build and background</app-fold></h3>
+    <div id="fold-ins-build" [hidden]="!fold.isOpen('ins-build')">
     <p class="sub">What each of these does to your finish time, compared with an average athlete who has your race times.</p>
     <ul class="profile">
       @for (r of i.profile; track r.id) {
         <li><span>{{ r.label }}</span><b class="mono" [class.slow]="r.sec > 0" [class.fast]="r.sec < 0">{{ signed(r.sec) }}</b></li>
       }
     </ul>
+    </div>
   }
 
-  <h3>Vs. athletes like you</h3>
+  <h3><app-fold key="ins-peers" controls="fold-ins-peers">Vs. athletes like you</app-fold></h3>
+  <div id="fold-ins-peers" [hidden]="!fold.isOpen('ins-peers')">
   <p class="sub">
     "Athletes like you" share your sex, age, height, weight, body fat, experience, race times and weekly training.
     They are typical only on trainable things: strength, grip, wall balls, burpees, sleds, lunges, ergs and
@@ -72,9 +75,11 @@
       entered yet. Add some in the Athlete section to see your strengths and limiters.</p>
   }
   <p class="legend"><span class="fast">■</span> faster than athletes like you <span class="slow">■</span> slower than athletes like you</p>
+  </div>
 
   @if (i.whatIfs.length) {
-    <h3>Realistic gains in 8–12 weeks</h3>
+    <h3><app-fold key="ins-gains" controls="fold-ins-gains">Realistic gains in 8–12 weeks</app-fold></h3>
+    <div id="fold-ins-gains" [hidden]="!fold.isOpen('ins-gains')">
     <p class="sub">Only for what you told us. Sized for your current level{{ i.masters ? ' and age' : '' }}; each re-runs the full prediction.</p>
     <ol class="whatifs">
       @for (w of i.whatIfs; track w.id) {
@@ -84,10 +89,12 @@
         </li>
       }
     </ol>
+    </div>
   }
 
   @if (i.unknowns.length) {
-    <h3>Worth measuring</h3>
+    <h3><app-fold key="ins-measure" controls="fold-ins-measure">Worth measuring</app-fold></h3>
+    <div id="fold-ins-measure" [hidden]="!fold.isOpen('ins-measure')">
     <p class="sub">You left these on "Not sure". Depending on the answer, your finish could move by about this much.</p>
     <ul class="unknowns">
       @for (u of i.unknowns; track u.id) {
@@ -97,17 +104,21 @@
         </li>
       }
     </ul>
+    </div>
   }
 
-  <h3>Practical tips</h3>
+  <h3><app-fold key="ins-tips" controls="fold-ins-tips">Practical tips</app-fold></h3>
+  <div id="fold-ins-tips" [hidden]="!fold.isOpen('ins-tips')">
   <ul class="tips">
     @for (t of i.tips; track t.id) {
       <li><strong>{{ t.title }}</strong><span>{{ t.text }}</span></li>
     }
   </ul>
+  </div>
 
   @if (i.doubles) {
-    <h3>Doubles: how to split each station</h3>
+    <h3><app-fold key="ins-doubles" controls="fold-ins-doubles">Doubles: how to split each station</app-fold></h3>
+    <div id="fold-ins-doubles" [hidden]="!fold.isOpen('ins-doubles')">
     <p class="sub">Only one of you works at a time and you can switch as often as you like. Short, frequent swaps keep you
       both near your best pace; the plan uses the split from Team tactics.</p>
     <ul class="tips doubles">
@@ -115,17 +126,22 @@
         <li><strong>{{ t.title }}</strong><span>{{ t.how }}</span><span class="plan">{{ t.plan }}</span></li>
       }
     </ul>
+    </div>
   }
 
-  <h3>Running</h3>
+  <h3><app-fold key="ins-running" controls="fold-ins-running">Running</app-fold></h3>
+  <div id="fold-ins-running" [hidden]="!fold.isOpen('ins-running')">
   <p class="txt">
     Your HYROX laps are projected <strong>{{ i.running.runFactorPct }}%</strong> slower than your 5K pace
     (typical ≈ {{ i.running.typicalPct }}%). {{ i.running.note }}
   </p>
   @if (i.running.comparison) { <p class="txt cmp">{{ i.running.comparison }}</p> }
+  </div>
 
-  <h3>Race-day pacing</h3>
+  <h3><app-fold key="ins-pacing" controls="fold-ins-pacing">Race-day pacing</app-fold></h3>
+  <div id="fold-ins-pacing" [hidden]="!fold.isOpen('ins-pacing')">
   <ul class="pacing">
     @for (p of i.pacing; track $index) { <li>{{ p }}</li> }
   </ul>
+  </div>
 </section>
