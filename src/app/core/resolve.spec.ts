@@ -104,6 +104,18 @@ describe('strength standards (user: "147 kg deadlift is just Solid? That\'s heav
 });
 
 describe('grip, burpees & wall balls', () => {
+  it('REGRESSION: a usual set size for 100 reps estimates max unbroken (user: "I did 100 in sets of 20")', () => {
+    const r = resolveAthlete(man({ wallBallsSetSize: 20 }));
+    expect(r.wallBallsUnbroken).toBe(33); // sets are ~60% of max unbroken
+    expect(r.quality.wallBalls).toBe('converted');
+    expect(r.sources.wallBalls).toContain('sets of 20 for 100 reps ≈ 33 max unbroken');
+    // Same prediction as entering that max unbroken directly; a real max takes priority.
+    const t = (p: Parameters<typeof man>[0]) => predict({ divisionId: 'men-open', athletes: [man(p)] }).total;
+    expect(t({ wallBallsSetSize: 20 })).toBeCloseTo(t({ wallBallsUnbroken: 33 }), 5);
+    expect(resolveAthlete(man({ wallBallsSetSize: 20, wallBallsUnbroken: 50 })).wallBallsUnbroken).toBe(50);
+    expect(t({ wallBallsSetSize: 25 })).toBeLessThan(t({ wallBallsSetSize: 10 }));
+  });
+
   it('turns dead hang / pull-ups / burpees into levels', () => {
     const strong = resolveAthlete(man({ deadHangSec: 120, pullUps: 15, burpees1Min: 30 }));
     expect(strong.grip.value).toBeLessThan(1);

@@ -60,7 +60,7 @@ export const FALLBACK = {
     sled: [30, 15 * 60], bbj: [90, 20 * 60], farmers: [45, 10 * 60], lunges: [90, 20 * 60],
     wallBalls100: [150, 25 * 60], karen: [240, 40 * 60],
     heightCm: [135, 225], bodyFat: [4, 50], runningKm: [0, 250], otherHours: [0, 30], vo2: [20, 90], bodyweightKg: [35, 200],
-    age: [16, 95], deadHang: [1, 600], pullUps: [0, 80], burpees1Min: [1, 60], wallBallsUnbroken: [1, 300],
+    age: [16, 95], deadHang: [1, 600], pullUps: [0, 80], burpees1Min: [1, 60], wallBallsUnbroken: [1, 300], wallBallsSetSize: [3, 100],
     liftKg: [5, 500], liftReps: [1, 15],
   },
 
@@ -116,6 +116,11 @@ export const FALLBACK = {
 
   // ── Conditioning ────────────────────────────────────────────────────────────────────
   burpees1MinByLevel: { male: [15, 20, 25, 30, 35], female: [12, 17, 22, 27, 32] } as BySex<ByLevel>,
+  /**
+   * Usual set size for 100 reps ÷ max unbroken. Athletes break well before failure so short rests
+   * keep them moving; ~60% is a common coaching target (e.g. sets of 20 ≈ 33 max unbroken).
+   */
+  wallBallsSetShare: 0.6,
   /** 100 wall balls ≈ 0.62 × "Karen" (150 reps) time. */
   wallBalls100FromKaren: 0.62,
 

@@ -363,7 +363,9 @@ export function resolveAthlete(raw: AthleteProfile): ResolvedAthlete {
         ? a.karenSec * FALLBACK.wallBalls100FromKaren
         : null,
   };
-  const wbU = pos(a.wallBallsUnbroken) ? a.wallBallsUnbroken : null;
+  // Max unbroken › usual set size for 100 reps (converted: sets are ~60% of max unbroken).
+  const wbSet = !pos(a.wallBallsUnbroken) && pos(a.wallBallsSetSize) ? a.wallBallsSetSize : null;
+  const wbU = pos(a.wallBallsUnbroken) ? a.wallBallsUnbroken : wbSet ? Math.round(wbSet / FALLBACK.wallBallsSetShare) : null;
 
   const best = (...qs: Quality[]): Quality => {
     const order: Quality[] = ['measured', 'converted', 'rated', 'assumed'];
@@ -378,7 +380,7 @@ export function resolveAthlete(raw: AthleteProfile): ResolvedAthlete {
     burpees: best(burpees.quality, tests.bbj ? 'measured' : 'assumed'),
     sled: best(sled.quality, tests.sledPush || tests.sledPull ? 'measured' : 'assumed'),
     lunges: best(lunges.quality, tests.lunges ? 'measured' : 'assumed'),
-    wallBalls: best(wallBalls.quality, (tests.wallBalls100 && tests.wallBalls100 === a.wallBalls100Sec) || wbU ? 'measured' : tests.wallBalls100 ? 'converted' : 'assumed'),
+    wallBalls: best(wallBalls.quality, (tests.wallBalls100 && tests.wallBalls100 === a.wallBalls100Sec) || (wbU && !wbSet) ? 'measured' : tests.wallBalls100 || wbSet ? 'converted' : 'assumed'),
     transitions: transitions.quality,
   };
 
@@ -395,7 +397,9 @@ export function resolveAthlete(raw: AthleteProfile): ResolvedAthlete {
     lunges: t(tests.lunges, 'lunges') ?? lunges.source,
     wallBalls: tests.wallBalls100 && pos(a.wallBalls100Sec) && tests.wallBalls100 === a.wallBalls100Sec
       ? `100 wall balls ${fmtT(a.wallBalls100Sec)}`
-      : wbU
+      : wbSet
+        ? `sets of ${wbSet} for 100 reps ≈ ${wbU} max unbroken`
+        : wbU
         ? `${wbU} unbroken wall balls`
         : tests.wallBalls100 && pos(a.karenSec)
           ? `from Karen ${fmtT(a.karenSec)} ≈ ${fmtT(tests.wallBalls100!)} per 100`

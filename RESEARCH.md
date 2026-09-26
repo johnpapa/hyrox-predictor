@@ -354,7 +354,7 @@ Quick shows only the inputs with the largest effect in the input weighting revie
 | Leg strength rating | 3:00 |
 | Bodyweight | 2:58 |
 | Weekly running | 2:41 |
-| Max unbroken wall balls | 2:37 |
+| Wall-ball set size for 100 reps (was max unbroken) | 2:37 |
 | Pulling strength rating | 2:12 |
 | Age | age group, and 1:20 from 35 to 60 |
 | Sex | sets the division, loads and baselines |
@@ -395,3 +395,15 @@ are unchanged until there's a comparable anchor.
 
 (hyresult's "top X%" labels don't match rank ÷ field size, e.g. Roxzone 795th of 2,814 is labelled top 56.6%, so
 ranks are used.)
+
+## Wall balls: usual set size (Sept 2026)
+
+Max unbroken wall balls predicts the station well: 100 reps at race weight is muscular-endurance work, and the size
+of the sets you can hold decides how many breaks you need. But most athletes have never tested a max. What they know
+is how they break up 100 reps in training ("sets of 20 with short breaks"). That's also closer to race behaviour.
+
+The set size is now the main wall-ball input in both Quick and Detailed. Max unbroken moves to the alternatives.
+Conversion: sets ≈ 60% of max unbroken (athletes break well before failure so the rests stay short; a common
+coaching target is roughly half to two-thirds of max). So sets of 20 ≈ 33 max unbroken, and the model then uses its
+existing unbroken formula. This matches the level anchors, e.g. Solid ≈ "sets of ~20–25" for an athlete whose typical
+max is ≈ 36. It's an estimate, so its quality shows as "Estimated", below a real max or a 100-rep time.

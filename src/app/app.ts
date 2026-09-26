@@ -67,6 +67,9 @@ export class App {
   }
 
   protected reset(): void {
-    if (confirm('Reset all inputs to default values?')) this.store.reset();
+    const msg = this.store.remember()
+      ? 'Are you sure? This clears everything you entered for every athlete, including the copy saved on this device.'
+      : 'Are you sure? This clears everything you entered for every athlete.';
+    if (confirm(msg)) this.store.reset();
   }
 }

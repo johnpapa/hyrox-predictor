@@ -231,6 +231,14 @@ describe('why each station differs (user question: "why am I worse than athletes
     expect(hinge.sec).toBeGreaterThan(0);
   });
 
+  it('wall-ball set size: gains and reasons talk in sets, not max unbroken', () => {
+    const a = { ...john(), wallBallsUnbroken: null, wallBallsSetSize: 12 };
+    const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
+    const i = computeInsights(input, predict(input));
+    expect(i.whatIfs.find((w) => w.id === 'wallBalls')!.detail).toMatch(/^Sets of 12 → \d+ for 100 reps$/);
+    expect(i.explanation.byArea.wallBalls[0].label).toContain('sets of 12');
+  });
+
   it('realistic gains for a working set are phrased as a working set (same reps, more weight)', () => {
     const a = { ...john(), lifts: { ...emptyLifts(), backSquat: { kg: 60, reps: 10, rir: 1.5 } } };
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };

@@ -105,6 +105,8 @@ export interface AthleteProfile {
   wallBalls100Sec: number | null;
   /** Max unbroken wall balls with the race ball & target. */
   wallBallsUnbroken: number | null;
+  /** Usual set size when doing 100 wall balls (e.g. sets of 20 with short breaks). */
+  wallBallsSetSize: number | null;
   /** "Karen": 150 wall balls for time. */
   karenSec: number | null;
 
@@ -172,6 +174,7 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
     lungesTestSec: null,
     wallBalls100Sec: null,
     wallBallsUnbroken: null,
+    wallBallsSetSize: null,
     karenSec: null,
     levels: emptyLevels(),
     previousHyroxSec: null,
@@ -200,7 +203,7 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
     'age', 'bodyweightKg', 'runningKmPerWeek', 'otherTrainingHours', 'fiveKSec', 'tenKSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
     'heightCm', 'bodyFatPct', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
     'row5kSec', 'deadHangSec', 'pullUps', 'burpees1Min', 'sledPushTestSec', 'sledPullTestSec', 'bbjTestSec',
-    'farmersTestSec', 'lungesTestSec', 'wallBalls100Sec', 'wallBallsUnbroken', 'karenSec', 'previousHyroxSec',
+    'farmersTestSec', 'lungesTestSec', 'wallBalls100Sec', 'wallBallsUnbroken', 'wallBallsSetSize', 'karenSec', 'previousHyroxSec',
   ];
   for (const k of numeric) (out as any)[k] = numOrNull(r[k]);
   const lifts = r['lifts'] ?? {};
@@ -259,6 +262,7 @@ export function sanitizeRanges(a: AthleteProfile): AthleteProfile {
     pullUps: inR(a.pullUps, R.pullUps),
     burpees1Min: inR(a.burpees1Min, R.burpees1Min),
     wallBallsUnbroken: inR(a.wallBallsUnbroken, R.wallBallsUnbroken),
+    wallBallsSetSize: inR(a.wallBallsSetSize, R.wallBallsSetSize),
     lifts,
   };
 }
@@ -286,6 +290,7 @@ export function detailOnlyInputs(a: AthleteProfile): string[] {
   if (LIFT_IDS.some((id) => a.lifts[id].kg != null)) out.push('lifts');
   if (a.deadHangSec != null || a.pullUps != null) out.push('grip tests');
   add(a.burpees1Min, 'burpees');
+  add(a.wallBallsUnbroken, 'max unbroken wall balls');
   if ([a.sledPushTestSec, a.sledPullTestSec, a.bbjTestSec, a.farmersTestSec, a.lungesTestSec, a.wallBalls100Sec, a.karenSec].some((x) => x != null)) {
     out.push('station tests');
   }

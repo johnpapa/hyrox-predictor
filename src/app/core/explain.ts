@@ -85,10 +85,14 @@ const FACTORS: Factor[] = [
   },
   {
     id: 'wallBalls',
-    applies: (a) => a.levels.wallBalls != null || a.wallBallsUnbroken != null || a.wallBalls100Sec != null || a.karenSec != null,
+    applies: (a) => a.levels.wallBalls != null || a.wallBallsUnbroken != null || a.wallBallsSetSize != null || a.wallBalls100Sec != null || a.karenSec != null,
     label: (a, slower) =>
-      a.wallBallsUnbroken != null ? `Wall-ball capacity (${a.wallBallsUnbroken} unbroken, ${slower ? 'below' : 'above'} typical)` : `Wall-ball capacity (${slower ? 'below' : 'above'} typical)`,
-    neutral: (a) => ({ ...a, levels: { ...a.levels, wallBalls: null }, wallBallsUnbroken: null, wallBalls100Sec: null, karenSec: null }),
+      a.wallBallsUnbroken != null
+        ? `Wall-ball capacity (${a.wallBallsUnbroken} unbroken, ${slower ? 'below' : 'above'} typical)`
+        : a.wallBallsSetSize != null
+          ? `Wall-ball capacity (sets of ${a.wallBallsSetSize}, ${slower ? 'below' : 'above'} typical)`
+          : `Wall-ball capacity (${slower ? 'below' : 'above'} typical)`,
+    neutral: (a) => ({ ...a, levels: { ...a.levels, wallBalls: null }, wallBallsUnbroken: null, wallBallsSetSize: null, wallBalls100Sec: null, karenSec: null }),
   },
   {
     id: 'burpees',

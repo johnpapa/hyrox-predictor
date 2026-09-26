@@ -12,7 +12,7 @@ prediction updates as you type.
 ## Quick or Detailed?
 
 The form opens in **Quick**: the 10 inputs that move the prediction most (sex, age, bodyweight, HYROX experience,
-weekly running, 5K or a running rating, leg and pulling strength ratings, and max unbroken wall balls). They're the same
+weekly running, 5K or a running rating, leg and pulling strength ratings, and your usual wall-ball set size). They're the same
 fields, in the same units, as the full form. Switch to **Detailed** at the top of the Athlete panel for everything else
 (other races, lifts, ergs, station tests, physiology, previous result); anything you enter there keeps counting when you
 switch back, and Quick lists what it's still using.
@@ -74,7 +74,7 @@ result; it only widens the range.
 
 ## 6. Station benchmarks
 
-Grip (dead hang, pull-ups), burpees per minute, wall balls (max unbroken, 100 for time, or "Karen") and fresh station
+Grip (dead hang, pull-ups), burpees per minute, wall balls (your usual set size for 100 reps, max unbroken, 100 for time, or "Karen") and fresh station
 tests (sled push/pull, lunges, farmers carry, burpee broad jumps) sharpen individual stations. Implausible entries are
 ignored with a warning.
 

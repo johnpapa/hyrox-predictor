@@ -41,7 +41,7 @@ const NEXT_STEP: Record<AbilityId, string> = {
   burpees: 'how many burpees you can do in 1 minute',
   sled: 'a sled push/pull test at race weight',
   lunges: 'a 100m sandbag lunge test',
-  wallBalls: 'your max unbroken wall balls',
+  wallBalls: 'your usual wall-ball set size (e.g. sets of 20)',
   transitions: 'a Roxzone self-rating',
 };
 
@@ -50,7 +50,7 @@ const QUICK_STEP: Partial<Record<AbilityId, string>> = {
   run: 'Enter your 5K (or rate your running)',
   legs: 'Rate your leg strength',
   hinge: 'Rate your pulling strength',
-  wallBalls: 'Enter your max unbroken wall balls',
+  wallBalls: 'Enter your usual wall-ball set size',
 };
 
 @Component({
@@ -75,7 +75,7 @@ export class AthleteForm {
   protected readonly r = computed(() => this.solo().resolved);
   protected readonly unit = computed(() => this.store.units());
   protected readonly quick = computed(() => this.store.mode() === 'quick');
-  /** Inputs in the Quick view: sex, age, bodyweight, experience, weekly running, 5K, running / leg / pulling ratings, max unbroken wall balls. */
+  /** Inputs in the Quick view: sex, age, bodyweight, experience, weekly running, 5K, running / leg / pulling ratings, wall-ball set size. */
   protected readonly quickCount = 10;
   /** Values entered in Detailed that Quick hides but still uses. */
   protected readonly hiddenUsed = computed(() => detailOnlyInputs(this.a()));

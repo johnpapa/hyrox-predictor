@@ -159,7 +159,14 @@ function realisticGains(a: AthleteProfile): Candidate[] {
   strength('hinge', 'deadlift', 'deadlift', FALLBACK.deadliftPerBw[a.sex], r.deadlift.value);
 
   if (known('wallBalls') && !r.tests.wallBalls100) {
-    if (r.wallBallsUnbroken) {
+    if (a.wallBallsSetSize && !a.wallBallsUnbroken) {
+      const add = Math.max(2, Math.round(a.wallBallsSetSize * G().wallBallsAddPct));
+      out.push({
+        id: 'wallBalls', label: 'Bigger wall-ball sets',
+        detail: `Sets of ${a.wallBallsSetSize} → ${a.wallBallsSetSize + add} for 100 reps`,
+        apply: (x) => ({ ...x, wallBallsSetSize: a.wallBallsSetSize! + add }),
+      });
+    } else if (r.wallBallsUnbroken) {
       const add = Math.max(3, Math.min(G().wallBallsAddMax, Math.round(r.wallBallsUnbroken * G().wallBallsAddPct)));
       out.push({
         id: 'wallBalls', label: 'Grow your unbroken wall balls',
@@ -241,7 +248,7 @@ const UNKNOWN_HOW: Partial<Record<keyof ReturnType<typeof resolveAthlete>['quali
   hinge: ['Enter a deadlift working set', 'Your usual set (e.g. 3 × 8), or a trap-bar deadlift; no max test needed.'],
   grip: ['Time a dead hang', 'Or count your max pull-ups.'],
   burpees: ['Count burpees in 1 minute', 'Chest to floor, full stand.'],
-  wallBalls: ['Find your max unbroken wall balls', 'With your race ball and target.'],
+  wallBalls: ['Enter your usual wall-ball set size', 'How many at a time when you do 100 reps, e.g. sets of 20.'],
   erg: ['Do a 1000 m row or SkiErg', 'A hard, even-paced effort.'],
 };
 
