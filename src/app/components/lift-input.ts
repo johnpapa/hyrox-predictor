@@ -1,31 +1,26 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { Lift } from '../core/athlete';
-import { LB_PER_KG, Units } from '../core/predictor.store';
 import { oneRepMax } from '../core/formulas';
+import { LB_PER_KG, Units } from '../core/predictor.store';
+import { NumberInput } from './number-input';
 
 /** Weight × reps entry; stores kg, shows the estimated 1RM for multi-rep sets. */
 @Component({
   selector: 'app-lift-input',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NumberInput],
   template: `
-    <div class="field">
-      <span class="label">{{ label() }}</span>
-      <div class="row">
-        <input type="number" inputmode="decimal" min="0" placeholder="—" [attr.aria-label]="label() + ' weight in ' + units()"
-          [value]="display()" (input)="onWeight($any($event.target).value)" />
-        <span class="x">{{ units() }} ×</span>
-        <input class="reps" type="number" inputmode="numeric" min="1" max="12" [attr.aria-label]="label() + ' reps'"
-          [value]="lift().reps ?? 1" (input)="onReps($any($event.target).value)" />
-        <span class="x">reps</span>
-      </div>
+    <div class="lift">
+      <app-number-input class="w" [label]="label() + ' (' + units() + ')'" placeholder="—" [value]="lift().kg"
+        [factor]="factor()" [decimals]="units() === 'kg' ? 1 : 0" (valueChange)="liftChange.emit({ kg: $event })" />
+      <app-number-input class="r" label="Reps" [ariaLabel]="label() + ' reps'" placeholder="1" [value]="lift().reps" [integer]="true"
+        (valueChange)="onReps($event)" />
       <span class="hint">{{ hintText() }}</span>
     </div>
   `,
   styles: `
-    .row { display: flex; align-items: center; gap: 6px; }
-    .row input { flex: 1; min-width: 0; }
-    .row input.reps { flex: 0 0 64px; }
-    .x { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-faint); white-space: nowrap; }
+    .lift { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 4px 8px; align-items: end; }
+    .hint { grid-column: 1 / -1; font-size: 0.78rem; color: var(--text-faint); }
   `,
 })
 export class LiftInput {
@@ -35,30 +30,20 @@ export class LiftInput {
   readonly hint = input('');
   readonly liftChange = output<Partial<Lift>>();
 
-  protected readonly display = computed(() => {
-    const kg = this.lift().kg;
-    if (kg == null) return null;
-    return this.units() === 'kg' ? Math.round(kg * 10) / 10 : Math.round(kg * LB_PER_KG);
-  });
+  protected readonly factor = computed(() => (this.units() === 'kg' ? 1 : LB_PER_KG));
 
   protected readonly hintText = computed(() => {
     const l = this.lift();
     if (l.kg && l.reps && l.reps > 1) {
       const rm = oneRepMax(l.kg, l.reps);
       const v = this.units() === 'kg' ? `${Math.round(rm)} kg` : `${Math.round(rm * LB_PER_KG)} lb`;
-      return `Est. 1RM ${v} (Epley)`;
+      return `Est. 1RM ${v} (Epley${l.reps > 10 ? ', less accurate above 10 reps' : ''})`;
     }
     return this.hint();
   });
 
-  protected onWeight(v: string): void {
-    const n = parseFloat(v);
-    const kg = isFinite(n) && n > 0 ? (this.units() === 'kg' ? n : n / LB_PER_KG) : null;
-    this.liftChange.emit({ kg });
-  }
-
-  protected onReps(v: string): void {
-    const n = Math.round(parseFloat(v));
-    this.liftChange.emit({ reps: isFinite(n) && n >= 1 ? Math.min(12, n) : 1 });
+  /** Blank reps means a single (1RM); values are capped at 12 where formulas stay usable. */
+  protected onReps(n: number | null): void {
+    this.liftChange.emit({ reps: n == null ? null : Math.min(12, Math.max(1, n)) });
   }
 }

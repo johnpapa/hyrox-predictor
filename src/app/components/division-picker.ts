@@ -14,13 +14,12 @@ import { PredictorStore } from '../core/predictor.store';
       @for (g of groups; track g.name) {
         <div class="group">
           <span class="label">{{ g.name }}</span>
-          <div class="chips" role="radiogroup" [attr.aria-label]="g.name + ' divisions'">
+          <div class="chips" role="group" [attr.aria-label]="g.name + ' divisions'">
             @for (d of g.items; track d.id) {
               <button
                 type="button"
                 class="chip"
-                role="radio"
-                [attr.aria-checked]="store.divisionId() === d.id"
+                [attr.aria-pressed]="store.divisionId() === d.id"
                 [class.on]="store.divisionId() === d.id"
                 (click)="store.setDivision(d.id)"
               >{{ d.name }}</button>

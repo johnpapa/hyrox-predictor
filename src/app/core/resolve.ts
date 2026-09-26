@@ -51,6 +51,10 @@ export interface ResolvedAthlete {
   quality: Record<AbilityId, Quality>;
   /** What each ability's estimate is based on, for display. */
   sources: Record<AbilityId, string>;
+  /** Inputs that were ignored because they are implausible. */
+  warnings: Partial<Record<AbilityId, string[]>>;
+  /** Whether the bodyweight used was entered (and plausible). */
+  bodyweightKnown: boolean;
 }
 
 const fmtKg = (kg: number) => `${Math.round(kg)} kg`;
@@ -61,6 +65,20 @@ const fmtT = (s: number) => {
 };
 const levelName = (l: Level) => FALLBACK.levelNames[l - 1];
 const pos = (x: number | null | undefined): x is number => x != null && isFinite(x) && x > 0;
+
+type RangeKey = keyof typeof FALLBACK.ranges;
+/** Warnings collected while resolving one athlete (reset per call). */
+let warnings: Partial<Record<AbilityId, string[]>> = {};
+
+/** True if the value is present and plausible; out-of-range values are ignored with a warning. */
+function ok(x: number | null | undefined, key: RangeKey, ability: AbilityId, label: string, fmt: (v: number) => string = fmtT): x is number {
+  if (!pos(x)) return false;
+  const [lo, hi] = FALLBACK.ranges[key];
+  if (x >= lo && x <= hi) return true;
+  (warnings[ability] ??= []).push(`${label} ${fmt(x)} ignored (expected ${fmt(lo)}–${fmt(hi)})`);
+  return false;
+}
+const plain = (v: number) => String(Math.round(v));
 
 /** Interpolate a 5-point level table at a (possibly fractional) level 1..5. */
 export function atLevel(table: readonly number[], level: number): number {
@@ -95,21 +113,21 @@ function levelMult(level: number): number {
 // ─────────────────────────────────────────────────────────────────────────────────────
 
 function resolveFiveK(a: AthleteProfile): Resolved {
-  if (pos(a.fiveKSec)) return { value: a.fiveKSec, quality: 'measured', source: `5K ${fmtT(a.fiveKSec)}` };
-  if (pos(a.tenKSec)) {
+  if (ok(a.fiveKSec, 'fiveK', 'run', '5K')) return { value: a.fiveKSec, quality: 'measured', source: `5K ${fmtT(a.fiveKSec)}` };
+  if (ok(a.tenKSec, 'tenK', 'run', '10K')) {
     return { value: riegel(a.tenKSec, 10000, 5000, FALLBACK.riegelExp.tenK), quality: 'converted', source: `from 10K ${fmtT(a.tenKSec)} (Riegel)` };
   }
-  if (pos(a.mileSec)) {
+  if (ok(a.mileSec, 'mile', 'run', 'Mile')) {
     return { value: riegel(a.mileSec, 1609.34, 5000, FALLBACK.riegelExp.mile), quality: 'converted', source: `from mile ${fmtT(a.mileSec)} (Riegel)` };
   }
-  if (pos(a.halfMarathonSec)) {
+  if (ok(a.halfMarathonSec, 'half', 'run', 'Half marathon')) {
     return {
       value: riegel(a.halfMarathonSec, 21097.5, 5000, FALLBACK.riegelExp.half),
       quality: 'converted',
       source: `from half marathon ${fmtT(a.halfMarathonSec)} (Riegel)`,
     };
   }
-  if (pos(a.cooperMeters) && a.cooperMeters > 1000) {
+  if (ok(a.cooperMeters, 'cooperM', 'run', 'Cooper test', (v) => `${Math.round(v)} m`)) {
     const vo2 = (a.cooperMeters - 504.9) / 44.73;
     return {
       value: raceTimeFromVdot(vo2, 5000),
@@ -117,12 +135,17 @@ function resolveFiveK(a: AthleteProfile): Resolved {
       source: `from Cooper test ${Math.round(a.cooperMeters)} m (VO₂max ≈ ${vo2.toFixed(0)})`,
     };
   }
-  if (pos(a.vo2max) && a.vo2max > 20 && a.vo2max < 90) {
-    const vdot = a.vo2max - FALLBACK.watchVo2Offset;
-    // Watch estimates are loose, so treat this like a self-rating for confidence.
-    return { value: raceTimeFromVdot(vdot, 5000), quality: 'rated', source: `from VO₂max ${a.vo2max} (Daniels VDOT)` };
+  if (ok(a.vo2max, 'vo2', 'run', 'VO₂max', plain)) {
+    const lab = a.vo2maxSource === 'lab';
+    // Wearables read high vs race-derived VDOT, and are loose, so they count like a self-rating.
+    const vdot = lab ? a.vo2max : a.vo2max - FALLBACK.watchVo2Offset;
+    return {
+      value: raceTimeFromVdot(vdot, 5000),
+      quality: lab ? 'converted' : 'rated',
+      source: `from ${lab ? 'lab' : 'watch'} VO₂max ${a.vo2max} (Daniels VDOT)`,
+    };
   }
-  if (pos(a.restingHr) && a.restingHr >= 30 && a.restingHr <= 110) {
+  if (ok(a.restingHr, 'restingHr', 'run', 'Resting HR', plain)) {
     const U = FALLBACK.uth;
     const hrMax = U.hrMaxBase - U.hrMaxPerYear * (a.age ?? U.defaultAge);
     const vo2 = (U.factor * hrMax) / a.restingHr;
@@ -165,10 +188,10 @@ function resolveErg(
   k2: number | null,
   k5: number | null,
 ): Resolved | null {
-  if (pos(k1)) return { value: k1, quality: 'measured', source: `${kind} 1000m ${fmtT(k1)}` };
-  if (pos(k2)) return { value: paulsLaw(k2, 2000, 1000), quality: 'converted', source: `from ${kind} 2000m ${fmtT(k2)}` };
-  if (pos(k500)) return { value: paulsLaw(k500, 500, 1000), quality: 'converted', source: `from ${kind} 500m ${fmtT(k500)}` };
-  if (pos(k5)) return { value: paulsLaw(k5, 5000, 1000), quality: 'converted', source: `from ${kind} 5000m ${fmtT(k5)}` };
+  if (ok(k1, 'erg1k', 'erg', `${kind} 1000m`)) return { value: k1, quality: 'measured', source: `${kind} 1000m ${fmtT(k1)}` };
+  if (ok(k2, 'erg2k', 'erg', `${kind} 2000m`)) return { value: paulsLaw(k2, 2000, 1000), quality: 'converted', source: `from ${kind} 2000m ${fmtT(k2)}` };
+  if (ok(k500, 'erg500', 'erg', `${kind} 500m`)) return { value: paulsLaw(k500, 500, 1000), quality: 'converted', source: `from ${kind} 500m ${fmtT(k500)}` };
+  if (ok(k5, 'erg5k', 'erg', `${kind} 5000m`)) return { value: paulsLaw(k5, 5000, 1000), quality: 'converted', source: `from ${kind} 5000m ${fmtT(k5)}` };
   return null;
 }
 
@@ -231,11 +254,6 @@ function fromStrengthLevel(a: AthleteProfile, bw: number, ability: 'legs' | 'hin
     const v = bw * atLevel(perBw, own);
     return { value: v, quality: 'rated', source: `${levelName(own)} strength ≈ ${fmtKg(v)} ${name}` };
   }
-  // A sled self-rating says something about leg/hip strength too.
-  if (a.levels.sled) {
-    const v = bw * atLevel(perBw, a.levels.sled) * 0.98;
-    return { value: v, quality: 'rated', source: `from sled rating (${levelName(a.levels.sled)}) ≈ ${fmtKg(v)} ${name}` };
-  }
   const v = bw * FALLBACK.typicalPerBw[ability][a.sex];
   return { value: v, quality: 'assumed', source: `typical ≈ ${fmtKg(v)} ${name}` };
 }
@@ -278,7 +296,9 @@ function clampLevel(l: number): number {
 
 export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
   const sex: Sex = a.sex;
-  const bw = pos(a.bodyweightKg) && a.bodyweightKg > 30 ? a.bodyweightKg : FALLBACK.refBodyweightKg[sex];
+  warnings = {};
+  const bodyweightKnown = ok(a.bodyweightKg, 'bodyweightKg', 'legs', 'Bodyweight', (v) => `${Math.round(v)} kg`);
+  const bw = bodyweightKnown ? a.bodyweightKg! : FALLBACK.refBodyweightKg[sex];
 
   const fiveK = resolveFiveK(a);
   const ski1k = resolveErg('SkiErg', a.skiErg1kSec, a.skiErg500Sec, a.skiErg2kSec, null);
@@ -294,14 +314,14 @@ export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
   const transitions = fromLevel(a, 'transitions', 'transitions');
 
   const tests = {
-    sledPush: pos(a.sledPushTestSec) ? a.sledPushTestSec : null,
-    sledPull: pos(a.sledPullTestSec) ? a.sledPullTestSec : null,
-    bbj: pos(a.bbjTestSec) ? a.bbjTestSec : null,
-    farmers: pos(a.farmersTestSec) ? a.farmersTestSec : null,
-    lunges: pos(a.lungesTestSec) ? a.lungesTestSec : null,
-    wallBalls100: pos(a.wallBalls100Sec)
+    sledPush: ok(a.sledPushTestSec, 'sled', 'sled', 'Sled push test') ? a.sledPushTestSec : null,
+    sledPull: ok(a.sledPullTestSec, 'sled', 'sled', 'Sled pull test') ? a.sledPullTestSec : null,
+    bbj: ok(a.bbjTestSec, 'bbj', 'burpees', 'BBJ test') ? a.bbjTestSec : null,
+    farmers: ok(a.farmersTestSec, 'farmers', 'grip', 'Farmers carry test') ? a.farmersTestSec : null,
+    lunges: ok(a.lungesTestSec, 'lunges', 'lunges', 'Lunge test') ? a.lungesTestSec : null,
+    wallBalls100: ok(a.wallBalls100Sec, 'wallBalls100', 'wallBalls', '100 wall balls')
       ? a.wallBalls100Sec
-      : pos(a.karenSec)
+      : ok(a.karenSec, 'karen', 'wallBalls', 'Karen')
         ? a.karenSec * FALLBACK.wallBalls100FromKaren
         : null,
   };
@@ -320,7 +340,7 @@ export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
     burpees: best(burpees.quality, tests.bbj ? 'measured' : 'assumed'),
     sled: best(sled.quality, tests.sledPush || tests.sledPull ? 'measured' : 'assumed'),
     lunges: best(lunges.quality, tests.lunges ? 'measured' : 'assumed'),
-    wallBalls: best(wallBalls.quality, a.wallBalls100Sec || wbU ? 'measured' : a.karenSec ? 'converted' : 'assumed'),
+    wallBalls: best(wallBalls.quality, (tests.wallBalls100 && tests.wallBalls100 === a.wallBalls100Sec) || wbU ? 'measured' : tests.wallBalls100 ? 'converted' : 'assumed'),
     transitions: transitions.quality,
   };
 
@@ -335,15 +355,15 @@ export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
     burpees: t(tests.bbj, '80m BBJ') ?? burpees.source,
     sled: [t(tests.sledPush, 'sled push'), t(tests.sledPull, 'sled pull')].filter(Boolean).join(' · ') || sled.source,
     lunges: t(tests.lunges, 'lunges') ?? lunges.source,
-    wallBalls: pos(a.wallBalls100Sec)
+    wallBalls: tests.wallBalls100 && pos(a.wallBalls100Sec) && tests.wallBalls100 === a.wallBalls100Sec
       ? `100 wall balls ${fmtT(a.wallBalls100Sec)}`
       : wbU
         ? `${wbU} unbroken wall balls`
-        : pos(a.karenSec)
+        : tests.wallBalls100 && pos(a.karenSec)
           ? `from Karen ${fmtT(a.karenSec)} ≈ ${fmtT(tests.wallBalls100!)} per 100`
           : wallBalls.source,
     transitions: transitions.source,
   };
 
-  return { sources, bodyweightKg: bw, fiveK, ski1k, row1k, ergMult, squat, deadlift, grip, burpees, sled, lunges, wallBalls, transitions, tests, wallBallsUnbroken: wbU, quality };
+  return { sources, warnings, bodyweightKnown, bodyweightKg: bw, fiveK, ski1k, row1k, ergMult, squat, deadlift, grip, burpees, sled, lunges, wallBalls, transitions, tests, wallBallsUnbroken: wbU, quality };
 }

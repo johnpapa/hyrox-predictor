@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { AbilityId, AthleteProfile, Experience, Level, Lift, LiftId, hyroxAgeGroup } from '../core/athlete';
 import { FALLBACK } from '../core/fallback-params';
 import { levelAnchors } from '../core/level-anchors';
-import { PredictorStore } from '../core/predictor.store';
+import { LB_PER_KG, PredictorStore } from '../core/predictor.store';
 import { Quality } from '../core/resolve';
 import { formatTime } from '../core/time';
 import { AbilityCard } from './ability-card';
 import { LiftInput } from './lift-input';
+import { NumberInput } from './number-input';
 import { TimeInput } from './time-input';
 
 const ABILITY_NAMES: Record<AbilityId, string> = {
@@ -38,7 +39,7 @@ const NEXT_STEP: Record<AbilityId, string> = {
 @Component({
   selector: 'app-athlete-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TimeInput, AbilityCard, LiftInput],
+  imports: [TimeInput, AbilityCard, LiftInput, NumberInput],
   templateUrl: './athlete-form.html',
   styleUrl: './athlete-form.scss',
 })
@@ -109,19 +110,14 @@ export class AthleteForm {
     this.store.setLift(this.idx(), id, p);
   }
 
-  protected num(v: string): number | null {
-    const n = parseFloat(v);
-    return isFinite(n) && n > 0 ? n : null;
-  }
+  protected readonly weightFactor = computed(() => (this.unit() === 'kg' ? 1 : LB_PER_KG));
 
-  /** Like `num` but keeps 0 (e.g. zero pull-ups is a real answer). */
-  protected count(v: string): number | null {
-    const n = parseFloat(v);
-    return isFinite(n) && n >= 0 && v.trim() !== '' ? Math.round(n) : null;
-  }
-
-  protected weight(v: string): number | null {
-    return this.store.fromDisplayWeight(this.num(v));
+  /** Arrow-key navigation between athlete tabs (WAI-ARIA tabs pattern). */
+  protected moveTab(delta: number): void {
+    const n = this.store.division().teamSize;
+    const next = (this.idx() + delta + n) % n;
+    this.store.activeAthlete.set(next);
+    queueMicrotask(() => document.getElementById('athlete-tab-' + next)?.focus());
   }
 
   protected any(...xs: unknown[]): boolean {

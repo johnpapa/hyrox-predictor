@@ -15,11 +15,18 @@ export interface DivisionInfo {
    * Weight class each athlete slot uses. Mixed divisions use the weight of the athlete
    * doing the work (see `weightForAthlete`).
    */
-  weights: WeightClass | 'mixedOpen';
+  /**
+   * `mixedOpen`: mixed doubles rule (Men's Open loads for both, target by sex).
+   * `ownSexOpen`: every athlete uses the Open standard for their own sex.
+   */
+  weights: WeightClass | 'mixedOpen' | 'ownSexOpen';
   /** Default sex of each team slot (used to pre-fill forms). */
   defaultSexes: Sex[];
   note?: string;
 }
+
+const DOUBLES_NOTE =
+  'Partners run every km together (from 2026/27 they must stay within 10 s of each other) and split station work however they like, one athlete working at a time.';
 
 export const DIVISIONS: readonly DivisionInfo[] = [
   { id: 'men-open', name: "Men's Open", group: 'Singles', format: 'single', teamSize: 1, weights: 'menOpen', defaultSexes: ['male'] },
@@ -35,26 +42,26 @@ export const DIVISIONS: readonly DivisionInfo[] = [
     note: 'Invitation-only Elite 15 series. Uses Pro weights.',
   },
   {
-    id: 'adaptive', name: 'Adaptive', group: 'Singles', format: 'single', teamSize: 1, weights: 'menOpen', defaultSexes: ['male'],
-    note: 'Adaptive categories modify equipment and movement standards per impairment. Prediction uses Open standards as a baseline — use the per-station overrides to fine-tune.',
+    id: 'adaptive', name: 'Adaptive', group: 'Singles', format: 'single', teamSize: 1, weights: 'ownSexOpen', defaultSexes: ['male'],
+    note: 'There are 13 Adaptive categories, each with its own equipment and movement standards. The prediction uses Open standards for your sex as a baseline; tap any station time to set your own. No field position is shown.',
   },
-  { id: 'men-doubles', name: "Men's Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'menOpen', defaultSexes: ['male', 'male'] },
-  { id: 'women-doubles', name: "Women's Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'womenOpen', defaultSexes: ['female', 'female'] },
+  { id: 'men-doubles', name: "Men's Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'menOpen', defaultSexes: ['male', 'male'], note: DOUBLES_NOTE },
+  { id: 'women-doubles', name: "Women's Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'womenOpen', defaultSexes: ['female', 'female'], note: DOUBLES_NOTE },
   {
     id: 'mixed-doubles', name: 'Mixed Doubles', group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'mixedOpen', defaultSexes: ['male', 'female'],
-    note: "Mixed doubles race on Men's Open weights for both partners (incl. the 6 kg wall ball); the wall ball target stays 3.00 m for men and 2.70 m for women.",
+    note: "Mixed doubles race on Men's Open weights for both partners (incl. the 6 kg wall ball); the wall ball target stays 3.00 m for men and 2.70 m for women. " + DOUBLES_NOTE,
   },
-  { id: 'men-pro-doubles', name: "Men's Pro Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'menPro', defaultSexes: ['male', 'male'] },
-  { id: 'women-pro-doubles', name: "Women's Pro Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'womenPro', defaultSexes: ['female', 'female'] },
+  { id: 'men-pro-doubles', name: "Men's Pro Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'menPro', defaultSexes: ['male', 'male'], note: DOUBLES_NOTE },
+  { id: 'women-pro-doubles', name: "Women's Pro Doubles", group: 'Doubles', format: 'doubles', teamSize: 2, weights: 'womenPro', defaultSexes: ['female', 'female'], note: DOUBLES_NOTE },
   { id: 'men-relay', name: "Men's Relay", group: 'Relay', format: 'relay', teamSize: 4, weights: 'menOpen', defaultSexes: ['male', 'male', 'male', 'male'] },
   { id: 'women-relay', name: "Women's Relay", group: 'Relay', format: 'relay', teamSize: 4, weights: 'womenOpen', defaultSexes: ['female', 'female', 'female', 'female'] },
   {
-    id: 'mixed-relay', name: 'Mixed Relay', group: 'Relay', format: 'relay', teamSize: 4, weights: 'mixedOpen', defaultSexes: ['male', 'male', 'female', 'female'],
+    id: 'mixed-relay', name: 'Mixed Relay', group: 'Relay', format: 'relay', teamSize: 4, weights: 'ownSexOpen', defaultSexes: ['male', 'male', 'female', 'female'],
     note: 'Mixed relay teams are 2 men + 2 women. Each athlete races on the Open weights for their sex.',
   },
   {
-    id: 'corporate-relay', name: 'Corporate Relay', group: 'Relay', format: 'relay', teamSize: 4, weights: 'womenOpen', defaultSexes: ['male', 'female', 'male', 'female'],
-    note: "Corporate relay: every athlete races on Women's Open weights.",
+    id: 'corporate-relay', name: 'Corporate Relay', group: 'Relay', format: 'relay', teamSize: 4, weights: 'ownSexOpen', defaultSexes: ['male', 'female', 'male', 'female'],
+    note: 'Corporate relay formats vary by event. Modelled like a relay where each athlete uses the Open weights for their sex; check your event rules.',
   },
 ];
 
@@ -116,12 +123,22 @@ export const STANDARDS: Record<WeightClass, Record<StationId, StationStandard>> 
  * Weight class an athlete races a given station on.
  * - Mixed doubles: both partners use Men's Open loads, but a woman throws the 6 kg ball to
  *   the 2.70 m target — which is exactly the Women's Pro wall ball standard.
- * - Mixed relay: each athlete uses the Open standard for their own sex.
+ * - Mixed relay, corporate relay, adaptive: each athlete uses the Open standard for their own sex.
  */
 export function weightForAthlete(division: DivisionInfo, sex: Sex, station: StationId): WeightClass {
   const w = division.weights;
+  if (w === 'ownSexOpen') return sex === 'male' ? 'menOpen' : 'womenOpen';
   if (w !== 'mixedOpen') return w;
-  if (division.format === 'relay') return sex === 'male' ? 'menOpen' : 'womenOpen';
   if (station === 'wallBalls' && sex === 'female') return 'womenPro';
   return 'menOpen';
+}
+
+/** Divisions whose team composition is chosen by the athletes rather than fixed by the rules. */
+export function sexIsChoosable(division: DivisionInfo): boolean {
+  return division.id === 'adaptive' || division.id === 'corporate-relay';
+}
+
+/** The athlete's own singles Open division (used to calibrate a previous result). */
+export function nativeOpenDivision(sex: Sex): DivisionInfo {
+  return findDivision(sex === 'male' ? 'men-open' : 'women-open');
 }

@@ -82,3 +82,29 @@ Sources: strengthlevel.com strength standards (squat, deadlift, bench, hex bar, 
 bar); Epley and Brzycki formulas; Riegel (1981); Daniels & Gilbert VDOT; Cooper test; Concept2 forum (Paul's law,
 ski-vs-row); endura.coach and marathonhandbook.com (dead hang); topendsports.com (burpee tests); wodtimecalculator.com
 (Karen); hyroxdatalab.com (station times).
+
+## Corrections from the expert review (Sept 2026)
+
+An independent review checked the model against the 2025/26–26/27 rulebooks and current data. It led to these
+changes:
+
+- **Women's Open wall balls are 100 reps** (up from 75 since 2024/25). The source data predates this, so the women's
+  wall-ball column is scaled ×1.34. The Women's Pro wall-ball multiplier drops from 1.6 to 1.2.
+- **Women's sled pull** is reduced 10%, because HyroxDataLab shows men and women near-identical.
+- **Relay:** stations run on fresh legs (×0.83, the inverse of the race-fatigue factors), Roxzone is ×0.75, and runs
+  are 1.03 / 1.08 × 5K pace. A relay is now faster than a doubles team of the same athletes, as world records show
+  (45:43 vs 47:57).
+- **Adaptive, mixed relay and corporate relay** use each athlete's own-sex Open weights. The 2025/26 relay rulebook
+  lists only Men, Women and Mixed relay; corporate formats vary by event. Adaptive shows no field position, because its
+  13 categories aren't one field.
+- **Elite calibration:**
+  - The extrapolated elite band is slower: push 2:20, pull 3:05, BBJ 2:45, lunges 3:00 at Open weights.
+  - Stacked skill bonuses (self-level × race-craft) are capped at −10%.
+  - Pacing flattens for fast runners; elites run within about 15 s/km.
+  - Doubles gain less from splitting at the elite end.
+  - Result: elite predictions now sit just above the world records (Pro men about 53 min vs a 51:59 record; men's
+    doubles about 47 min vs 47:57).
+- **Field medians:** Men's Open 89 min, Women's Open 97, Men's relay 68, Mixed relay 71, Women's relay 76.
+- **Strength:** "Solid" now equals the typical athlete ("Not sure"). Women's deadlift standards are
+  0.5 / 1.0 / 1.25 / 1.75 / 2.5 × bodyweight.
+- **Doubles rule (2026/27):** partners must stay within 10 s of each other on the runs. This is noted in the app.

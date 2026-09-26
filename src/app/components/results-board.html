@@ -1,9 +1,12 @@
 @let pr = p();
-<section class="board panel" aria-live="polite">
+<section class="board panel" aria-labelledby="board-title">
+  <p class="sr-only" [attr.aria-live]="simT() == null ? 'polite' : 'off'">
+    Predicted finish {{ fmt(pr.total, true) }}, range {{ fmt(pr.low, true) }} to {{ fmt(pr.high, true) }}.
+  </p>
   <header class="board-head">
     <div>
       <span class="label">Predicted finish</span>
-      <h2 class="div-name">{{ pr.division.name }}</h2>
+      <h2 class="div-name" id="board-title">{{ pr.division.name }}</h2>
     </div>
     <span class="live"><span class="dot"></span>Live</span>
   </header>
@@ -82,17 +85,18 @@
         </span>
         <span class="r mono t">
           @if (s.kind === 'station' && editing() === s.stationId) {
-            <input class="edit mono" type="text" inputmode="numeric" [value]="fmt(s.sec)" autofocus
+            <input #editInput class="edit mono" type="text" autocomplete="off" [value]="fmt(s.sec)"
+              [class.invalid]="editInvalid()" [attr.aria-invalid]="editInvalid()"
               aria-label="Set station time (mm:ss); leave empty to reset"
               (keydown.enter)="commitEdit(s.stationId!, $any($event.target).value)"
-              (keydown.escape)="editing.set(null)"
+              (keydown.escape)="cancelEdit(s.stationId!)"
               (blur)="commitEdit(s.stationId!, $any($event.target).value)" />
           } @else if (s.kind === 'station') {
             @if (s.overridden) {
               <button type="button" class="lock" aria-label="Reset to predicted time" title="Reset to predicted"
                 (click)="clearOverride(s.stationId!, $event)">✕</button>
             }
-            <button type="button" class="time-btn" (click)="startEdit(s.stationId)" [attr.aria-label]="'Set your own ' + s.label + ' time, currently ' + fmt(s.sec)">
+            <button type="button" class="time-btn" [attr.data-edit]="s.stationId" (click)="startEdit(s.stationId)" [attr.aria-label]="'Set your own ' + s.label + ' time, currently ' + fmt(s.sec)">
               {{ fmt(s.sec) }}
               <svg class="pen" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="none" stroke="currentColor" stroke-width="2" /></svg>
             </button>

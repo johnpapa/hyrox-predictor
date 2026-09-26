@@ -37,7 +37,14 @@
   align-items: start;
 }
 .config { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.results { position: sticky; top: 76px; scroll-margin-top: 70px; }
+.results {
+  position: sticky; top: 76px; scroll-margin-top: 70px;
+  /* The board is taller than most screens: let it scroll on its own while the form scrolls. */
+  max-height: calc(100vh - 92px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
 
 .hero {
   padding: 8px 2px 4px;
@@ -54,7 +61,7 @@
 
 @media (max-width: 1023px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
-  .results { position: static; }
+  .results { position: static; max-height: none; overflow: visible; }
   .foot { padding-bottom: 110px; }
   .dock {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;

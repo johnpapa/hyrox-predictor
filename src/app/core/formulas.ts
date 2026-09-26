@@ -20,7 +20,8 @@ export function riegel(timeSec: number, fromMeters: number, toMeters: number, ex
  */
 export function paulsLaw(timeSec: number, fromMeters: number, toMeters: number): number {
   const split = timeSec / (fromMeters / 500);
-  const newSplit = split + 5 * Math.log2(toMeters / fromMeters);
+  // Never let the adjustment eat more than half the split (guards absurd inputs).
+  const newSplit = Math.max(split * 0.5, split + 5 * Math.log2(toMeters / fromMeters));
   return newSplit * (toMeters / 500);
 }
 

@@ -1,7 +1,7 @@
 import { AbilityId, AthleteProfile } from './athlete';
 import { FALLBACK } from './fallback-params';
 import { ResolvedAthlete, resolveAthlete } from './resolve';
-import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, weightForAthlete } from './divisions';
+import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, nativeOpenDivision, weightForAthlete } from './divisions';
 import { PARAMS } from './model-params';
 import { FIELD, PRO_MULT, interpolateBand, tableFor } from './split-tables';
 import { STATIONS, STATION_IDS, StationId } from './stations';
@@ -60,8 +60,8 @@ export interface Prediction {
   high: number;
   bestRun: number;
   avgRun: number;
-  /** Estimated % of the division field finishing faster than this time. */
-  topPercent: number;
+  /** Estimated % of the division field finishing faster than this time (null: no field data). */
+  topPercent: number | null;
   solos: SoloPrediction[];
   /** Doubles: share of each station taken by athlete 0. */
   doublesShares?: StationTimes;
@@ -94,6 +94,19 @@ const RUN_SHAPE = (() => {
   return PARAMS.runShape.map((x) => x / mean);
 })();
 
+/** Run shape for a given run factor: elites (low factor) pace far more evenly. */
+export function runShapeFor(runFactor: number): number[] {
+  const f = PARAMS.runShapeFlatten;
+  const t = clamp((runFactor - f.flatAt) / (f.fullAt - f.flatAt), 0, 1);
+  const scale = f.minScale + (1 - f.minScale) * t;
+  return RUN_SHAPE.map((x) => 1 + (x - 1) * scale);
+}
+
+/** Self-level × race-craft bonuses are capped so stacked multipliers stay realistic. */
+function skill(x: number): number {
+  return Math.max(PARAMS.minSkillMult, x);
+}
+
 /**
  * Time multiplier for racing a station on a load different from the athlete's own Open
  * standard. Uses a power law whose elasticity is fitted to the observed Pro/Open ratio,
@@ -119,6 +132,8 @@ function strengthClamp(x: number): number {
 // ─────────────────────────────────────────────────────────────────────────────────────
 
 export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPrediction {
+  // A previous result is a singles time on the athlete's own weights: calibrate against that race.
+  const calibration = previousResultCalibration(a);
   const sex = a.sex;
   const r = resolveAthlete(a);
   const bw = r.bodyweightKg;
@@ -142,7 +157,7 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     rf.max,
   );
   const avgRun = (fiveK / 5) * runFactor;
-  const runs = RUN_SHAPE.map((s) => avgRun * s);
+  const runs = runShapeFor(runFactor).map((s) => avgRun * s);
 
   // Baseline: median splits of athletes who run at this pace ─────────────────────────
   const band = interpolateBand(tableFor(sex), avgRun);
@@ -173,7 +188,7 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     const push = PARAMS.sledPush;
     const cap = push.bwShare * bw + push.liftShare * squat;
     const capRef = push.bwShare * bwRef + push.liftShare * squatRef;
-    st.sledPush = base.sledPush * loadMult.sledPush * strengthClamp(Math.pow(capRef / cap, push.exp)) * r.sled.value * expMult;
+    st.sledPush = base.sledPush * loadMult.sledPush * strengthClamp(Math.pow(capRef / cap, push.exp)) * skill(r.sled.value * expMult);
   }
 
   // Sled pull ─────────────────────────────────────────────────────────────────────────
@@ -184,18 +199,18 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     const cap = pull.bwShare * bw + pull.liftShare * dead;
     const capRef = pull.bwShare * bwRef + pull.liftShare * deadRef;
     st.sledPull =
-      base.sledPull * loadMult.sledPull * strengthClamp(Math.pow(capRef / cap, pull.exp)) * r.sled.value * gripOnPull * expMult;
+      base.sledPull * loadMult.sledPull * strengthClamp(Math.pow(capRef / cap, pull.exp)) * skill(r.sled.value * gripOnPull * expMult);
   }
 
   // Burpee broad jumps ───────────────────────────────────────────────────────────────
   st.burpeeBroadJump = r.tests.bbj
     ? r.tests.bbj * fatigue.burpeeBroadJump
-    : base.burpeeBroadJump * Math.pow(bw / bwRef, PARAMS.bbjBodyweightExp) * r.burpees.value;
+    : base.burpeeBroadJump * Math.pow(bw / bwRef, PARAMS.bbjBodyweightExp) * skill(r.burpees.value);
 
   // Farmers carry ────────────────────────────────────────────────────────────────────
   st.farmersCarry = r.tests.farmers
     ? r.tests.farmers * fatigue.farmersCarry
-    : base.farmersCarry * loadMult.farmersCarry * strengthClamp(Math.pow(deadRef / dead, PARAMS.farmers.exp)) * r.grip.value;
+    : base.farmersCarry * loadMult.farmersCarry * strengthClamp(Math.pow(deadRef / dead, PARAMS.farmers.exp)) * skill(r.grip.value);
 
   // Sandbag lunges ───────────────────────────────────────────────────────────────────
   if (r.tests.lunges) {
@@ -203,7 +218,7 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
   } else {
     const bag = STANDARDS[nativeClass(sex)].sandbagLunges.kg;
     st.sandbagLunges =
-      base.sandbagLunges * loadMult.sandbagLunges * expMult * r.lunges.value *
+      base.sandbagLunges * loadMult.sandbagLunges * skill(expMult * r.lunges.value) *
       strengthClamp(Math.pow((bw + bag) / squat / ((bwRef + bag) / squatRef), PARAMS.lunges.exp));
   }
 
@@ -215,17 +230,14 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     st.wallBalls =
       base.wallBalls * loadMult.wallBalls * strengthClamp(Math.pow(typical / r.wallBallsUnbroken, PARAMS.wallBallsUnbrokenExp));
   } else {
-    st.wallBalls = base.wallBalls * loadMult.wallBalls * r.wallBalls.value;
+    st.wallBalls = base.wallBalls * loadMult.wallBalls * skill(r.wallBalls.value);
   }
 
   // Roxzone ──────────────────────────────────────────────────────────────────────────
   let roxzone = band.roxzone * PARAMS.roxzoneExperienceMult[a.experience] * r.transitions.value;
 
   // Calibration from a previous result ───────────────────────────────────────────────
-  const raw = sum(runs) + sum(STATION_IDS.map((id) => st[id])) + roxzone;
-  let calibration = 1;
-  if (a.previousHyroxSec && a.previousHyroxSec > 1800) {
-    calibration = clamp(1 + PARAMS.previousResultWeight * (a.previousHyroxSec / raw - 1), 0.75, 1.3);
+  if (calibration !== 1) {
     for (let i = 0; i < runs.length; i++) runs[i] *= calibration;
     for (const id of STATION_IDS) st[id] *= calibration;
     roxzone *= calibration;
@@ -244,12 +256,23 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
   };
 }
 
+/**
+ * Scale factor from a previous singles result, compared with this model's prediction for the
+ * athlete's own Open division (so switching to Pro, mixed doubles, etc. doesn't distort it).
+ */
+function previousResultCalibration(a: AthleteProfile): number {
+  const prev = a.previousHyroxSec;
+  if (!prev || !isFinite(prev) || prev < 40 * 60 || prev > 4 * 3600) return 1;
+  const native = predictSolo({ ...a, previousHyroxSec: null }, nativeOpenDivision(a.sex)).total;
+  return clamp(1 + PARAMS.previousResultWeight * (prev / native - 1), 0.75, 1.3);
+}
+
 export function soloUncertainty(a: AthleteProfile, r: ResolvedAthlete = resolveAthlete(a)): number {
   let u = FALLBACK.baseUncertainty;
   for (const id of Object.keys(r.quality) as AbilityId[]) {
     u += FALLBACK.abilityWeight[id] * FALLBACK.qualityFactor[r.quality[id]];
   }
-  if (!a.bodyweightKg) u += 0.005;
+  if (!r.bodyweightKnown) u += 0.005;
   if (a.trainingHours == null) u += 0.003;
   if (a.experience === 'first') u += 0.015;
   if (a.experience === 'unknown') u += 0.01;
@@ -262,19 +285,26 @@ export function soloUncertainty(a: AthleteProfile, r: ResolvedAthlete = resolveA
 // ─────────────────────────────────────────────────────────────────────────────────────
 
 /** Station time when athlete A does share p of the work and B does the rest. */
-export function doublesStationTime(id: StationId, ta: number, tb: number, p: number): number {
-  const a = PARAMS.doubles.intensityFloor[id];
+/** Intensity floor for a pair; fitter pairs (lower run factor) benefit less from splitting. */
+export function doublesFloor(id: StationId, pairRunFactor = 1.2): number {
+  const base = PARAMS.doubles.intensityFloor[id];
+  const t = clamp((1.2 - pairRunFactor) / 0.1, 0, 1);
+  return base + (1 - base) * PARAMS.doubles.eliteFloorShift * t;
+}
+
+export function doublesStationTime(id: StationId, ta: number, tb: number, p: number, pairRunFactor = 1.2): number {
+  const a = doublesFloor(id, pairRunFactor);
   const q = 1 - p;
   const swap = p > 0.001 && q > 0.001 ? PARAMS.doubles.swapSec[id] : 0;
   return p * ta * (a + (1 - a) * p) + q * tb * (a + (1 - a) * q) + swap;
 }
 
-export function optimalDoublesShare(id: StationId, ta: number, tb: number): number {
+export function optimalDoublesShare(id: StationId, ta: number, tb: number, pairRunFactor = 1.2): number {
   let best = 0.5;
   let bestT = Infinity;
   for (let i = 0; i <= 20; i++) {
     const p = i / 20;
-    const t = doublesStationTime(id, ta, tb, p);
+    const t = doublesStationTime(id, ta, tb, p, pairRunFactor);
     if (t < bestT - 1e-9) {
       bestT = t;
       best = p;
@@ -285,7 +315,7 @@ export function optimalDoublesShare(id: StationId, ta: number, tb: number): numb
 
 function doublesRun(solo: SoloPrediction): number[] {
   const factor = 1 + (solo.runFactor - 1) * PARAMS.doubles.runCompromiseShare;
-  return RUN_SHAPE.map((s) => (solo.fiveKSec / 5) * factor * s * solo.calibration);
+  return runShapeFor(factor).map((s) => (solo.fiveKSec / 5) * factor * s * solo.calibration);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────
@@ -314,7 +344,7 @@ function relayFor(order: number[], solos: SoloPrediction[]): RelayResult {
         athlete: ath,
       });
       stations.push({ sec: solo.stations[STATION_IDS[idx]] * PARAMS.relay.stationFreshness, athlete: ath });
-      roxzone += solo.roxzone / 8;
+      roxzone += (solo.roxzone / 8) * PARAMS.relay.roxzoneFactor;
     }
   }
   const total = sum(runs.map((r) => r.sec)) + sum(stations.map((s) => s.sec)) + roxzone;
@@ -352,8 +382,9 @@ function normCdf(z: number): number {
   return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
 }
 
-export function topPercent(divisionId: string, totalSec: number): number {
-  const f = FIELD[divisionId] ?? FIELD['men-open'];
+export function topPercent(divisionId: string, totalSec: number): number | null {
+  const f = FIELD[divisionId];
+  if (!f) return null;
   const z = (Math.log(totalSec / 60) - Math.log(f.medianMin)) / f.sigma;
   return clamp(normCdf(z) * 100, 0.1, 99.9);
 }
@@ -395,18 +426,23 @@ export function predict(input: PredictInput): Prediction {
       ]);
     }
     doublesShares = {} as StationTimes;
+    const pairRf = (sa.runFactor + sb.runFactor) / 2;
     for (const id of STATION_IDS) {
       const ta = sa.stations[id];
       const tb = sb.stations[id];
       const given = input.doublesShares?.[id];
-      const p = given != null ? clamp(given, 0, 1) : optimalDoublesShare(id, ta, tb);
+      const p = given != null && isFinite(given) ? clamp(given, 0, 1) : optimalDoublesShare(id, ta, tb, pairRf);
       doublesShares[id] = p;
-      const a = PARAMS.doubles.intensityFloor[id];
-      const total = doublesStationTime(id, ta, tb, p);
+      const a = doublesFloor(id, pairRf);
+      const total = doublesStationTime(id, ta, tb, p, pairRf);
       stSecs[id] = total;
+      // Changeover time is shared in proportion to the work so contributions add up.
+      const workA = p * ta * (a + (1 - a) * p);
+      const workB = (1 - p) * tb * (a + (1 - a) * (1 - p));
+      const swap = total - workA - workB;
       stContrib[id] = [
-        { athlete: 0, share: p, sec: p * ta * (a + (1 - a) * p) },
-        { athlete: 1, share: 1 - p, sec: (1 - p) * tb * (a + (1 - a) * (1 - p)) },
+        { athlete: 0, share: p, sec: workA + swap * p },
+        { athlete: 1, share: 1 - p, sec: workB + swap * (1 - p) },
       ];
     }
     roxzone = Math.max(sa.roxzone, sb.roxzone) * PARAMS.doubles.roxzoneFactor;
