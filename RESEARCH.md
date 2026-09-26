@@ -179,3 +179,18 @@ changes:
 - **Unknown values are neutral:** they only widen the confidence range.
 - **Migration:** an old combined "training hours" value is split as half running at about 9.5 km/h and half other
   training.
+
+## First race vs. fitness (Sept 2026)
+
+The often-quoted "first-timers run 25–30% slower than 5K pace" describes typical beginners, who are usually also less fit
+(low running volume, low durability, weak muscular endurance). HYROX coaching attributes the pure first-race cost mainly
+to pacing (going out too fast), Roxzone hesitation and never having practised running on legs tired from stations.
+
+The model now splits the first-race lap penalty into:
+- a fixed **pacing allowance** of +0.015 on the lap factor;
+- an **unfamiliarity** part of up to +0.035, reduced by fitness indicators, with a combined reduction of at most 80%:
+  - running volume: up to 60% at 50 km/week above the 25 km reference;
+  - a durable short-plus-long race profile (Riegel k ≤ 1.07): 20%;
+  - at least 4 hours a week of other training: 20%.
+
+A fit, high-volume first-timer now pays about +0.02; a low-volume first-timer about +0.05, as before. (Estimate.)

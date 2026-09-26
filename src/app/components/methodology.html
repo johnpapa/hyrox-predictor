@@ -4,71 +4,113 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" /></svg>
   </summary>
   <div class="body">
-    <h3>1 · Your 5K sets the baseline</h3>
+    <h3>1 · Your running sets the baseline</h3>
     <p>
-      Running is about half of a HYROX race, and in results data run total alone explains roughly <b>82% of the variation in finish
-      time</b> (r ≈ 0.91). Physiology research agrees: VO₂max is the strongest single correlate of finish time. We convert your 5K
-      pace into a HYROX kilometre pace. Mid-pack athletes run about <b>20% slower than 5K pace</b>, strong hybrid athletes about
-      12–15% slower, and first-timers up to 30% slower. Experience, training volume and Pro loads adjust this "compromised running"
-      factor. The eight runs follow the real pacing shape: Run 1 is fastest, the runs after the sled push and the lunges are slowest,
-      and Run 8 includes the finish straight.
+      Running is about half of a HYROX race. In results data, run total alone explains roughly <b>82% of the variation in
+      finish time</b>, and VO₂max is the strongest single physiological correlate. Enter any recent races: <b>5K, 10K,
+      half marathon, marathon</b>. Each is converted with the Riegel formula and blended. 10K and half marathon count most
+      because they match a HYROX effort (60–120 min near threshold), the 5K a little less, the marathon least.
+    </p>
+    <p>
+      That gives your HYROX kilometre pace. Mid-pack athletes run their laps about <b>20% slower than 5K pace</b>; strong
+      hybrid athletes 12–15%. The "~25–30%" often quoted for beginners is <b>mostly fitness, not inexperience</b>: less
+      running volume, less durability and weaker muscular endurance. So the lap factor responds to:
+    </p>
+    <ul>
+      <li><b>Weekly running distance:</b> more volume means less compromised running and less fade, with diminishing
+        returns (about 2% better at 40 mi/week, capped near 3%).</li>
+      <li><b>Endurance:</b> a short plus a long race show how well you hold pace. Durable runners fade less.</li>
+      <li><b>First race:</b> a small pacing allowance (about 1.5%) for everyone, plus an "unfamiliar with running on tired
+        legs" part of up to 3.5% that shrinks with running volume, durable race times and regular gym/HYROX training.</li>
+      <li><b>Pro loads</b> add a little; racing experience beyond a first race helps a little.</li>
+    </ul>
+    <p>
+      The eight runs follow the real pacing shape: Run 1 fastest, the runs after the sled push and lunges slowest, and Run 8
+      includes the finish straight. Elites and high-volume runners pace more evenly.
     </p>
 
     <h3>2 · Stations start from real race medians</h3>
     <p>
-      Station, run and Roxzone times come from median splits of about 15,000 Open results from results.hyrox.com, grouped by finish
-      band. For your projected run pace we interpolate what athletes who run like you typically post on each station. We then adjust
-      each station for you:
+      Station, run and Roxzone baselines are median splits of about 15,000 Open results from results.hyrox.com, grouped by
+      finish band. The app takes what athletes who run like you typically post, then adjusts each station for you:
     </p>
     <ul>
-      <li><b>SkiErg / Row:</b> your fresh 1000 m erg time × 1.13, since in the race you hold about 85–90% of time-trial pace. A 2 km row is converted to a 1 km equivalent. If you know only one erg time, it also informs the other.</li>
-      <li><b>Sled Push:</b> uses your leg capacity (bodyweight + back squat) relative to a typical athlete. <b>Sled Pull</b> uses bodyweight + deadlift, plus grip.</li>
-      <li><b>Burpee Broad Jumps:</b> aerobic level plus bodyweight. Heavier athletes are slower.</li>
-      <li><b>Farmers Carry:</b> deadlift and grip. <b>Sandbag Lunges:</b> load relative to squat, plus leg endurance.</li>
-      <li><b>Wall Balls:</b> your max unbroken set compared with the typical set for your level (about 100 for sub-60 athletes, 40 at 80–90 min, 20 at 120+).</li>
-      <li><b>Pro and mixed loads:</b> heavier sleds, bells, bags and balls scale times using elasticities fitted to Pro vs Open splits at the same run pace.</li>
-      <li><b>Roxzone:</b> typically 6–9% of race time. It is adjusted for experience and your self-rated transition speed.</li>
+      <li><b>SkiErg / Row:</b> your fresh 1000 m time × 1.13 (in the race you hold about 85–90% of time-trial pace).
+        500 m, 2 km and 5 km times are converted. Taller athletes are slightly faster.</li>
+      <li><b>Sled Push / Pull:</b> leg or pulling capacity (bodyweight + squat or deadlift) against a typical athlete,
+        plus grip for the pull and a technique rating.</li>
+      <li><b>Burpee Broad Jumps:</b> conditioning plus bodyweight. Taller athletes need fewer jumps.</li>
+      <li><b>Farmers Carry:</b> deadlift and grip. <b>Sandbag Lunges:</b> load relative to squat, and stride length
+        (height).</li>
+      <li><b>Wall Balls:</b> your max unbroken set against the typical set for your level (about 100 for sub-60, 40 at
+        80–90 min, 20 at 120+).</li>
+      <li><b>Other training hours</b> (gym, HYROX classes): up to ±3% on stations, never on the runs. <b>Age 50+:</b> a
+        small recovery allowance, capped at 4%.</li>
+      <li><b>Pro and mixed loads:</b> scaled with elasticities fitted to Pro vs Open splits at the same run pace.</li>
+      <li><b>Roxzone:</b> typically 6–9% of race time. Your transition self-rating sets it; without one, first-timers get
+        about 15% extra.</li>
+      <li><b>Guard rails:</b> combined personal adjustments stay within 0.65–1.5× the typical split, and nothing goes below
+        world-class floors.</li>
     </ul>
 
     <h3>3 · Missing data? Every ability has fallbacks</h3>
     <p>You can leave any field blank. Each ability uses the best information available, in this order:</p>
     <ul>
-      <li><b>Running:</b> any race times you know (5K, 10K, half marathon, marathon), converted with the Riegel formula and blended: 10K and half marathon count most because they match a HYROX effort (60–120 min near threshold), the 5K slightly less, the marathon least. A 5K plus a longer race also adjusts for endurance. No race? VO₂max (lab or watch, via Daniels VDOT) › resting heart rate + age › self-rating.</li>
-      <li><b>Ergs:</b> 1000 m time › 500 m, 2000 m or 5000 m (Paul's law: +5 s/500 m per doubling) › the other erg ± the typical SkiErg-vs-row gap › self-rating.</li>
-      <li><b>Leg strength:</b> back squat (any reps; 1RM via Epley) › front squat ÷ 0.85 › deadlift × 0.8 › trap-bar or Romanian deadlift › leg press or bench (rough) › self-rating mapped to strength standards (Weak 0.75× … Elite 2.75× bodyweight for men).</li>
-      <li><b>Pulling strength:</b> deadlift › trap bar ÷ 1.08 › Romanian deadlift ÷ 0.75 › squat ÷ 0.8 › bench (rough) › self-rating.</li>
-      <li><b>Grip:</b> farmers carry test › dead hang and/or pull-ups, placed on a level scale › self-rating.</li>
+      <li><b>Running:</b> any race times (blended) › VO₂max (lab or watch, via Daniels VDOT) › resting heart rate + age ›
+        self-rating (Weak ≈ 32:00 … Elite ≈ 17:30 5K for men).</li>
+      <li><b>Ergs:</b> 1000 m › 500 m, 2000 m or 5000 m (Paul's law: +5 s/500 m per doubling) › the other erg ± the typical
+        SkiErg-vs-row gap › self-rating.</li>
+      <li><b>Leg strength:</b> back squat (any reps; 1RM via Epley) › front squat ÷ 0.85 › deadlift × 0.8 › trap-bar or
+        Romanian deadlift › leg press or bench (rough) › self-rating mapped to strength standards (Weak 0.75× … Elite 2.75×
+        bodyweight for men).</li>
+      <li><b>Pulling strength:</b> deadlift › trap bar ÷ 1.08 › Romanian deadlift ÷ 0.75 › squat ÷ 0.8 › bench (rough) ›
+        self-rating.</li>
+      <li><b>Grip:</b> farmers carry test › dead hang and/or pull-ups › self-rating.</li>
       <li><b>Burpees:</b> 80 m BBJ test › burpees in 1 minute › self-rating.</li>
       <li><b>Wall balls:</b> 100 reps for time › "Karen" (150 reps) × 0.62 › max unbroken › self-rating.</li>
-      <li><b>Sleds and lunges:</b> fresh station test × race-fatigue factor › strength and bodyweight model, adjusted by a technique self-rating.</li>
+      <li><b>Sleds and lunges:</b> fresh station test × race-fatigue factor › strength and bodyweight model.</li>
     </ul>
     <p>
-      Every self-rating has a concrete description for each level, so "Strong" means the same thing to everyone. "Not sure"
-      assumes a typical athlete at your running level, so it never skews the result; it only widens the confidence range. The
-      confidence panel shows which inputs are measured, estimated, self-rated or assumed, and which single input would narrow
-      your range most.
+      Every self-rating has a concrete description for each level. "Not sure" assumes a typical athlete at your running level:
+      it never skews the result, it only widens the confidence range. The confidence panel shows what each estimate is based
+      on and which single input would narrow your range most.
     </p>
 
     <h3>4 · Doubles &amp; relay</h3>
     <p>
-      <b>Doubles:</b> partners run together, so each run goes at the slower partner's pace, though it is less compromised because each
-      of you does only part of the station work. Doing a share of a station lets you work at higher intensity. The model is calibrated
-      so an even split matches the observed doubles-to-singles ratios: sleds about 0.55–0.6×, wall balls about 0.66×, ergs about
-      0.9×. "Auto all" finds the fastest split for each station.
-      <b>Relay:</b> each athlete runs 2 × 1 km and does 2 stations on relatively fresh legs. The fastest athlete order is chosen
+      <b>Doubles:</b> partners run together at the slower partner's pace, though less compromised because each does only part
+      of the stations. Splitting a station lets you work harder. The model is calibrated so an even split matches observed
+      doubles-to-singles ratios (sleds about 0.55–0.6×, wall balls about 0.66×, ergs about 0.9×). Elite pairs gain a little
+      less. "Auto" finds the fastest split per station, so a much taller partner takes more of the lunges and burpee broad
+      jumps. <b>Relay:</b> each athlete runs 2 × 1 km and does 2 stations on fresh legs. The fastest order is chosen
       automatically.
+    </p>
+
+    <h3>5 · Insights &amp; Simulator</h3>
+    <p>
+      <b>Insights</b> compares each station with athletes who run like you. <b>Realistic gains</b> are sized from training
+      studies for your level and age (e.g. about 1–2% on a well-trained runner's 5K in 8–12 weeks, less over 50). They are
+      offered only for things you entered or rated. Unknowns show as <b>worth measuring</b>, with how much they could swing
+      your time; the app never invents a number for you. The <b>Simulator</b> lets you drag any split to see its effect on
+      your finish and field position.
     </p>
 
     <h3>Accuracy</h3>
     <p>
-      From a 5K alone, expect roughly ±10%. Each benchmark you add narrows the range, and a previous HYROX result narrows it most.
-      Venues differ: sled surfaces and Roxzone lengths vary, so treat the result as a pacing plan, not a promise. The field position
-      is approximate and based on historical finish distributions.
+      The <b>likely range</b> under the big clock shows the low and high end of where you'll probably finish. Its width comes
+      from how much is measured versus assumed: measured inputs narrow it, "Not sure" widens it. From a single race time
+      alone, expect roughly ±10%. Each benchmark narrows the range, and a previous HYROX result
+      narrows it most. Venues differ in sled surfaces and Roxzone length, so treat the result as a pacing plan, not a
+      promise. The field position is approximate and based on historical finish distributions.
     </p>
     <p class="fine">
-      Sources: results.hyrox.com split data (via public scraped datasets), HyroxDataLab station and Roxzone analyses, Brandt et al.
-      2025 (Frontiers in Physiology) on HYROX physiological determinants, and published HYROX 25/26 rulebooks for weights. HYROX is a
-      trademark of its owners. This is an unofficial fan tool.
+      Sources:
+      results.hyrox.com split data (via public scraped datasets); HyroxDataLab station, Roxzone and age analyses;
+      Brandt et al. 2025 (Frontiers in Physiology) on HYROX determinants;
+      Tanda 2011 and the 2025 Boston Marathon cohort on training volume;
+      Strength Level standards; Riegel, Daniels VDOT, Epley and Paul's law;
+      HYROX 25/26–26/27 rulebooks.
+      Full details are in RESEARCH.md. HYROX is a trademark of its owners; this is an unofficial fan tool.
     </p>
   </div>
 </details>

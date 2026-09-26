@@ -461,3 +461,24 @@ describe('training volume: weekly running distance + other training hours (resea
     expect(known.high - known.low).toBeLessThan(unknown.high - unknown.low); // more confident
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+describe('first race vs fitness (user question: does inexperience or fitness drive slower laps?)', () => {
+  const factor = (p: Partial<AthleteProfile>) => run('men-open', athlete('male', { fiveKSec: min(21, 8), ...p })).solos[0].runFactor;
+
+  it('REGRESSION: a fit, high-volume first-timer pays only a small first-race lap penalty', () => {
+    const fit = { runningKmPerWeek: 64, otherTrainingHours: 5.5, marathonSec: 3 * 3600 + 24 * 60 };
+    const penalty = factor({ ...fit, experience: 'first' }) - factor({ ...fit, experience: 'some' });
+    expect(penalty).toBeLessThan(0.01); // ≈ pacing allowance only
+    expect(penalty).toBeGreaterThanOrEqual(0); // a first race is never faster than a second
+  });
+
+  it('a low-volume first-timer still gets the full unfamiliarity penalty', () => {
+    const penalty = factor({ runningKmPerWeek: 10, experience: 'first' }) - factor({ runningKmPerWeek: 10, experience: 'some' });
+    expect(penalty).toBeGreaterThan(0.03);
+  });
+
+  it('with no fitness data, a first race costs more than with high running volume', () => {
+    expect(factor({ experience: 'first' })).toBeGreaterThan(factor({ experience: 'first', runningKmPerWeek: 80 }));
+  });
+});

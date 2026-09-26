@@ -20,7 +20,10 @@
         {{ piece.label }}
       </div>
     } @else {
-      <div class="range">
+      <div class="range-label" [title]="'Width reflects how much is measured vs. assumed. Add benchmarks to narrow it.'">
+        Likely range ±{{ rangePct() }}%
+      </div>
+      <div class="range" [attr.aria-label]="'Likely range ' + fmt(pr.low, true) + ' to ' + fmt(pr.high, true)">
         <span class="mono">{{ fmt(pr.low, true) }}</span>
         <span class="range-bar"><span></span></span>
         <span class="mono">{{ fmt(pr.high, true) }}</span>
