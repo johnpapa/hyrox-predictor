@@ -74,7 +74,7 @@ result; it only widens the range.
 
 ## 6. Station benchmarks
 
-Grip (dead hang, pull-ups), burpees per minute, wall balls (your usual set size for 100 reps, max unbroken, 100 for time, or "Karen") and fresh station
+Grip (dead hang, pull-ups), burpees per minute, wall balls (your usual set size for 100 reps, max unbroken, or 100 for time) and fresh station
 tests (sled push/pull, lunges, farmers carry, burpee broad jumps) sharpen individual stations. Implausible entries are
 ignored with a warning.
 

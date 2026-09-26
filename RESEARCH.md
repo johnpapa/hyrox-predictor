@@ -64,7 +64,7 @@ the confidence range. "Not sure" equals the model's typical athlete, so it never
 | Pulling strength | deadlift › trap bar › RDL › squat › front squat › leg press › bench › level | trap bar = 1.08 × DL (JSCR 2011); RDL = 0.75 × DL; DL = 1.6 × bench (men), 2.0 × (women) |
 | Grip | farmers test › dead hang / pull-ups › level | hang (s) men 20/45/75/120/180, women 12/25/50/90/150; pull-ups men 1/5/10/15/22, women 0/2/5/10/15 |
 | Burpees | 80 m BBJ test › burpees in 1 min › level | men 15/20/25/30/35, women 12/17/22/27/32 |
-| Wall balls | 100 for time › Karen × 0.62 › max unbroken › level | unbroken 15/30/50/75/100 |
+| Wall balls | 100 for time › max unbroken › usual set size for 100 › level | unbroken 15/30/50/75/100 |
 | Sleds / lunges | fresh 50 m / 100 m test › strength + bodyweight model × technique level | race fatigue: sleds ×1.15, carry ×1.12, BBJ ×1.2, WB ×1.22, lunges ×1.25 (est.) |
 
 Strength standards by level (1RM ÷ bodyweight, Weak / Fair / Solid / Strong / Elite ≈ Strength Level's Beginner /
@@ -81,7 +81,7 @@ women; deadlift 1.7× and 1.35×.
 Sources: strengthlevel.com strength standards (squat, deadlift, bench, hex bar, pull-ups); strongerbyscience.com (trap
 bar); Epley and Brzycki formulas; Riegel (1981); Daniels & Gilbert VDOT; Cooper test; Concept2 forum (Paul's law,
 ski-vs-row); endura.coach and marathonhandbook.com (dead hang); topendsports.com (burpee tests); wodtimecalculator.com
-(Karen); hyroxdatalab.com (station times).
+hyroxdatalab.com (station times).
 
 ## Corrections from the expert review (Sept 2026)
 
@@ -407,3 +407,12 @@ Conversion: sets ≈ 60% of max unbroken (athletes break well before failure so 
 coaching target is roughly half to two-thirds of max). So sets of 20 ≈ 33 max unbroken, and the model then uses its
 existing unbroken formula. This matches the level anchors, e.g. Solid ≈ "sets of ~20–25" for an athlete whose typical
 max is ≈ 36. It's an estimate, so its quality shows as "Estimated", below a real max or a 100-rep time.
+
+## Only everyday inputs (Sept 2026)
+
+The app is for the average athlete, so every input should be something a typical HYROX entrant could know. "Karen"
+(a CrossFit benchmark of 150 wall balls for time) was removed at a user's request. Everything left is either a common
+race or gym number (5K to marathon, row or SkiErg times, squat and deadlift variants, bench, pull-ups, dead hang,
+burpees per minute, watch VO₂max, body fat) or a plain-language HYROX test people do in training (100 wall balls or
+sets of wall balls, 50 m sled push or pull, 80 m burpee broad jumps, 200 m farmers carry, 100 m lunges, a previous
+HYROX time). New inputs should pass the same test.

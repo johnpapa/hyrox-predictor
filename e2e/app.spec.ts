@@ -245,19 +245,15 @@ test.describe('athlete inputs & fallbacks', () => {
     await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('80');
   });
 
-  test('the "Karen" field explains itself', async ({ app, page }) => {
-    await app.openAlternatives('Wall balls');
-    await expect(page.locator('app-time-input').filter({ hasText: 'Karen' })).toContainText('CrossFit benchmark: 150 wall balls for time');
-  });
-
   test('grip, burpees, wall balls and station tests are used', async ({ app, page }) => {
     await page.getByLabel('Max dead hang (sec)').fill('90');
     await expect(app.card('Grip').locator('.src')).toContainText('dead hang 90s');
     await page.getByLabel('Max burpees in 1 minute').fill('28');
     await expect(app.card('Burpee broad jumps').locator('.src')).toContainText('28 burpees');
     await app.openAlternatives('Wall balls');
-    await app.card('Wall balls').getByLabel('"Karen" (150 reps)').fill('10:00');
-    await expect(app.card('Wall balls').locator('.src')).toContainText('from Karen');
+    await app.card('Wall balls').getByLabel('100 wall balls for time').fill('6:10');
+    await expect(app.card('Wall balls').locator('.src')).toContainText('100 wall balls 6:10');
+    await expect(app.card('Wall balls')).not.toContainText('Karen');
     await page.getByLabel('50m sled push test').fill('2:00');
     await expect(app.splitRow('Sled Push')).toContainText('02:18');
   });

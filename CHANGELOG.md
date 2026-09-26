@@ -9,8 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - **Wall balls: "Usual set size for 100 reps"** (e.g. sets of 20) is now the main wall-ball input in Quick and Detailed.
   Most people know it, and it's closer to race behaviour than a max-unbroken test. It's converted at sets ≈ 60% of max
-  unbroken; max unbroken, 100-for-time and Karen stay as alternatives. Gains and reasons are phrased in sets.
-- The **"Karen"** field explains what it is (150 wall balls for time) and that a CrossFit-weight ball reads slow for Open.
+  unbroken; max unbroken and 100-for-time stay as alternatives. Gains and reasons are phrased in sets.
 - **Reset asks "Are you sure?"** and says it also clears the saved copy when saving is on. Cancelling keeps everything
   (regression test).
 - **Collapsible sections:** click a section's title (or its arrow) to collapse it:
@@ -40,6 +39,7 @@ All notable changes to this project are documented here. The format follows
   100%. Team tactics shows which partner sets the running pace, and flags it if that pace is only assumed.
 
 ### Removed
+- **"Karen"** (a CrossFit benchmark): the app sticks to things an average athlete knows. Old saves drop it.
 - **Resting heart rate:** too rough to be worth entering (its VO₂max estimate is about ±10%, and it only mattered with
   no race time and no VO₂max).
 - **"Runs straight after stations":** most people can't answer it reliably.

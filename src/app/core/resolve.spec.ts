@@ -124,10 +124,10 @@ describe('grip, burpees & wall balls', () => {
     expect(weak.grip.value).toBeGreaterThan(1);
   });
 
-  it('converts Karen to a 100 wall-ball time', () => {
-    const r = resolveAthlete(man({ karenSec: 600 }));
-    expect(r.tests.wallBalls100).toBeCloseTo(372, 0);
-    expect(r.quality.wallBalls).toBe('converted');
+  it('REGRESSION: no niche benchmarks — "Karen" was removed and old saves drop it', () => {
+    // User: "This app should help the average person… I never heard of a Karen, so don't add that or anything similar."
+    const m = migrateAthlete({ sex: 'male', karenSec: 600 }, 0) as unknown as Record<string, unknown>;
+    expect('karenSec' in m).toBe(false);
   });
 
   it('station tests override formula estimates', () => {
