@@ -136,3 +136,15 @@ test.describe('honest suggestions & height (user feedback)', () => {
     await expect(card.getByText('Cooper')).toHaveCount(0);
   });
 });
+
+test.describe('training volume inputs', () => {
+  test('weekly running in km or miles, plus other training hours', async ({ page }) => {
+    await page.getByLabel('Weekly running (km)').fill('64');
+    const field = page.locator('app-number-input').filter({ hasText: 'Weekly running' });
+    await field.getByRole('button', { name: 'Miles' }).click();
+    await expect(page.getByLabel('Weekly running (mi)')).toHaveValue('40');
+    await page.getByLabel('Other training (hrs / week)').pressSequentially('5.5');
+    await expect(page.getByLabel('Other training (hrs / week)')).toHaveValue('5.5');
+    await expect(page.getByText('Gym, HYROX classes, erg or sled work')).toBeVisible();
+  });
+});

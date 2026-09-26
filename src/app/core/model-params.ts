@@ -21,9 +21,12 @@ export const PARAMS = {
     experience: { unknown: 0.015, first: 0.05, some: 0.015, experienced: -0.01, competitive: -0.025 } satisfies Record<Experience, number>,
     /** Heavier Pro stations compromise the runs more. */
     pro: 0.012,
-    /** Each weekly training hour above 6 helps a little (clamped). */
-    perTrainingHour: -0.005,
-    trainingClamp: 0.02,
+    /**
+     * Weekly running volume (km). Diminishing returns (Tanda 2011; Boston Marathon cohort 2025):
+     * above the reference, factor −= max·(1 − e^(−(km − ref)/scale)); below it, up to +penalty.
+     * Halved when a short + long race already measure endurance (avoids double counting).
+     */
+    runningVolume: { refKm: 25, maxBenefit: 0.03, scaleKm: 40, maxPenalty: 0.02, withEnduranceShare: 0.5 },
     min: 1.1,
     max: 1.42,
     /**
@@ -43,6 +46,14 @@ export const PARAMS = {
    * as the run factor drops: full shape at ≥ 1.20, 40% of it at ≤ 1.10.
    */
   runShapeFlatten: { fullAt: 1.2, flatAt: 1.1, minScale: 0.4 },
+  /**
+   * Other training hours (gym, HYROX classes, erg/sled). Brandt 2025 found no link between
+   * resistance-training volume and finish time, so the effect is small and stations-only:
+   * ±1% per hour vs. the 3 h reference, capped at ±3%, half-strength on the ergs.
+   */
+  otherTraining: { refHours: 3, perHour: 0.01, cap: 0.03, ergShare: 0.5 },
+  /** Heavy running volume also reduces lap-to-lap fade (up to 30% flatter at +75 km). */
+  runVolumeFlatten: { maxShare: 0.3, fullAtExtraKm: 75 },
   /** Combined skill multipliers (self-level × race-craft) never go below this. */
   minSkillMult: 0.9,
   /**

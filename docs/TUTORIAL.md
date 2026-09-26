@@ -19,7 +19,9 @@ the doubles 10-second rule.
 
 ## 2. Tell it about yourself
 
-Name, sex, bodyweight (switch **KG / LB** right on the field), age, HYROX experience and weekly training hours.
+Name, sex, bodyweight (switch **KG / LB** right on the field), height, age, HYROX experience, **weekly running
+distance** (km or mi) and **other training hours** (gym, HYROX classes, erg or sled work). They're separate because
+research shows running volume is what predicts HYROX times; gym hours help the stations a little.
 Anything you don't know can stay on **Not sure**.
 Age shows your HYROX age group. Under **Physiology** you can add a VO₂max (from a lab or a watch) and a resting heart
 rate. These are only used when you have no race time.
