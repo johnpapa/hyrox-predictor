@@ -8,7 +8,7 @@
  */
 import { AthleteProfile, Level, defaultAthlete, emptyLevels, emptyLifts, migrateAthlete } from './athlete';
 import { DIVISIONS, weightForAthlete } from './divisions';
-import { Prediction, loadMultiplier, predict, suggestDoublesShares } from './predictor';
+import { Prediction, loadMultiplier, predict, suggestDoublesShares, topPercent } from './predictor';
 import { STATION_IDS, StationId } from './stations';
 
 const min = (m: number, s = 0) => m * 60 + s;
@@ -541,5 +541,25 @@ describe('age groups, body fat and VO₂max (user question)', () => {
     const labHigh = run('men-open', john({ vo2max: 70, vo2maxSource: 'lab' })).total;
     expect(labHigh).toBeLessThan(high);
     expect((none - labHigh) / none).toBeLessThan(0.05);
+  });
+});
+
+describe('real results (calibration anchors)', () => {
+  it('REGRESSION: S9 Washington DC 2026 mixed doubles — 1:19:14 placed 670th of 2,814 (top 23.8%)', () => {
+    // A friend pair of the user (both 45, second HYROX, strong at stations, good runners).
+    expect(topPercent('mixed-doubles', 1 * 3600 + 19 * 60 + 14)).toBeCloseTo(23.8, 0);
+  });
+
+  it('reproduces that pair when their runs match: total within 2%, runs / stations / Roxzone within 10%', () => {
+    // Actual: runs 44:12, stations 27:41, Roxzone 7:21. A ≈ 22:55 / 23:25 5K pair reproduces the runs;
+    // typical ("Solid") station ability for that running level.
+    const him = athlete('male', { fiveKSec: min(23, 25), age: 45, bodyweightKg: 84, experience: 'some' });
+    const her = athlete('female', { fiveKSec: min(22, 55), age: 45, bodyweightKg: 62, experience: 'some' });
+    const p = run('mixed-doubles', him, her);
+    const near = (x: number, target: number, tol: number) => expect(Math.abs(x - target) / target).toBeLessThan(tol);
+    near(p.total, 4754, 0.02);
+    near(p.runTotal, 2652, 0.1);
+    near(p.workTotal, 1661, 0.1);
+    near(p.roxzone, 441, 0.1);
   });
 });
