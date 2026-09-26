@@ -48,6 +48,12 @@ export const FALLBACK = {
   uth: { factor: 15.3, hrMaxBase: 208, hrMaxPerYear: 0.7, defaultAge: 35 },
   /** Wearable VO₂max estimates run high vs race-derived VDOT; subtract this many points. */
   watchVo2Offset: 4,
+  /**
+   * With race times, VO₂max still gets a small say (races can be old or not all-out), in log-time
+   * space against the races' combined weight of 1, and the shift is capped. Watch estimates are
+   * largely derived from your running already, so they count less than a lab test.
+   */
+  vo2WithRaces: { weight: { lab: 0.2, watch: 0.08 }, maxShift: { lab: 0.04, watch: 0.015 } },
   /** Plausible input ranges (seconds unless noted); values outside are ignored with a warning. */
   ranges: {
     fiveK: [12 * 60, 90 * 60], tenK: [26 * 60, 3 * 3600], half: [58 * 60, 4 * 3600],

@@ -223,7 +223,7 @@ test.describe('expert review: doubles tips and new inputs', () => {
     const before = await app.total();
     await page.getByLabel('Runs straight after stations').selectOption({ label: 'Weekly or more' });
     await expect.poll(() => app.total()).toBeLessThan(before);
-    await expect(page.locator('app-number-input').filter({ hasText: 'VO₂max' })).toContainText('Cross-check only');
+    await expect(page.locator('app-number-input').filter({ hasText: 'VO₂max' })).toContainText('Small weight');
     await expect(page.locator('app-number-input').filter({ hasText: 'Resting heart rate' })).toContainText('Not used');
   });
 });

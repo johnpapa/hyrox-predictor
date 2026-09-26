@@ -305,6 +305,14 @@ high-volume runner). 3+ races is now about −1.5% (was −3.6%) and competitive
   - Lactate threshold and heart-rate zones: race times already measure this.
   - Isolation lifts (e.g. curls): don't predict any station.
 
+**VO₂max and resting HR with race times.** VO₂max used to be a cross-check only when a race time existed. Race
+performance = VO₂max × running economy × fractional utilisation (Joyner & Coyle 2008), so a race already contains
+VO₂max. But a VO₂max that is out of line with the races often means the races are old or weren't all-out efforts. It
+now gets a small say in log-time space: weight 0.08 for a watch estimate (these are largely derived from your running
+already) and 0.2 for a lab test, against the races' combined weight of 1. The shift is capped at ±1.5% (watch) and ±4%
+(lab). Resting HR stays unused when there's a race or VO₂max: the Uth estimate of VO₂max from resting HR has errors
+of roughly ±10%, so it would add noise, not information.
+
 **Doubles hand-over tips.** In doubles only one partner works at a time and you can switch freely, so the tips give a
 switch pattern per station and each partner's share from the doubles optimiser:
 - SkiErg every 100–250 m;

@@ -10,7 +10,8 @@ All notable changes to this project are documented here. The format follows
 - **Doubles hand-over tips** in Insights: how often to switch on each station and each partner's share of the work.
 - **Runs straight after stations** (compromised-running practice): a new input that adjusts lap pace and shrinks the
   first-race penalty.
-- VO₂max and resting HR say when race times make them a cross-check only.
+- **VO₂max keeps a small, capped weight** even with race times (±1.5% watch, ±4% lab). Resting HR is still unused next
+  to a race (too rough), and the field says so.
 
 ### Changed
 - **Input weighting review:** self-ratings now move each station by how much it varies in real results (ergs less,

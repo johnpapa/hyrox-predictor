@@ -151,13 +151,22 @@ function resolveRaces(a: AthleteProfile): Resolved | null {
 function resolveFiveK(a: AthleteProfile): Resolved {
   const races = resolveRaces(a);
   if (races) {
-    // Race times beat VO₂max for predicting running; show the cross-check so it's visible it was considered.
+    // Race times beat VO₂max for predicting running, but VO₂max keeps a small, capped say.
+    // Resting HR is not used here: its VO₂max estimate is far noisier than any race.
     if (pos(a.vo2max) && a.vo2max >= FALLBACK.ranges.vo2[0] && a.vo2max <= FALLBACK.ranges.vo2[1]) {
-      const vdot = a.vo2maxSource === 'lab' ? a.vo2max : a.vo2max - FALLBACK.watchVo2Offset;
+      const src = a.vo2maxSource === 'lab' ? 'lab' : 'watch';
+      const vdot = src === 'lab' ? a.vo2max : a.vo2max - FALLBACK.watchVo2Offset;
       const implied = raceTimeFromVdot(vdot, 5000);
+      const V = FALLBACK.vo2WithRaces;
+      const w = V.weight[src];
+      const blended = Math.exp((Math.log(races.value) + w * Math.log(implied)) / (1 + w));
+      const cap = V.maxShift[src];
+      const value = Math.min(races.value * (1 + cap), Math.max(races.value * (1 - cap), blended));
       const ratio = implied / races.value;
       const verdict = ratio > 0.95 && ratio < 1.05 ? 'consistent with your races' : ratio <= 0.95 ? 'suggests more potential than your races show' : 'lower than your races suggest';
-      races.source += ` · VO₂max ${a.vo2max} ${verdict} (races are used)`;
+      const pct = ((value / races.value - 1) * 100);
+      const effect = Math.abs(pct) < 0.05 ? 'no change' : `${pct < 0 ? '−' : '+'}${Math.abs(pct).toFixed(1)}%`;
+      return { ...races, value, source: `${races.source} · ${src} VO₂max ${a.vo2max} ${verdict} (small weight: ${effect})` };
     }
     return races;
   }
