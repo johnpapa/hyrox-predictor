@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an improvement to the predictor, insights or simulator
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or data (for model changes)
+      description: The model is research-backed. Links to studies, race data or coaching sources help (see RESEARCH.md).

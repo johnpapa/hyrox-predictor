@@ -1,5 +1,7 @@
 # HYROX Finish Time Predictor
 
+[![AI-Ready](https://img.shields.io/badge/AI--Ready-%F0%9F%8F%86%20AI--Ready-brightgreen)](https://github.com/johnpapa/ai-ready)
+
 **Live app: https://johnpapa.github.io/hyrox-predictor/**
 
 A responsive Angular web app that predicts your HYROX finish time split by split: all 8 runs, all 8 stations, and Roxzone
@@ -108,8 +110,17 @@ All tuning constants live in `src/app/core/model-params.ts` and `src/app/core/sp
 
 ## Contributing
 
-Every bug fix must include a regression test that would have caught it. See [CLAUDE.md](CLAUDE.md) for the project
-rules.
+Contributions are welcome. Issues use forms for bug reports (including unrealistic predictions) and feature requests.
+
+1. Fork the repo and create a branch: `git checkout -b my-change`.
+2. `npm ci`, make your change, then run `npm test` and `npm run e2e`.
+3. **Every bug fix must include a regression test** that fails without the fix.
+4. Model changes need a source in [RESEARCH.md](RESEARCH.md). Follow the maintenance matrix in
+   [.github/copilot-instructions.md](.github/copilot-instructions.md).
+5. Add a line to [CHANGELOG.md](CHANGELOG.md) and open a pull request. The template has a checklist, and CI runs unit
+   tests, the build and e2e tests.
+
+AI agents: start with [AGENTS.md](AGENTS.md). Project rules are also in [CLAUDE.md](CLAUDE.md).
 
 ## Project layout
 
