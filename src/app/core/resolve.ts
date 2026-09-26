@@ -112,9 +112,9 @@ export function levelOf(table: readonly number[], value: number): number {
   return asc ? 5 + over : 1 - over;
 }
 
-/** Station multiplier for a level (3 ⇒ 1.0). */
-function levelMult(level: number): number {
-  return atLevel(FALLBACK.levelMult, level);
+/** Station multiplier for a level (3 ⇒ 1.0), spread to match how much that station varies. */
+export function levelMult(level: number, ability: AbilityId): number {
+  return 1 + (atLevel(FALLBACK.levelMult, level) - 1) * FALLBACK.levelSpread[ability];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────
@@ -151,13 +151,22 @@ function resolveRaces(a: AthleteProfile): Resolved | null {
 function resolveFiveK(a: AthleteProfile): Resolved {
   const races = resolveRaces(a);
   if (races) {
-    // Race times beat VO₂max for predicting running; show the cross-check so it's visible it was considered.
+    // Race times beat VO₂max for predicting running, but VO₂max keeps a small, capped say.
+    // Resting HR is not used here: its VO₂max estimate is far noisier than any race.
     if (pos(a.vo2max) && a.vo2max >= FALLBACK.ranges.vo2[0] && a.vo2max <= FALLBACK.ranges.vo2[1]) {
-      const vdot = a.vo2maxSource === 'lab' ? a.vo2max : a.vo2max - FALLBACK.watchVo2Offset;
+      const src = a.vo2maxSource === 'lab' ? 'lab' : 'watch';
+      const vdot = src === 'lab' ? a.vo2max : a.vo2max - FALLBACK.watchVo2Offset;
       const implied = raceTimeFromVdot(vdot, 5000);
+      const V = FALLBACK.vo2WithRaces;
+      const w = V.weight[src];
+      const blended = Math.exp((Math.log(races.value) + w * Math.log(implied)) / (1 + w));
+      const cap = V.maxShift[src];
+      const value = Math.min(races.value * (1 + cap), Math.max(races.value * (1 - cap), blended));
       const ratio = implied / races.value;
       const verdict = ratio > 0.95 && ratio < 1.05 ? 'consistent with your races' : ratio <= 0.95 ? 'suggests more potential than your races show' : 'lower than your races suggest';
-      races.source += ` · VO₂max ${a.vo2max} ${verdict} (races are used)`;
+      const pct = ((value / races.value - 1) * 100);
+      const effect = Math.abs(pct) < 0.05 ? 'no change' : `${pct < 0 ? '−' : '+'}${Math.abs(pct).toFixed(1)}%`;
+      return { ...races, value, source: `${races.source} · ${src} VO₂max ${a.vo2max} ${verdict} (small weight: ${effect})` };
     }
     return races;
   }
@@ -303,7 +312,7 @@ function fromStrengthLevel(a: AthleteProfile, bw: number, ability: 'legs' | 'hin
 
 function fromLevel(a: AthleteProfile, id: AbilityId, what: string): Resolved {
   const l = a.levels[id];
-  if (l) return { value: levelMult(l), quality: 'rated', source: `${levelName(l)} ${what}` };
+  if (l) return { value: levelMult(l, id), quality: 'rated', source: `${levelName(l)} ${what}` };
   return { value: 1, quality: 'assumed', source: `typical ${what} for your level` };
 }
 
@@ -312,17 +321,17 @@ function resolveGrip(a: AthleteProfile): Resolved {
   const pull = a.pullUps != null && a.pullUps >= 0 ? levelOf(FALLBACK.pullUpsByLevel[a.sex], a.pullUps) : null;
   if (hang != null && pull != null) {
     const l = (hang + pull) / 2;
-    return { value: levelMult(l), quality: 'converted', source: `dead hang ${a.deadHangSec}s + ${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
+    return { value: levelMult(l, 'grip'), quality: 'converted', source: `dead hang ${a.deadHangSec}s + ${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
   }
-  if (hang != null) return { value: levelMult(hang), quality: 'converted', source: `dead hang ${a.deadHangSec}s ≈ ${levelName(Math.round(clampLevel(hang)) as Level)} grip` };
-  if (pull != null) return { value: levelMult(pull), quality: 'converted', source: `${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(pull)) as Level)} grip` };
+  if (hang != null) return { value: levelMult(hang, 'grip'), quality: 'converted', source: `dead hang ${a.deadHangSec}s ≈ ${levelName(Math.round(clampLevel(hang)) as Level)} grip` };
+  if (pull != null) return { value: levelMult(pull, 'grip'), quality: 'converted', source: `${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(pull)) as Level)} grip` };
   return fromLevel(a, 'grip', 'grip');
 }
 
 function resolveBurpees(a: AthleteProfile): Resolved {
   if (a.burpees1Min != null && a.burpees1Min > 0) {
     const l = levelOf(FALLBACK.burpees1MinByLevel[a.sex], a.burpees1Min);
-    return { value: levelMult(l), quality: 'converted', source: `${a.burpees1Min} burpees in 1 min ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
+    return { value: levelMult(l, 'burpees'), quality: 'converted', source: `${a.burpees1Min} burpees in 1 min ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
   }
   return fromLevel(a, 'burpees', 'burpee conditioning');
 }

@@ -331,7 +331,7 @@ test.describe('results board', () => {
     // Keep the in-app methodology in sync with the model (see CLAUDE.md rule 5).
     const body = page.locator('app-methodology .body');
     for (const phrase of ['5K, 10K, half marathon, marathon', 'Weekly running distance', 'mostly fitness, not inexperience',
-      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed']) {
+      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed', 'Runs straight after stations', 'hand-over tips']) {
       await expect(body).toContainText(phrase);
     }
   });

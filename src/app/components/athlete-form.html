@@ -67,13 +67,23 @@
         hint="Your usual week, all runs" [range]="ranges.runningKm" (valueChange)="patch({ runningKmPerWeek: $event })" />
       <app-number-input label="Other training (hrs / week)" [value]="ath.otherTrainingHours" [allowZero]="true"
         hint="Gym, HYROX classes, erg or sled work" [range]="ranges.otherHours" (valueChange)="patch({ otherTrainingHours: $event })" />
+      <label class="field">
+        <span class="label">Runs straight after stations</span>
+        <select (change)="patch({ compromisedRuns: $any($event.target).value || null })">
+          @for (c of compromisedOptions; track c.id) {
+            <option [value]="c.id" [selected]="(ath.compromisedRuns ?? '') === c.id">{{ c.label }}</option>
+          }
+        </select>
+        <span class="hint">"Compromised running": bricks, HYROX classes</span>
+      </label>
     </div>
   </fieldset>
 
   <fieldset>
     <legend>Physiology <span class="opt">optional · leave blank if unknown</span></legend>
     <div class="grid">
-      <app-number-input label="VO₂max (ml/kg/min)" [value]="ath.vo2max" [range]="ranges.vo2" (valueChange)="patch({ vo2max: $event })" />
+      <app-number-input label="VO₂max (ml/kg/min)" [value]="ath.vo2max" [range]="ranges.vo2"
+        [hint]="hasRace() ? 'Small weight: your race times count most' : 'Estimates your running'" (valueChange)="patch({ vo2max: $event })" />
       <label class="field">
         <span class="label">VO₂max measured by</span>
         <select (change)="patch({ vo2maxSource: $any($event.target).value })">
@@ -85,7 +95,7 @@
       <app-number-input label="Body fat (%)" [value]="ath.bodyFatPct" [hint]="bodyFatHint()" [range]="ranges.bodyFat"
         (valueChange)="patch({ bodyFatPct: $event })" />
       <app-number-input label="Resting heart rate (bpm)" [value]="ath.restingHr" [integer]="true"
-        hint="Morning, before getting up" [range]="ranges.restingHr" (valueChange)="patch({ restingHr: $event })" />
+        [hint]="hasRace() ? 'Not used with a race time: too rough an estimate (±10%)' : 'Morning, before getting up'" [range]="ranges.restingHr" (valueChange)="patch({ restingHr: $event })" />
       <p class="note span-all">
         Used to estimate your running when you have no recent race time. A real race time always beats these estimates. Age
         also adjusts the typical athlete assumed when you give no running information.

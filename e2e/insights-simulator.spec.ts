@@ -202,3 +202,28 @@ test.describe('age group & body fat', () => {
     await expect(page.locator('app-insights-panel .profile')).toContainText('Body fat 14%');
   });
 });
+
+test.describe('expert review: doubles tips and new inputs', () => {
+  test('doubles show how often to switch on each station, with each partner’s share', async ({ app, page }) => {
+    await app.division("Men's Doubles").click();
+    const panel = page.locator('app-insights-panel');
+    const tips = panel.locator('.tips.doubles');
+    await expect(panel.getByRole('heading', { name: 'Doubles: how to split each station' })).toBeVisible();
+    await expect(tips).toContainText('SkiErg: swap every 100–250 m');
+    await expect(tips).toContainText('Row: swap every 250 m');
+    await expect(tips).toContainText('Sled push: swap every length');
+    await expect(tips).toContainText('Wall balls: swap every 10–15 reps');
+    await expect(tips.locator('.plan').first()).toContainText('Athlete 1 ≈');
+    await app.division("Men's Open").click();
+    await expect(panel.locator('.tips.doubles')).toHaveCount(0);
+  });
+
+  test('compromised-running practice changes the prediction; VO₂max says when it is only a cross-check', async ({ app, page }) => {
+    await page.getByLabel('5K', { exact: true }).fill('23:00');
+    const before = await app.total();
+    await page.getByLabel('Runs straight after stations').selectOption({ label: 'Weekly or more' });
+    await expect.poll(() => app.total()).toBeLessThan(before);
+    await expect(page.locator('app-number-input').filter({ hasText: 'VO₂max' })).toContainText('Small weight');
+    await expect(page.locator('app-number-input').filter({ hasText: 'Resting heart rate' })).toContainText('Not used');
+  });
+});

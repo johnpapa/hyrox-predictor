@@ -14,7 +14,7 @@ test('desktop walkthrough', async ({ app, page }) => {
   await page.screenshot({ path: out('01-overview') });
   // For element captures only: stop the sticky header overlapping, and show the whole board.
   await page.addStyleTag({
-    content: '.topbar{position:relative!important} .results{position:static!important;max-height:none!important;overflow:visible!important}',
+    content: '.dock{display:none!important} .topbar{position:relative!important} .results{position:static!important;max-height:none!important;overflow:visible!important}',
   });
   await page.getByLabel('Name').fill('Alex');
 
@@ -76,6 +76,7 @@ test('desktop walkthrough', async ({ app, page }) => {
   await page.getByLabel('Name').fill('Jess');
   await page.getByLabel('5K', { exact: true }).fill('25:30');
   await page.locator('app-team-tactics').screenshot({ path: out('12-doubles') });
+  await page.locator('app-insights-panel .tips.doubles').screenshot({ path: out('12b-doubles-tips') });
 
   // 11. Relay
   await app.division('Mixed Relay').click();

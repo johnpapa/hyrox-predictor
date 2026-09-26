@@ -7,6 +7,9 @@ export type Rating = Level;
 
 export const LEVEL_LABELS = ['Weak', 'Fair', 'Solid', 'Strong', 'Elite'] as const;
 
+/** How often the athlete runs straight after station work (bricks, HYROX classes). */
+export type CompromisedRuns = 'never' | 'sometimes' | 'weekly';
+
 /** 'unknown' behaves like 'some' but widens the confidence range. */
 export type Experience = 'unknown' | 'first' | 'some' | 'experienced' | 'competitive';
 
@@ -62,6 +65,8 @@ export interface AthleteProfile {
   runningKmPerWeek: number | null;
   /** Other training per week in hours (gym, HYROX classes, erg/sled work); null = unknown. */
   otherTrainingHours: number | null;
+  /** Compromised-running practice: runs straight after station work; null = not sure. */
+  compromisedRuns: CompromisedRuns | null;
 
   // ── Running (seconds) — first available wins: 5K › 10K › mile › half › VO₂max › level ──
   fiveKSec: number | null;
@@ -149,6 +154,7 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
     experience: 'unknown',
     runningKmPerWeek: null,
     otherTrainingHours: null,
+    compromisedRuns: null,
     fiveKSec: null,
     tenKSec: null,
     halfMarathonSec: null,
@@ -198,6 +204,7 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   if (typeof r['name'] === 'string') out.name = r['name'].slice(0, 24);
   if (EXPERIENCES.includes(r['experience'])) out.experience = r['experience'];
   if (r['vo2maxSource'] === 'lab') out.vo2maxSource = 'lab';
+  if (['never', 'sometimes', 'weekly'].includes(r['compromisedRuns'])) out.compromisedRuns = r['compromisedRuns'];
   const numeric: (keyof AthleteProfile)[] = [
     'age', 'bodyweightKg', 'runningKmPerWeek', 'otherTrainingHours', 'fiveKSec', 'tenKSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
     'heightCm', 'bodyFatPct', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
@@ -269,6 +276,7 @@ export function peerProfile(a: AthleteProfile): AthleteProfile {
     experience: a.experience,
     runningKmPerWeek: a.runningKmPerWeek,
     otherTrainingHours: a.otherTrainingHours,
+    compromisedRuns: a.compromisedRuns,
     fiveKSec: a.fiveKSec,
     tenKSec: a.tenKSec,
     halfMarathonSec: a.halfMarathonSec,

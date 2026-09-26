@@ -25,7 +25,17 @@ export const PARAMS = {
      *   high running volume, durable race times (short + long race) and regular gym/HYROX work.
      * Beginners' typical "~25–30% slower than 5K pace" is mostly low fitness, not inexperience.
      */
-    experience: { unknown: 0.015, first: 0, some: 0.015, experienced: -0.01, competitive: -0.025 } satisfies Record<Experience, number>,
+    // Race craft only (same fitness): most of the gain seen between races is training, which the
+    // fitness inputs already capture. See RESEARCH.md "Input weighting review".
+    experience: { unknown: 0.015, first: 0, some: 0.015, experienced: 0.005, competitive: -0.01 } satisfies Record<Experience, number>,
+    /**
+     * Compromised-running practice (runs straight after stations): a small run-factor change,
+     * plus an offset on the first-race "unfamiliar" penalty. Estimates; see RESEARCH.md.
+     */
+    compromised: {
+      adj: { never: 0.01, sometimes: 0, weekly: -0.012 },
+      firstRaceOffset: { never: 0, sometimes: 0.2, weekly: 0.4 },
+    },
     firstRace: {
       pacing: 0.015,
       unfamiliar: 0.035,
@@ -75,7 +85,7 @@ export const PARAMS = {
   /** Heavy running volume also reduces lap-to-lap fade (up to 30% flatter at +75 km). */
   runVolumeFlatten: { maxShare: 0.3, fullAtExtraKm: 75 },
   /** Combined skill multipliers (self-level × race-craft) never go below this. */
-  minSkillMult: 0.9,
+  minSkillMult: 0.86,
   /**
    * All personal adjustments together (strength × bodyweight × skill) stay within this range
    * of the typical time for the athlete's run pace, so extremes can't stack unrealistically.
@@ -109,8 +119,8 @@ export const PARAMS = {
 
   // ── Experience ────────────────────────────────────────────────────────────────────
   /** Race-craft on the loaded stations. */
-  experienceStationMult: { unknown: 1.0, first: 1.05, some: 1.0, experienced: 0.98, competitive: 0.96 } satisfies Record<Experience, number>,
-  roxzoneExperienceMult: { unknown: 1.0, first: 1.15, some: 1.0, experienced: 0.9, competitive: 0.8 } satisfies Record<Experience, number>,
+  experienceStationMult: { unknown: 1.0, first: 1.04, some: 1.0, experienced: 0.99, competitive: 0.97 } satisfies Record<Experience, number>,
+  roxzoneExperienceMult: { unknown: 1.0, first: 1.15, some: 1.0, experienced: 0.94, competitive: 0.85 } satisfies Record<Experience, number>,
 
   // ── Doubles ────────────────────────────────────────────────────────────────────────
   doubles: {

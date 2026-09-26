@@ -8,9 +8,9 @@ import { weightForAthlete } from './divisions';
 import { loadMultiplier } from './predictor';
 import { bandForSplit, bandForWork, bandIndex } from './split-tables';
 import { FALLBACK } from './fallback-params';
-import { Tip, tipsFor } from './tips';
+import { DoublesTip, Tip, doublesTips, tipsFor } from './tips';
 import { GapExplanation, Reason, explainGaps, profileEffects } from './explain';
-export type { Tip } from './tips';
+export type { DoublesTip, Tip } from './tips';
 
 /**
  * Deterministic "Insights": where an athlete gains or loses time versus athletes like them
@@ -48,6 +48,8 @@ export interface Insights {
   /** Unknown abilities, ranked by how much measuring them could change the prediction. */
   unknowns: UnknownInput[];
   tips: Tip[];
+  /** Doubles only: how often to switch on each station and who does how much. */
+  doubles: DoublesTip[] | null;
   /** Why each station differs from athletes like you (per trainable input). */
   explanation: GapExplanation;
   /** What your build and background do to your finish time vs. an average athlete with your race times. */
@@ -339,8 +341,10 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   const tips = tipsFor(limiters.map((l) => l.id), a.experience === 'first' || a.experience === 'unknown');
   const explanation = explainGaps(a, prediction.division);
   const profile = profileEffects(a, prediction.division);
+  const teamNames = input.athletes.slice(0, 2).map((x, i) => x.name?.trim() || `Athlete ${i + 1}`) as [string, string];
+  const doubles = prediction.doublesShares ? doublesTips(prediction.doublesShares, teamNames, NAMES) : null;
   return {
-    athleteIndex: idx, headline, limiters, strengths, whatIfs, unknowns, tips, explanation, profile,
+    athleteIndex: idx, headline, limiters, strengths, whatIfs, unknowns, tips, doubles, explanation, profile,
     masters: (a.age ?? 0) >= 50, running, pacing,
   };
 }

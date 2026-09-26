@@ -97,7 +97,9 @@ typical on everything trainable. It shows your biggest limiters and strengths. *
   well-trained 54-year-old gets about 1% on the 5K, not "a minute faster"). Each one re-runs the whole prediction.
 - **Worth measuring:** anything you left on "Not sure", ranked by how much the answer could move your finish time. The
   app never invents a squat or deadlift for you.
-- **Practical tips:** technique and race-craft for your weakest stations, plus pacing and Roxzone advice. You also get
+- **Practical tips:** technique and race-craft for your weakest stations, plus pacing and Roxzone advice. In doubles you
+  also get **how to split each station**: how often to switch (e.g. row every 250 m, wall balls every 10–15 reps) and
+  how much each partner does. You also get
 notes on your running and race-day pacing, including whether your laps or your station work is your relative
 strength. In doubles and relay, switch between athletes at the top of the panel.
 Everything is calculated in your browser; no AI and no data leaves your device.
@@ -123,6 +125,11 @@ In doubles, fill in both partners using the athlete tabs. You run together, and 
 fastest work split (**Auto**). You can also drag the slider to plan your own split.
 
 ![Doubles work split](tutorial/12-doubles.png)
+
+Insights then turns that split into a hand-over plan: how often to switch on each station and how much each of you
+does.
+
+![Doubles hand-over tips](tutorial/12b-doubles-tips.png)
 
 ## 12. Relay: choose the order
 

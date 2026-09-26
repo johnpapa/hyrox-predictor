@@ -71,3 +71,5 @@ h3 { font-size: 1rem; font-weight: 700; margin: 18px 0 4px; color: var(--text); 
 .tips strong { font-weight: 600; font-size: 0.9rem; }
 .tips span { font-size: 0.82rem; color: var(--text-dim); }
 .profile { border-left-color: var(--accent); }
+.tips.doubles li { border-left-color: var(--accent); }
+.tips .plan { color: var(--text); font-family: var(--font-mono); font-size: 0.76rem; }
