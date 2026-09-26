@@ -28,7 +28,12 @@
         <span class="range-bar"><span></span></span>
         <span class="mono">{{ fmt(pr.high, true) }}</span>
       </div>
-      <div class="field-pos">Est. field position <strong>{{ topLabel() }}</strong></div>
+      <div class="field-pos">
+        Est. field position <strong>{{ topLabel() }}</strong> overall
+        @if (pr.ageGroup; as g) {
+          <span class="ag">· <strong>Top {{ agPct(g.topPercent) }}%</strong> of {{ g.label }}</span>
+        }
+      </div>
     }
   </div>
 

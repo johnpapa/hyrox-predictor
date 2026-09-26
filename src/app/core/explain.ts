@@ -49,6 +49,12 @@ const FACTORS: Factor[] = [
     neutral: (a) => ({ ...a, bodyweightKg: null }),
   },
   {
+    id: 'bodyFat',
+    applies: (a) => a.bodyFatPct != null,
+    label: (a) => `Body fat ${a.bodyFatPct}% (lean mass vs typical ${a.sex === 'male' ? 18 : 25}%)`,
+    neutral: (a) => ({ ...a, bodyFatPct: null }),
+  },
+  {
     id: 'height',
     applies: (a) => a.heightCm != null,
     label: (a) => `Height (${Math.round(a.heightCm!)} cm vs typical ${REF_H[a.sex]} cm)`,

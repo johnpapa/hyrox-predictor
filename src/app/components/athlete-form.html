@@ -82,6 +82,8 @@
         </select>
         <span class="hint">Watch estimates run high, so they're discounted</span>
       </label>
+      <app-number-input label="Body fat (%)" [value]="ath.bodyFatPct" hint="Used for lean mass when lifts are unknown"
+        (valueChange)="patch({ bodyFatPct: $event })" />
       <app-number-input label="Resting heart rate (bpm)" [value]="ath.restingHr" [integer]="true"
         hint="Morning, before getting up" (valueChange)="patch({ restingHr: $event })" />
       <p class="note span-all">

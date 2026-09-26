@@ -295,12 +295,13 @@ test.describe('saving & reset', () => {
   test('opt-in save survives a reload; opting out deletes it', async ({ page }) => {
     await page.getByLabel('5K', { exact: true }).fill('21:45');
     await page.getByText('Save my inputs on this device').click();
-    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(['hyrox-predictor:saved']);
+    // Saving runs in an effect after the click; poll instead of reading once (this raced in CI).
+    await expect.poll(() => page.evaluate(() => Object.keys(localStorage))).toEqual(['hyrox-predictor:saved']);
     await page.reload();
     await expect(page.getByLabel('5K', { exact: true })).toHaveValue('21:45');
     await expect(page.getByRole('checkbox', { name: /Save my inputs/ })).toBeChecked();
     await page.getByText('Save my inputs on this device').click();
-    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+    await expect.poll(() => page.evaluate(() => Object.keys(localStorage))).toEqual([]);
     await page.reload();
     await expect(page.getByLabel('5K', { exact: true })).toHaveValue('');
   });

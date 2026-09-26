@@ -482,3 +482,49 @@ describe('first race vs fitness (user question: does inexperience or fitness dri
     expect(factor({ experience: 'first' })).toBeGreaterThan(factor({ experience: 'first', runningKmPerWeek: 80 }));
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+describe('age groups, body fat and VO₂max (user question)', () => {
+  const john = (p: Partial<AthleteProfile> = {}) =>
+    athlete('male', {
+      fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, vo2max: 53, restingHr: 53, bodyweightKg: 73.5, bodyFatPct: 14,
+      age: 54, heightCm: 170, experience: 'first', runningKmPerWeek: 64, otherTrainingHours: 5.5, ...p,
+    });
+
+  it('REGRESSION: field position is also given within the HYROX 5-year age group', () => {
+    const p = run('men-open', john());
+    expect(p.ageGroup!.label).toBe('Men 50–54');
+    expect(p.ageGroup!.topPercent).toBeLessThan(p.topPercent!); // older groups are slower on average
+    expect(p.ageGroup!.topPercent).toBeLessThan(25); // a 21-min 5K at 54 ranks well in 50–54
+  });
+
+  it('age-group medians slow down with age and use 5-year groups', () => {
+    const top = (age: number) => run('men-open', john({ age })).ageGroup!.topPercent;
+    expect(top(34)).toBeGreaterThan(top(54)); // same time ranks higher among older athletes
+    expect(top(54)).toBeGreaterThan(top(64));
+    expect(run('men-open', john({ age: 50 })).ageGroup!.label).toBe('Men 50–54');
+    expect(run('men-open', john({ age: 55 })).ageGroup!.label).toBe('Men 55–59');
+  });
+
+  it('age group is omitted when age is unknown or for team divisions', () => {
+    expect(run('men-open', john({ age: null })).ageGroup).toBeNull();
+    expect(run('men-doubles', john(), john()).ageGroup).toBeNull();
+  });
+
+  it('lean athletes are assumed stronger when lifts are unknown; measured lifts ignore body fat', () => {
+    const lean = run('men-open', john({ bodyFatPct: 12 }));
+    const avg = run('men-open', john({ bodyFatPct: 18 }));
+    const high = run('men-open', john({ bodyFatPct: 28 }));
+    expect(st(lean, 'sledPush')).toBeLessThan(st(avg, 'sledPush'));
+    expect(st(high, 'sledPush')).toBeGreaterThan(st(avg, 'sledPush'));
+    expect(avg.total).toBeCloseTo(run('men-open', john({ bodyFatPct: null })).total, 5); // 18% = typical = neutral
+    const lifts = { ...emptyLifts(), backSquat: { kg: 120, reps: 1 }, deadlift: { kg: 160, reps: 1 } };
+    expect(st(run('men-open', john({ bodyFatPct: 12, lifts })), 'sledPush')).toBeCloseTo(st(run('men-open', john({ bodyFatPct: 28, lifts })), 'sledPush'), 5);
+  });
+
+  it('VO₂max is cross-checked against race times but the races are used', () => {
+    const p = run('men-open', john());
+    expect(p.solos[0].resolved.sources.run).toContain('VO₂max 53 consistent with your races');
+    expect(run('men-open', john({ vo2max: 70 })).total).toBeCloseTo(p.total, 5);
+  });
+});

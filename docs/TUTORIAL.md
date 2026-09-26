@@ -23,8 +23,10 @@ Name, sex, bodyweight (switch **KG / LB** right on the field), height, age, HYRO
 distance** (km or mi) and **other training hours** (gym, HYROX classes, erg or sled work). They're separate because
 research shows running volume is what predicts HYROX times; gym hours help the stations a little.
 Anything you don't know can stay on **Not sure**.
-Age shows your HYROX age group. Under **Physiology** you can add a VO₂max (from a lab or a watch) and a resting heart
-rate. These are only used when you have no race time.
+Age shows your HYROX age group, and your field position is also estimated within it (e.g. **Top 17% of Men
+50–54**). Under **Physiology** you can add body fat %, VO₂max (lab or watch) and resting heart rate:
+- **Body fat:** a lean athlete is assumed stronger when lifts are unknown.
+- **VO₂max and resting HR:** cross-checked against your race times, which are used when you have them.
 
 ![Profile](tutorial/03-profile.png)
 

@@ -16,6 +16,10 @@ All notable changes to this project are documented here. The format follows
 - This changelog.
 
 ### Added
+- **Age-group field position:** "Top X% of Men 50–54" next to the overall position (5-year HYROX age groups), on the
+  results board and the Simulator.
+- **Body fat %** (optional): estimated strength uses lean mass when lifts are unknown; shown in the "why" breakdown.
+- VO₂max is cross-checked against race times in the running summary.
 - **Insights → "why" breakdown:** tap any station in "Vs. athletes who run like you" to see which of your inputs cause
   the difference and by how much, plus a "main reasons overall" summary. Uses leave-one-out attribution in
   `core/explain.ts`.
