@@ -145,7 +145,6 @@ changes:
 - **Age:** once a run time is known, most of the effect is already in it. An estimated extra station and Roxzone
   penalty of 0.3% per year over 50, capped at 4%, covers recovery. HyroxDataLab reports 50–54 men about 11% slower
   than peak, mostly through fitness.
-- **Training volume** (ρ = −0.68 in Brandt) is captured as weekly training hours.
 - **Realistic gains in 8–12 weeks**, used by Insights:
   - 5K: untrained 8–15%, recreational 3–6%, well trained 1–2%. Masters get about 60–75% of that (×0.7 over 50, ×0.55
     over 60).
@@ -156,3 +155,27 @@ changes:
     even pacing 1–3%.
 - **Unknown abilities** are never given invented numbers in suggestions. Insights instead shows how much the finish
   could swing (Fair versus Strong) and recommends measuring that ability.
+
+## Training volume: weekly running distance + other training hours
+
+- **Why two inputs:**
+  - Brandt et al. 2025 (HYROX, n = 11): *endurance* training volume correlated with finish time (ρ = −0.68), and only
+    through the runs. Resistance-training volume did not correlate.
+  - In running science, weekly distance predicts performance with diminishing returns: Tanda 2011 (marathon pace
+    from weekly km and training pace, ±4 min).
+  - Boston Marathon cohort 2025 (n = 917): more weekly distance and more cross-training sessions each linked to
+    faster times.
+  - Durability is proposed as a separate determinant, built by volume (Maunder 2021; Jones 2024/2025).
+  - One combined "hours" number mixes these, and it confused users.
+- **Weekly running (km or mi):**
+  - Above the 25 km reference, the lap factor drops by 0.03 × (1 − e^(−(km − 25)/40)). That is about −0.019 at 64 km
+    (40 mi) and −0.024 at 100 km.
+  - Below 25 km there is a penalty of up to +0.02.
+  - The effect is halved when a short and a long race already measure endurance.
+  - Heavy volume also flattens lap-to-lap fade, by up to 30%. (Estimate.)
+- **Other training hours** (gym, HYROX classes, erg or sled work): ±1% station time per hour against a 3-hour
+  reference, capped at ±3% and half-strength on the ergs. It has no effect on the runs. The effect is small because
+  the HYROX study found no strength-volume link. (Estimate.)
+- **Unknown values are neutral:** they only widen the confidence range.
+- **Migration:** an old combined "training hours" value is split as half running at about 9.5 km/h and half other
+  training.

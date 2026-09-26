@@ -15,6 +15,12 @@ All notable changes to this project are documented here. The format follows
   - issue forms and a PR template.
 - This changelog.
 
+### Changed
+- Replaced the single "training hours" input with **weekly running distance** (km or mi) and **other training hours**.
+  - Running volume reduces compromised running and lap fade, with diminishing returns.
+  - Other hours give a small, capped station benefit.
+  - Old saves migrate automatically.
+
 ### Fixed
 - Removed the stale Karma "ng test" debug configuration from `.vscode/launch.json` (tests run on Vitest).
 

@@ -5,7 +5,7 @@ import { predict } from './predictor';
 import { ageFactor, atLevel, levelOf, resolveAthlete } from './resolve';
 
 const man = (p: Partial<AthleteProfile> = {}) =>
-  ({ ...defaultAthlete('male'), fiveKSec: 23 * 60, bodyweightKg: 82, experience: 'some', trainingHours: 6, ...p }) as AthleteProfile;
+  ({ ...defaultAthlete('male'), fiveKSec: 23 * 60, bodyweightKg: 82, experience: 'some', ...p }) as AthleteProfile;
 const lifts = (p: Partial<ReturnType<typeof emptyLifts>>) => ({ ...emptyLifts(), ...p });
 
 describe('formulas', () => {

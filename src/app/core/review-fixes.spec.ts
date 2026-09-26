@@ -10,14 +10,13 @@ const ath = (sex: 'male' | 'female', p: Partial<AthleteProfile> = {}): AthletePr
   fiveKSec: sex === 'male' ? 23 * 60 : 25 * 60,
   bodyweightKg: sex === 'male' ? 82 : 65,
   experience: 'some',
-  trainingHours: 6,
   ...p,
 });
 const elite = (sex: 'male' | 'female'): AthleteProfile =>
   ath(sex, {
     fiveKSec: sex === 'male' ? 15 * 60 : 17 * 60,
     experience: 'competitive',
-    trainingHours: 15,
+    runningKmPerWeek: 100, otherTrainingHours: 8,
     levels: { run: null, erg: null, legs: 5, hinge: 5, grip: 5, burpees: 5, sled: 5, lunges: 5, wallBalls: 5, transitions: 5 },
   });
 const station = (p: ReturnType<typeof predict>, id: string) => p.segments.find((s) => s.stationId === id)!.sec;

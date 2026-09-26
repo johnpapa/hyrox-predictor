@@ -41,8 +41,10 @@ export interface AthleteProfile {
   /** Bodyweight in kg (always stored in kg); null = unknown. */
   bodyweightKg: number | null;
   experience: Experience;
-  /** Weekly training volume in hours (all modalities); null = unknown. */
-  trainingHours: number | null;
+  /** Weekly running distance in km (stored in km); null = unknown. The strongest volume predictor. */
+  runningKmPerWeek: number | null;
+  /** Other training per week in hours (gym, HYROX classes, erg/sled work); null = unknown. */
+  otherTrainingHours: number | null;
 
   // ── Running (seconds) — first available wins: 5K › 10K › mile › half › VO₂max › level ──
   fiveKSec: number | null;
@@ -127,7 +129,8 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
     heightCm: null,
     bodyweightKg: null,
     experience: 'unknown',
-    trainingHours: null,
+    runningKmPerWeek: null,
+    otherTrainingHours: null,
     fiveKSec: null,
     tenKSec: null,
     halfMarathonSec: null,
@@ -178,7 +181,7 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   if (EXPERIENCES.includes(r['experience'])) out.experience = r['experience'];
   if (r['vo2maxSource'] === 'lab') out.vo2maxSource = 'lab';
   const numeric: (keyof AthleteProfile)[] = [
-    'age', 'bodyweightKg', 'trainingHours', 'fiveKSec', 'tenKSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
+    'age', 'bodyweightKg', 'runningKmPerWeek', 'otherTrainingHours', 'fiveKSec', 'tenKSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
     'heightCm', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
     'row5kSec', 'deadHangSec', 'pullUps', 'burpees1Min', 'sledPushTestSec', 'sledPullTestSec', 'bbjTestSec',
     'farmersTestSec', 'lungesTestSec', 'wallBalls100Sec', 'wallBallsUnbroken', 'karenSec', 'previousHyroxSec',
@@ -194,6 +197,12 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   for (const id of ABILITY_IDS) {
     const v = levels[id];
     out.levels[id] = [1, 2, 3, 4, 5].includes(v) ? (v as Level) : null;
+  }
+  // Older saves had one combined "training hours" number: assume half was running at ~9.5 km/h.
+  const oldHours = numOrNull(r['trainingHours']);
+  if (oldHours != null && out.runningKmPerWeek == null && out.otherTrainingHours == null) {
+    out.runningKmPerWeek = Math.round(oldHours * 0.5 * 9.5);
+    out.otherTrainingHours = oldHours * 0.5;
   }
   // v1 → v2
   if (numOrNull(r['backSquatKg']) && !out.lifts.backSquat.kg) out.lifts.backSquat = { kg: r['backSquatKg'], reps: 1 };

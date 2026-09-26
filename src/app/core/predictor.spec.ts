@@ -4,9 +4,9 @@ import { doublesStationTime, loadMultiplier, optimalDoublesShare, predict, predi
 import { parseTime, formatTime } from './time';
 
 const man = (patch: Partial<AthleteProfile> = {}) =>
-  ({ ...defaultAthlete('male'), fiveKSec: 23 * 60, bodyweightKg: 82, experience: 'some', trainingHours: 6, ...patch }) as AthleteProfile;
+  ({ ...defaultAthlete('male'), fiveKSec: 23 * 60, bodyweightKg: 82, experience: 'some', ...patch }) as AthleteProfile;
 const woman = (patch: Partial<AthleteProfile> = {}) =>
-  ({ ...defaultAthlete('female', 1), fiveKSec: 25 * 60, bodyweightKg: 65, experience: 'some', trainingHours: 6, ...patch }) as AthleteProfile;
+  ({ ...defaultAthlete('female', 1), fiveKSec: 25 * 60, bodyweightKg: 65, experience: 'some', ...patch }) as AthleteProfile;
 const min = (s: number) => s / 60;
 
 describe('time helpers', () => {

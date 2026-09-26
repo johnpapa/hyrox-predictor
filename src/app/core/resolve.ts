@@ -57,6 +57,9 @@ export interface ResolvedAthlete {
   bodyweightKnown: boolean;
   /** Height in cm if entered and plausible. */
   heightCm: number | null;
+  /** Weekly running km and other training hours, if entered and plausible. */
+  runningKmPerWeek: number | null;
+  otherTrainingHours: number | null;
 }
 
 const fmtKg = (kg: number) => `${Math.round(kg)} kg`;
@@ -378,5 +381,8 @@ export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
   };
 
   const heightCm = ok(a.heightCm, 'heightCm', 'legs', 'Height', (v) => `${Math.round(v)} cm`) ? a.heightCm : null;
-  return { sources, warnings, bodyweightKnown, heightCm, bodyweightKg: bw, fiveK, ski1k, row1k, ergMult, squat, deadlift, grip, burpees, sled, lunges, wallBalls, transitions, tests, wallBallsUnbroken: wbU, quality };
+  const runningKmPerWeek = a.runningKmPerWeek != null && a.runningKmPerWeek >= 0 && a.runningKmPerWeek <= FALLBACK.ranges.runningKm[1] ? a.runningKmPerWeek : null;
+  if (a.runningKmPerWeek != null && runningKmPerWeek == null) (warnings.run ??= []).push(`Weekly running ${Math.round(a.runningKmPerWeek)} km ignored (expected 0–${FALLBACK.ranges.runningKm[1]})`);
+  const otherTrainingHours = a.otherTrainingHours != null && a.otherTrainingHours >= 0 && a.otherTrainingHours <= FALLBACK.ranges.otherHours[1] ? a.otherTrainingHours : null;
+  return { sources, warnings, bodyweightKnown, heightCm, runningKmPerWeek, otherTrainingHours, bodyweightKg: bw, fiveK, ski1k, row1k, ergMult, squat, deadlift, grip, burpees, sled, lunges, wallBalls, transitions, tests, wallBallsUnbroken: wbU, quality };
 }
