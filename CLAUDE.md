@@ -1,5 +1,7 @@
 # HYROX Predictor — contributor rules
 
+Full agent guide: [AGENTS.md](AGENTS.md). Conventions and maintenance matrix: [.github/copilot-instructions.md](.github/copilot-instructions.md).
+
 Angular 21 (standalone components, signals, zoneless) static app deployed to GitHub Pages.
 
 ## Rules

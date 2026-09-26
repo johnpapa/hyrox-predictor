@@ -1,0 +1,47 @@
+name: Bug report
+description: Something is broken or a prediction looks wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Unrealistic predictions count as bugs too. Please include your inputs so we can reproduce them.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Prediction looks unrealistic
+        - Inputs / form
+        - Results board
+        - Insights
+        - Simulator page
+        - Doubles / relay tactics
+        - Saving / privacy
+        - Layout (phone / desktop)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: division
+    attributes:
+      label: Division
+      placeholder: "e.g. Men's Open, Mixed Doubles"
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs you entered
+      description: Race times, bodyweight, age, lifts, self-ratings (leave out anything personal you'd rather not share)
+      placeholder: "5K 21:08, marathon 3:24, 162 lb, age 54, Roxzone: Strong"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened vs. what you expected
+      description: For predictions, include the split(s) that look wrong and, if you have them, real race results
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: "iPhone 15, Safari / Windows, Chrome"
