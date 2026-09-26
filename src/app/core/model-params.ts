@@ -39,6 +39,12 @@ export const PARAMS = {
   runShapeFlatten: { fullAt: 1.2, flatAt: 1.1, minScale: 0.4 },
   /** Combined skill multipliers (self-level × race-craft) never go below this. */
   minSkillMult: 0.9,
+  /**
+   * All personal adjustments together (strength × bodyweight × skill) stay within this range
+   * of the typical time for the athlete's run pace, so extremes can't stack unrealistically.
+   * Entered station tests are exempt.
+   */
+  personalMultRange: [0.65, 1.5] as const,
 
   // ── Ergs ───────────────────────────────────────────────────────────────────────────
   /** In-race 1000 m station time ÷ fresh 1000 m time-trial (race runs at ~85–90% of TT pace). */

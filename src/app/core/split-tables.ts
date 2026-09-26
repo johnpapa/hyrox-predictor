@@ -64,6 +64,16 @@ export const PRO_MULT: Record<Sex, Partial<Record<StationId, number>>> = {
   female: { sledPush: 1.6, sledPull: 1.21, farmersCarry: 1.22, sandbagLunges: 1.19, wallBalls: 1.2 },
 };
 
+/**
+ * World-class floors per station at the athlete's own Open weights (seconds). Individual
+ * multipliers can stack at the extremes; no prediction goes below these (scaled up for
+ * heavier loads). Based on the fastest splits seen in elite Open/Pro racing.
+ */
+export const STATION_FLOOR: Record<Sex, Record<StationId, number>> = {
+  male: { skierg: 195, sledPush: 100, sledPull: 135, burpeeBroadJump: 135, row: 190, farmersCarry: 65, sandbagLunges: 135, wallBalls: 170 },
+  female: { skierg: 220, sledPush: 90, sledPull: 140, burpeeBroadJump: 150, row: 215, farmersCarry: 70, sandbagLunges: 135, wallBalls: 170 },
+};
+
 export function tableFor(sex: Sex): BandRow[] {
   return sex === 'male' ? MEN_OPEN : WOMEN_OPEN;
 }

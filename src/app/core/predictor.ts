@@ -3,7 +3,7 @@ import { FALLBACK } from './fallback-params';
 import { ResolvedAthlete, resolveAthlete } from './resolve';
 import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, nativeOpenDivision, weightForAthlete } from './divisions';
 import { PARAMS } from './model-params';
-import { FIELD, PRO_MULT, interpolateBand, tableFor } from './split-tables';
+import { FIELD, PRO_MULT, STATION_FLOOR, interpolateBand, tableFor } from './split-tables';
 import { STATIONS, STATION_IDS, StationId } from './stations';
 
 // ─────────────────────────────────────────────────────────────────────────────────────
@@ -160,7 +160,9 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
   const runs = runShapeFor(runFactor).map((s) => avgRun * s);
 
   // Baseline: median splits of athletes who run at this pace ─────────────────────────
-  const band = interpolateBand(tableFor(sex), avgRun);
+  // Baselines come from the run pace *without* the Pro running penalty: heavier sleds slow
+  // the runs, but they don't make the athlete a weaker skier or rower.
+  const band = interpolateBand(tableFor(sex), avgRun - (heavy ? (fiveK / 5) * rf.pro : 0));
   const base = band.stations;
   const st = {} as StationTimes;
   const expMult = PARAMS.experienceStationMult[a.experience];
@@ -232,6 +234,22 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
   } else {
     st.wallBalls = base.wallBalls * loadMult.wallBalls * skill(r.wallBalls.value);
   }
+
+  // Cap the combined personal adjustment for formula-based stations ───────────────────
+  const tested: Partial<Record<StationId, boolean>> = {
+    sledPush: !!r.tests.sledPush, sledPull: !!r.tests.sledPull, burpeeBroadJump: !!r.tests.bbj,
+    farmersCarry: !!r.tests.farmers, sandbagLunges: !!r.tests.lunges, wallBalls: !!r.tests.wallBalls100,
+    skierg: !!skiTT, row: !!rowTT,
+  };
+  const [lo, hi] = PARAMS.personalMultRange;
+  for (const id of STATION_IDS) {
+    if (tested[id]) continue;
+    const typical = base[id] * loadMult[id];
+    st[id] = clamp(st[id], typical * lo, typical * hi);
+  }
+
+  // World-class floors (scaled for heavier loads) ─────────────────────────────────────
+  for (const id of STATION_IDS) st[id] = Math.max(st[id], STATION_FLOOR[sex][id] * loadMult[id]);
 
   // Roxzone ──────────────────────────────────────────────────────────────────────────
   let roxzone = band.roxzone * PARAMS.roxzoneExperienceMult[a.experience] * r.transitions.value;

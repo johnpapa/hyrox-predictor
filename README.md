@@ -33,6 +33,12 @@ you can play back.
 - **Race simulator:** plays the race back along a run/station/Roxzone timeline.
 - Supports kg and lb. Mobile-first, with a sticky summary dock on phones.
 
+## AI analysis?
+
+Should the app add Claude-powered coaching? See the research and recommendation in [docs/AI-ANALYSIS.md](docs/AI-ANALYSIS.md).
+In short: keep the prediction deterministic, add a free rule-based Insights panel first, and if AI is added, make it
+opt-in with bring-your-own-key.
+
 ## Privacy
 
 - **No servers, accounts, analytics or cookies.** The app is static files; every calculation runs in your browser.
@@ -53,11 +59,20 @@ Static Web Apps, or any static file host.
 ```bash
 npm install
 npm start                  # http://localhost:4200
-npm test                   # unit tests (Vitest): model, conversions, review regressions
+npm test                   # unit tests (Vitest): model, conversions, realism personas, fuzzing
 npm run e2e                # Playwright end-to-end tests on desktop + iPhone (production build)
 npm run docs:screenshots   # regenerate the tutorial screenshots in docs/tutorial
 npm run build              # production build in dist/
 ```
+
+**Realism tests** (`src/app/core/realism.spec.ts`) check the predictions themselves, not just the code:
+- **Personas:** a high-VO₂max runner never gets slow laps; a runner with no strength is slow on sleds and lunges; a
+  strong lifter who can't run gets slow laps but fast sleds; beginners land in the 2–3 hour band; elites stay just
+  above world records.
+- **Benchmark effects:** each benchmark moves only the stations it should (e.g. dead hang → farmers carry and pull,
+  not runs).
+- **Monotonic cause and effect:** a faster 5K always means faster runs; more strength always means faster sleds.
+- **Fuzzing:** 500 random athletes across all divisions, each checked against human limits for every split.
 
 The end-to-end suite runs every user path against the production build (strict CSP, served under `/hyrox-predictor/`
 like GitHub Pages) on desktop and iPhone viewports. It covers all 16 divisions, every input and fallback, key-by-key
