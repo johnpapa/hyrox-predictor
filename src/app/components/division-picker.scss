@@ -1,0 +1,32 @@
+@use '../shared' as *;
+@include block;
+
+.group { display: flex; flex-direction: column; gap: 8px; & + .group { margin-top: 14px; } }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover { border-color: var(--accent); }
+  &.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+}
+
+.note {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}

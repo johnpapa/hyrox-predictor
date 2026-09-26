@@ -1,0 +1,19 @@
+/* Shared component mixins */
+@mixin block {
+  .block { padding: 18px; }
+  .block-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+    h2 { font-size: 1.5rem; font-weight: 800; }
+  }
+  .step {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent-ink);
+    background: var(--accent);
+    padding: 3px 6px;
+    border-radius: 2px;
+    font-weight: 700;
+  }
+  @media (max-width: 480px) { .block { padding: 14px; } }
+}

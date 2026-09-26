@@ -1,0 +1,293 @@
+<section class="panel block">
+  <header class="block-head">
+    <span class="step">02</span>
+    <h2>{{ store.division().teamSize > 1 ? 'Athletes' : 'Athlete' }}</h2>
+    <div class="units" role="group" aria-label="Weight units">
+      <button type="button" [class.on]="unit() === 'kg'" (click)="store.units.set('kg')">KG</button>
+      <button type="button" [class.on]="unit() === 'lb'" (click)="store.units.set('lb')">LB</button>
+    </div>
+  </header>
+
+  @if (store.division().teamSize > 1) {
+    <div class="tabs" role="tablist">
+      @for (t of store.teamAthletes(); track $index) {
+        <button type="button" role="tab" class="tab" [class.on]="idx() === $index" [attr.aria-selected]="idx() === $index"
+          (click)="store.activeAthlete.set($index)">
+          <span class="tab-num">{{ $index + 1 }}</span>
+          <span class="tab-name">{{ t.name || 'Athlete ' + ($index + 1) }}</span>
+          <span class="tab-sex">{{ t.sex === 'male' ? 'M' : 'W' }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  @let ath = a();
+  @let res = r();
+  @let an = anchors();
+
+  <fieldset>
+    <legend>Profile</legend>
+    <div class="grid">
+      <label class="field span-2">
+        <span class="label">Name</span>
+        <input type="text" [value]="ath.name" maxlength="24" (input)="patch({ name: $any($event.target).value })" />
+      </label>
+      <div class="field">
+        <span class="label">Sex</span>
+        <div class="seg" role="radiogroup" aria-label="Sex">
+          <button type="button" role="radio" [attr.aria-checked]="ath.sex === 'male'" [class.on]="ath.sex === 'male'"
+            [disabled]="store.sexLocked()" (click)="patch({ sex: 'male' })">Male</button>
+          <button type="button" role="radio" [attr.aria-checked]="ath.sex === 'female'" [class.on]="ath.sex === 'female'"
+            [disabled]="store.sexLocked()" (click)="patch({ sex: 'female' })">Female</button>
+        </div>
+      </div>
+      <label class="field">
+        <span class="label">Bodyweight ({{ unit() }})</span>
+        <input type="number" inputmode="decimal" min="30" placeholder="Not sure" [value]="store.toDisplayWeight(ath.bodyweightKg)"
+          (input)="patch({ bodyweightKg: weight($any($event.target).value) })" />
+      </label>
+      <label class="field">
+        <span class="label">Age</span>
+        <input type="number" inputmode="numeric" min="16" max="99" placeholder="Not sure" [value]="ath.age"
+          (input)="patch({ age: num($any($event.target).value) })" />
+        @if (ageGroup(); as g) { <span class="hint">HYROX age group {{ g }}</span> }
+      </label>
+      <label class="field">
+        <span class="label">HYROX experience</span>
+        <select (change)="patch({ experience: $any($event.target).value })">
+          @for (e of experiences; track e.id) {
+            <option [value]="e.id" [selected]="ath.experience === e.id">{{ e.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">Training hrs / week</span>
+        <input type="number" inputmode="decimal" min="0" max="40" placeholder="Not sure" [value]="ath.trainingHours"
+          (input)="patch({ trainingHours: num($any($event.target).value) })" />
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Physiology <span class="opt">optional · leave blank if unknown</span></legend>
+    <div class="grid">
+      <label class="field">
+        <span class="label">VO₂max (ml/kg/min)</span>
+        <input type="number" inputmode="decimal" min="20" max="90" placeholder="Not sure" [value]="ath.vo2max"
+          (input)="patch({ vo2max: num($any($event.target).value) })" />
+        <span class="hint">From a lab test or sports watch</span>
+      </label>
+      <label class="field">
+        <span class="label">Resting heart rate (bpm)</span>
+        <input type="number" inputmode="numeric" min="30" max="110" placeholder="Not sure" [value]="ath.restingHr"
+          (input)="patch({ restingHr: num($any($event.target).value) })" />
+        <span class="hint">Morning, before getting up</span>
+      </label>
+      <p class="note span-all">
+        Used to estimate your running when you have no recent race time. A real race time always beats these estimates. Age
+        also adjusts the typical athlete assumed when you give no running information.
+      </p>
+    </div>
+  </fieldset>
+
+  @let conf = confidence();
+  <div class="confidence" aria-live="polite">
+    <div class="conf-head">
+      <span class="label">Prediction confidence</span>
+      <span class="mono conf-pct">±{{ conf.pct }}%</span>
+    </div>
+    <div class="conf-items">
+      @for (it of conf.items; track it.id) {
+        <span class="ci" [attr.data-quality]="it.quality" [title]="it.name + ': ' + it.quality">{{ it.name }}</span>
+      }
+    </div>
+    <p class="conf-tip">{{ conf.tip }}</p>
+    <p class="conf-legend">
+      <i data-quality="measured"></i>Measured <i data-quality="converted"></i>Estimated from another test
+      <i data-quality="rated"></i>Self-rated <i data-quality="assumed"></i>Assumed
+    </p>
+  </div>
+
+  <p class="intro">
+    Fill in what you know and leave the rest blank. Each ability uses the best information available: a measured test first,
+    then a conversion from a related test, then your self-rating, and finally a typical athlete at your running level.
+  </p>
+
+  <div class="cards">
+    <!-- Running -->
+    <app-ability-card heading="Running" [source]="res.sources.run" [quality]="res.quality.run" [anchors]="an.run"
+      [level]="ath.levels.run" levelPrompt="No recent race? Rate your running"
+      [altOpen]="any(ath.tenKSec, ath.mileSec, ath.halfMarathonSec, ath.cooperMeters)"
+      (levelChange)="level('run', $event)">
+      <div primary class="grid">
+        <app-time-input label="Current 5K best" [seconds]="ath.fiveKSec" placeholder="e.g. 23:30" [hint]="runHint()"
+          (secondsChange)="patch({ fiveKSec: $event })" />
+      </div>
+      <div alternatives class="grid">
+        <app-time-input label="10K" [seconds]="ath.tenKSec" placeholder="e.g. 49:00" (secondsChange)="patch({ tenKSec: $event })" />
+        <app-time-input label="1 mile" [seconds]="ath.mileSec" placeholder="e.g. 6:45" (secondsChange)="patch({ mileSec: $event })" />
+        <app-time-input label="Half marathon" [seconds]="ath.halfMarathonSec" placeholder="h:mm:ss"
+          (secondsChange)="patch({ halfMarathonSec: $event })" />
+        <label class="field">
+          <span class="label">Cooper test (m in 12 min)</span>
+          <input type="number" inputmode="numeric" min="0" placeholder="e.g. 2600" [value]="ath.cooperMeters"
+            (input)="patch({ cooperMeters: num($any($event.target).value) })" />
+        </label>
+      </div>
+    </app-ability-card>
+
+    <!-- Ergs -->
+    <app-ability-card heading="SkiErg & Row" [source]="res.sources.erg" [quality]="res.quality.erg" [anchors]="an.erg"
+      [level]="ath.levels.erg"
+      [altOpen]="any(ath.skiErg500Sec, ath.skiErg2kSec, ath.row500Sec, ath.row2kSec, ath.row5kSec)"
+      (levelChange)="level('erg', $event)">
+      <div primary class="grid">
+        <app-time-input label="SkiErg 1000m best" [seconds]="ath.skiErg1kSec" placeholder="e.g. 4:05"
+          (secondsChange)="patch({ skiErg1kSec: $event })" />
+        <app-time-input label="Row 1000m best" [seconds]="ath.row1kSec" placeholder="e.g. 3:40"
+          (secondsChange)="patch({ row1kSec: $event })" />
+      </div>
+      <div alternatives class="grid">
+        <app-time-input label="SkiErg 500m" [seconds]="ath.skiErg500Sec" (secondsChange)="patch({ skiErg500Sec: $event })" />
+        <app-time-input label="SkiErg 2000m" [seconds]="ath.skiErg2kSec" (secondsChange)="patch({ skiErg2kSec: $event })" />
+        <app-time-input label="Row 500m" [seconds]="ath.row500Sec" (secondsChange)="patch({ row500Sec: $event })" />
+        <app-time-input label="Row 2000m" [seconds]="ath.row2kSec" (secondsChange)="patch({ row2kSec: $event })" />
+        <app-time-input label="Row 5000m" [seconds]="ath.row5kSec" (secondsChange)="patch({ row5kSec: $event })" />
+        <p class="note span-all">Converted to 1000m with Paul's law (+5 s/500m per doubling of distance). If you know only one erg,
+          the other is estimated from the typical SkiErg-vs-row gap.</p>
+      </div>
+    </app-ability-card>
+
+    <!-- Leg strength -->
+    <app-ability-card heading="Leg strength" [source]="res.sources.legs" [quality]="res.quality.legs" [anchors]="an.legs"
+      [level]="ath.levels.legs" levelPrompt="Don't lift or don't know? Rate yourself"
+      [altOpen]="any(ath.lifts.frontSquat.kg, ath.lifts.legPress.kg)"
+      (levelChange)="level('legs', $event)">
+      <div primary class="grid">
+        <app-lift-input label="Back squat" [lift]="ath.lifts.backSquat" [units]="unit()" hint="Drives sled push & lunges"
+          (liftChange)="lift('backSquat', $event)" />
+      </div>
+      <div alternatives class="grid">
+        <app-lift-input label="Front squat" [lift]="ath.lifts.frontSquat" [units]="unit()" hint="≈ 85% of back squat"
+          (liftChange)="lift('frontSquat', $event)" />
+        <app-lift-input label="Leg press (45°)" [lift]="ath.lifts.legPress" [units]="unit()" hint="Rough: machines vary"
+          (liftChange)="lift('legPress', $event)" />
+        <p class="note span-all">A deadlift, trap-bar or Romanian deadlift entered under Pulling strength also estimates your squat.</p>
+      </div>
+    </app-ability-card>
+
+    <!-- Pulling strength -->
+    <app-ability-card heading="Pulling strength" [source]="res.sources.hinge" [quality]="res.quality.hinge" [anchors]="an.hinge"
+      [level]="ath.levels.hinge" levelPrompt="Don't lift or don't know? Rate yourself"
+      [altOpen]="any(ath.lifts.trapBar.kg, ath.lifts.romanianDeadlift.kg, ath.lifts.benchPress.kg)"
+      (levelChange)="level('hinge', $event)">
+      <div primary class="grid">
+        <app-lift-input label="Deadlift" [lift]="ath.lifts.deadlift" [units]="unit()" hint="Drives sled pull & farmers carry"
+          (liftChange)="lift('deadlift', $event)" />
+      </div>
+      <div alternatives class="grid">
+        <app-lift-input label="Trap-bar deadlift" [lift]="ath.lifts.trapBar" [units]="unit()" hint="≈ 108% of deadlift"
+          (liftChange)="lift('trapBar', $event)" />
+        <app-lift-input label="Romanian deadlift" [lift]="ath.lifts.romanianDeadlift" [units]="unit()" hint="≈ 75% of deadlift"
+          (liftChange)="lift('romanianDeadlift', $event)" />
+        <app-lift-input label="Bench press" [lift]="ath.lifts.benchPress" [units]="unit()" hint="Rough overall-strength proxy"
+          (liftChange)="lift('benchPress', $event)" />
+      </div>
+    </app-ability-card>
+
+    <!-- Grip -->
+    <app-ability-card heading="Grip" [source]="res.sources.grip" [quality]="res.quality.grip" [anchors]="an.grip"
+      [level]="ath.levels.grip" [altOpen]="any(ath.farmersTestSec)" (levelChange)="level('grip', $event)">
+      <div primary class="grid">
+        <label class="field">
+          <span class="label">Max dead hang (sec)</span>
+          <input type="number" inputmode="numeric" min="0" placeholder="e.g. 60" [value]="ath.deadHangSec"
+            (input)="patch({ deadHangSec: num($any($event.target).value) })" />
+        </label>
+        <label class="field">
+          <span class="label">Max strict pull-ups</span>
+          <input type="number" inputmode="numeric" min="0" placeholder="e.g. 8" [value]="ath.pullUps"
+            (input)="patch({ pullUps: count($any($event.target).value) })" />
+        </label>
+      </div>
+      <div alternatives class="grid">
+        <app-time-input label="200m farmers carry test" [seconds]="ath.farmersTestSec" placeholder="e.g. 1:55"
+          hint="Fresh, with race-weight bells" (secondsChange)="patch({ farmersTestSec: $event })" />
+      </div>
+    </app-ability-card>
+
+    <!-- Sleds -->
+    <app-ability-card heading="Sleds" [source]="res.sources.sled" [quality]="res.quality.sled" [anchors]="an.sled"
+      [level]="ath.levels.sled" levelPrompt="How do heavy sleds feel?" [hasAlternatives]="false"
+      (levelChange)="level('sled', $event)">
+      <div primary class="grid">
+        <app-time-input label="50m sled push test" [seconds]="ath.sledPushTestSec" placeholder="optional"
+          hint="Fresh, at race weight" (secondsChange)="patch({ sledPushTestSec: $event })" />
+        <app-time-input label="50m sled pull test" [seconds]="ath.sledPullTestSec" placeholder="optional"
+          hint="Fresh, at race weight" (secondsChange)="patch({ sledPullTestSec: $event })" />
+        <p class="note span-all">No sled test? Your leg & pulling strength plus bodyweight estimate the sleds. The rating below adjusts for technique.</p>
+      </div>
+    </app-ability-card>
+
+    <!-- Burpees -->
+    <app-ability-card heading="Burpee broad jumps" [source]="res.sources.burpees" [quality]="res.quality.burpees"
+      [anchors]="an.burpees" [level]="ath.levels.burpees" [altOpen]="any(ath.bbjTestSec)"
+      (levelChange)="level('burpees', $event)">
+      <div primary class="grid">
+        <label class="field">
+          <span class="label">Max burpees in 1 minute</span>
+          <input type="number" inputmode="numeric" min="0" placeholder="e.g. 22" [value]="ath.burpees1Min"
+            (input)="patch({ burpees1Min: num($any($event.target).value) })" />
+        </label>
+      </div>
+      <div alternatives class="grid">
+        <app-time-input label="80m burpee broad jump test" [seconds]="ath.bbjTestSec" placeholder="e.g. 4:30"
+          hint="Fresh" (secondsChange)="patch({ bbjTestSec: $event })" />
+      </div>
+    </app-ability-card>
+
+    <!-- Lunges -->
+    <app-ability-card heading="Sandbag lunges" [source]="res.sources.lunges" [quality]="res.quality.lunges"
+      [anchors]="an.lunges" [level]="ath.levels.lunges" [hasAlternatives]="false" (levelChange)="level('lunges', $event)">
+      <div primary class="grid">
+        <app-time-input label="100m lunge test" [seconds]="ath.lungesTestSec" placeholder="optional"
+          hint="Fresh, race-weight bag" (secondsChange)="patch({ lungesTestSec: $event })" />
+        <p class="note span-all">No test? Your squat relative to bodyweight estimates the lunges.</p>
+      </div>
+    </app-ability-card>
+
+    <!-- Wall balls -->
+    <app-ability-card heading="Wall balls" [source]="res.sources.wallBalls" [quality]="res.quality.wallBalls"
+      [anchors]="an.wallBalls" [level]="ath.levels.wallBalls" [altOpen]="any(ath.wallBalls100Sec, ath.karenSec)"
+      (levelChange)="level('wallBalls', $event)">
+      <div primary class="grid">
+        <label class="field">
+          <span class="label">Max unbroken wall balls</span>
+          <input type="number" inputmode="numeric" min="0" max="200" placeholder="e.g. 35" [value]="ath.wallBallsUnbroken"
+            (input)="patch({ wallBallsUnbroken: num($any($event.target).value) })" />
+          <span class="hint">Race ball & target</span>
+        </label>
+      </div>
+      <div alternatives class="grid">
+        <app-time-input label="100 wall balls for time" [seconds]="ath.wallBalls100Sec" placeholder="e.g. 6:10"
+          (secondsChange)="patch({ wallBalls100Sec: $event })" />
+        <app-time-input label='"Karen" (150 reps)' [seconds]="ath.karenSec" placeholder="e.g. 10:30"
+          (secondsChange)="patch({ karenSec: $event })" />
+      </div>
+    </app-ability-card>
+
+    <!-- Transitions -->
+    <app-ability-card heading="Roxzone transitions" [source]="res.sources.transitions" [quality]="res.quality.transitions"
+      [anchors]="an.transitions" [level]="ath.levels.transitions" levelPrompt="How do you move between stations?"
+      [hasAlternatives]="false" (levelChange)="level('transitions', $event)" />
+  </div>
+
+  <fieldset class="calibrate">
+    <legend>Calibrate <span class="opt">optional</span></legend>
+    <div class="grid">
+      <app-time-input class="span-2" label="Previous HYROX finish (singles, same weights)" placeholder="h:mm:ss"
+        [seconds]="ath.previousHyroxSec" hint="Pulls the projection towards your real result."
+        (secondsChange)="patch({ previousHyroxSec: $event })" />
+    </div>
+  </fieldset>
+</section>

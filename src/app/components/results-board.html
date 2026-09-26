@@ -1,0 +1,115 @@
+@let pr = p();
+<section class="board panel" aria-live="polite">
+  <header class="board-head">
+    <div>
+      <span class="label">Predicted finish</span>
+      <h2 class="div-name">{{ pr.division.name }}</h2>
+    </div>
+    <span class="live"><span class="dot"></span>Live</span>
+  </header>
+
+  <div class="clock-wrap">
+    <div class="clock mono">{{ fmt(simT() ?? pr.total, true) }}</div>
+    @if (simPiece(); as piece) {
+      <div class="sim-now">
+        <span class="kind" [attr.data-kind]="piece.kind">{{ piece.kind === 'run' ? 'RUN' : piece.kind === 'station' ? 'STATION' : 'ROXZONE' }}</span>
+        {{ piece.label }}
+      </div>
+    } @else {
+      <div class="range">
+        <span class="mono">{{ fmt(pr.low, true) }}</span>
+        <span class="range-bar"><span></span></span>
+        <span class="mono">{{ fmt(pr.high, true) }}</span>
+      </div>
+      <div class="field-pos">Est. field position <strong>{{ topLabel() }}</strong></div>
+    }
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="label">Run total</span><span class="mono v run">{{ fmt(pr.runTotal) }}</span></div>
+    <div class="stat"><span class="label">Work total</span><span class="mono v station">{{ fmt(pr.workTotal) }}</span></div>
+    <div class="stat"><span class="label">Roxzone</span><span class="mono v rox">{{ fmt(pr.roxzone) }}</span></div>
+    <div class="stat"><span class="label">Best run lap</span><span class="mono v">{{ fmt(pr.bestRun) }}</span></div>
+    <div class="stat"><span class="label">Avg run</span><span class="mono v">{{ fmt(pr.avgRun) }}<small>/km</small></span></div>
+  </div>
+
+  <!-- Race simulator track -->
+  <div class="track-wrap">
+    <div class="track-head">
+      <span class="label">Race simulator</span>
+      <button type="button" class="sim-btn" (click)="toggleSim()" [attr.aria-pressed]="simT() != null">
+        @if (simT() == null) {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16l13-8z" fill="currentColor" /></svg> Simulate
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" fill="currentColor" /></svg> Stop
+        }
+      </button>
+    </div>
+    <div class="track" role="img" [attr.aria-label]="'Race timeline totalling ' + fmt(pr.total, true)">
+      @for (piece of track(); track $index) {
+        <div class="piece" [attr.data-kind]="piece.kind" [style.width.%]="pct(piece.sec)"
+          [class.active]="simPiece() === piece" [title]="piece.label + ' ' + fmt(piece.sec)"></div>
+      }
+      @if (simT() != null) {
+        <div class="marker" [style.left.%]="pct(simT()!)"></div>
+      }
+    </div>
+    <div class="legend">
+      <span><i data-kind="run"></i>Run</span>
+      <span><i data-kind="station"></i>Station</span>
+      <span><i data-kind="roxzone"></i>Roxzone</span>
+    </div>
+  </div>
+
+  <!-- Splits table, laid out like an official results page -->
+  <div class="splits">
+    <div class="splits-head">
+      <span>Split</span>
+      <span class="r">Time</span>
+      <span class="r hide-sm">Pace / Load</span>
+      <span class="r">Total</span>
+    </div>
+    @for (row of rows(); track row.s.label) {
+      @let s = row.s;
+      <div class="split" [attr.data-kind]="s.kind" [class.locked]="s.overridden">
+        <span class="name">
+          <span class="idx mono">{{ s.kind === 'run' ? 'R' + (s.index + 1) : 'S' + (s.index + 1) }}</span>
+          <span class="name-text">
+            {{ s.label }}
+            @if (contributionText(s); as c) { <small class="contrib">{{ c }}</small> }
+            <small class="show-sm contrib">{{ pace(s) }}</small>
+          </span>
+        </span>
+        <span class="r mono t">
+          @if (s.kind === 'station' && editing() === s.stationId) {
+            <input class="edit mono" type="text" inputmode="numeric" [value]="fmt(s.sec)" autofocus
+              aria-label="Set station time (mm:ss); leave empty to reset"
+              (keydown.enter)="commitEdit(s.stationId!, $any($event.target).value)"
+              (keydown.escape)="editing.set(null)"
+              (blur)="commitEdit(s.stationId!, $any($event.target).value)" />
+          } @else if (s.kind === 'station') {
+            @if (s.overridden) {
+              <button type="button" class="lock" aria-label="Reset to predicted time" title="Reset to predicted"
+                (click)="clearOverride(s.stationId!, $event)">✕</button>
+            }
+            <button type="button" class="time-btn" (click)="startEdit(s.stationId)" [attr.aria-label]="'Set your own ' + s.label + ' time, currently ' + fmt(s.sec)">
+              {{ fmt(s.sec) }}
+              <svg class="pen" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+            </button>
+          } @else {
+            {{ fmt(s.sec) }}
+          }
+        </span>
+        <span class="r dim hide-sm">{{ pace(s) }}</span>
+        <span class="r mono dim">{{ fmt(row.cum, true) }}</span>
+      </div>
+    }
+    <div class="totals">
+      <div class="tot"><span>Roxzone Time</span><span class="mono rox">{{ fmt(pr.roxzone, true) }}</span></div>
+      <div class="tot"><span>Run Total</span><span class="mono run">{{ fmt(pr.runTotal, true) }}</span></div>
+      <div class="tot"><span>Work Total</span><span class="mono station">{{ fmt(pr.workTotal, true) }}</span></div>
+      <div class="tot overall"><span>Overall Time</span><span class="mono">{{ fmt(pr.total, true) }}</span></div>
+    </div>
+    <p class="tip">Tap a station time to lock in your own split.</p>
+  </div>
+</section>
