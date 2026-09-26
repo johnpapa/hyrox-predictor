@@ -245,6 +245,11 @@ test.describe('athlete inputs & fallbacks', () => {
     await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('80');
   });
 
+  test('the "Karen" field explains itself', async ({ app, page }) => {
+    await app.openAlternatives('Wall balls');
+    await expect(page.locator('app-time-input').filter({ hasText: 'Karen' })).toContainText('CrossFit benchmark: 150 wall balls for time');
+  });
+
   test('grip, burpees, wall balls and station tests are used', async ({ app, page }) => {
     await page.getByLabel('Max dead hang (sec)').fill('90');
     await expect(app.card('Grip').locator('.src')).toContainText('dead hang 90s');

@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows
 - **Wall balls: "Usual set size for 100 reps"** (e.g. sets of 20) is now the main wall-ball input in Quick and Detailed.
   Most people know it, and it's closer to race behaviour than a max-unbroken test. It's converted at sets ≈ 60% of max
   unbroken; max unbroken, 100-for-time and Karen stay as alternatives. Gains and reasons are phrased in sets.
+- The **"Karen"** field explains what it is (150 wall balls for time) and that a CrossFit-weight ball reads slow for Open.
 - **Reset asks "Are you sure?"** and says it also clears the saved copy when saving is on. Cancelling keeps everything
   (regression test).
 - **Collapsible sections:** click a section's title (or its arrow) to collapse it:

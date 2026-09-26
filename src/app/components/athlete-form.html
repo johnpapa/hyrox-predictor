@@ -311,6 +311,7 @@
         <app-time-input label="100 wall balls for time" [range]="ranges.wallBalls100" [step]="5" [start]="360" [seconds]="ath.wallBalls100Sec" placeholder="e.g. 6:10"
           (secondsChange)="patch({ wallBalls100Sec: $event })" />
         <app-time-input label='"Karen" (150 reps)' [range]="ranges.karen" [step]="10" [start]="600" [seconds]="ath.karenSec" placeholder="e.g. 10:30"
+          hint="CrossFit benchmark: 150 wall balls for time. Use a time with your HYROX ball; the usual 9 kg / 20 lb (men) or 6 kg / 14 lb (women) ball is Pro weight and reads slow for Open."
           (secondsChange)="patch({ karenSec: $event })" />
       </div>
       }
