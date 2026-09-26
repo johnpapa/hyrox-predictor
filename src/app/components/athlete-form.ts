@@ -4,7 +4,7 @@ import { FALLBACK } from '../core/fallback-params';
 import { levelAnchors } from '../core/level-anchors';
 import { enduranceExponent } from '../core/predictor';
 import { LB_PER_KG, PredictorStore } from '../core/predictor.store';
-import { Quality } from '../core/resolve';
+import { Quality, leanMassFactor } from '../core/resolve';
 import { formatTime } from '../core/time';
 import { AbilityCard } from './ability-card';
 import { LiftInput } from './lift-input';
@@ -51,6 +51,18 @@ export class AthleteForm {
   protected readonly solo = computed(() => this.store.prediction().solos[this.idx()]);
   protected readonly r = computed(() => this.solo().resolved);
   protected readonly unit = computed(() => this.store.units());
+  protected readonly ranges = FALLBACK.ranges;
+
+  /** Body fat only matters while strength is estimated; say what it is doing right now. */
+  protected readonly bodyFatHint = computed(() => {
+    const q = this.r().quality;
+    if (q.legs !== 'assumed' && q.hinge !== 'assumed') return 'No effect now: your lifts or strength ratings set your strength';
+    const lean = leanMassFactor(this.a());
+    if (lean === 1) return 'Used for lean mass when lifts are unknown';
+    const pct = Math.round((lean - 1) * 100);
+    const ref = FALLBACK.typicalBodyFatPct[this.a().sex];
+    return `Estimated strength ${pct >= 0 ? '+' : '−'}${Math.abs(pct)}% vs a typical ${ref}% athlete of your weight`;
+  });
 
   protected readonly experiences: { id: Experience; label: string }[] = [
     { id: 'unknown', label: 'Not sure' },

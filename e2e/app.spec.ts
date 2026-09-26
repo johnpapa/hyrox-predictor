@@ -57,7 +57,7 @@ test.describe('divisions', () => {
   test('Pro weights are slower than Open for the same athlete and show Pro loads', async ({ app, page }) => {
     await page.getByLabel('5K', { exact: true }).fill('22:00');
     const open = await app.total();
-    await expect(app.splitRow('Sled Push')).toContainText('152 kg');
+    await expect(app.splitRow('Sled Push')).toContainText('152 kg / 335 lb');
     await app.division("Men's Pro").click();
     await expect(app.splitRow('Sled Push')).toContainText('202 kg');
     expect(await app.total()).toBeGreaterThan(open);
@@ -173,7 +173,7 @@ test.describe('athlete inputs & fallbacks', () => {
     const legs = app.card('Leg strength');
     await legs.getByRole('button', { name: 'Strong', exact: true }).click();
     await expect(legs.locator('.q')).toHaveText('Self-rated');
-    await expect(legs.locator('.anchor')).toContainText('2.25× bodyweight');
+    await expect(legs.locator('.anchor')).toContainText('1.6× bodyweight');
 
     await legs.getByLabel('Back squat (kg)').fill('100');
     await legs.getByLabel('Back squat reps').fill('5');
@@ -205,6 +205,34 @@ test.describe('athlete inputs & fallbacks', () => {
     await expect(pull.locator('.src')).toContainText('× 10 (1–2 left)');
     await pull.getByLabel('Deadlift effort', { exact: true }).selectOption({ label: 'Easy (5+ left)' });
     await expect(pull).toContainText(/Est\. 1RM 20[23] lb/); // 15.5 reps to failure, capped at 15
+  });
+
+  test('REGRESSION: impossible body fat is flagged, not silently ignored', async ({ app, page }) => {
+    // User: "I changed the body fat to 114 and then 144 and it didn't have any effect at all."
+    const bf = page.getByLabel('Body fat (%)');
+    await bf.fill('114');
+    const field = page.locator('app-number-input').filter({ hasText: 'Body fat' });
+    await expect(field.getByRole('alert')).toContainText("114 isn't realistic, so it's ignored (expected 4–50)");
+    await expect(bf).toHaveAttribute('aria-invalid', 'true');
+    // A real value shows what it does; once lifts are entered it says it has no effect.
+    await page.getByLabel('Bodyweight (kg)').fill('73.5');
+    await bf.fill('14');
+    await expect(field).toContainText('Estimated strength +5% vs a typical 18% athlete');
+    await app.card('Leg strength').getByLabel('Back squat (kg)').fill('100');
+    await app.card('Pulling strength').getByLabel('Deadlift (kg)', { exact: true }).fill('120');
+    await expect(field).toContainText('No effect now');
+  });
+
+  test('REGRESSION: weights show both kg and lb', async ({ app, page }) => {
+    // User: "any time something's listed as KG, should also be listed as pounds and vice versa."
+    await expect(app.splitRow('Farmers')).toContainText('2 × 24 kg / 53 lb');
+    const pull = app.card('Pulling strength');
+    await pull.getByRole('button', { name: 'Solid', exact: true }).click();
+    await page.getByLabel('Bodyweight (kg)').fill('73.5');
+    await expect(pull.locator('.src')).toContainText('110 kg / 243 lb');
+    await pull.getByLabel('Deadlift (kg)', { exact: true }).fill('60');
+    await pull.getByLabel('Deadlift reps', { exact: true }).fill('10');
+    await expect(pull).toContainText('Est. 1RM 83 kg / 183 lb');
   });
 
   test('kg / lb toggle converts displayed weights', async ({ page }) => {

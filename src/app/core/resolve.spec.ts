@@ -66,7 +66,7 @@ describe('strength fallbacks', () => {
     expect(trap.deadlift.value).toBeCloseTo(150, 0);
     expect(trap.deadlift.quality).toBe('converted');
     const lvl = resolveAthlete(man({ bodyweightKg: 80, levels: { ...defaultAthlete('male').levels, legs: 3 } }));
-    expect(lvl.squat.value).toBeCloseTo(120, 0); // Solid = 1.5 × BW
+    expect(lvl.squat.value).toBeCloseTo(100, 0); // Solid = 1.25 × BW
     expect(lvl.squat.quality).toBe('rated');
   });
 
@@ -80,9 +80,26 @@ describe('strength fallbacks', () => {
     const blank = predict({ divisionId: 'men-open', athletes: [man()] }).total;
     const typical = predict({
       divisionId: 'men-open',
-      athletes: [man({ lifts: lifts({ backSquat: { kg: 82 * 1.5, reps: 1 }, deadlift: { kg: 82 * 2.0, reps: 1 } }) })],
+      athletes: [man({ lifts: lifts({ backSquat: { kg: 82 * 1.25, reps: 1 }, deadlift: { kg: 82 * 1.5, reps: 1 } }) })],
     }).total;
     expect(Math.abs(blank - typical)).toBeLessThan(5);
+  });
+});
+
+describe('strength standards (user: "147 kg deadlift is just Solid? That\'s heavy as hell")', () => {
+  it('REGRESSION: Solid means a recreational HYROX athlete, not a powerlifter', () => {
+    // 73.5 kg man: Solid deadlift ≈ 110 kg (243 lb), squat ≈ 92 kg (203 lb); 147 kg deadlift is Strong+.
+    const m = (lv: 'legs' | 'hinge', l: 1 | 2 | 3 | 4 | 5) =>
+      resolveAthlete(man({ bodyweightKg: 73.5, levels: { ...defaultAthlete('male').levels, [lv]: l } }));
+    expect(m('hinge', 3).deadlift.value).toBeCloseTo(110, 0);
+    expect(m('legs', 3).squat.value).toBeCloseTo(92, 0);
+    expect(m('hinge', 4).deadlift.value).toBeLessThan(147);
+    expect(m('hinge', 5).deadlift.value).toBeGreaterThan(147);
+    // Typical ("Not sure") equals Solid, and women's squat stays below their deadlift.
+    expect(resolveAthlete(man({ bodyweightKg: 73.5 })).deadlift.value).toBeCloseTo(110, 0);
+    const w = resolveAthlete({ ...defaultAthlete('female'), bodyweightKg: 65 });
+    expect(w.squat.value).toBeLessThan(w.deadlift.value);
+    expect(w.deadlift.value).toBeLessThan(80);
   });
 });
 

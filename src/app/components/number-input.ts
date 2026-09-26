@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, linkedSignal, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
 
 let nextId = 0;
 
@@ -25,22 +25,24 @@ let nextId = 0;
       <input
         [id]="id"
         [attr.aria-label]="ariaLabel() || null"
-        [attr.aria-describedby]="hint() ? id + '-hint' : null"
+        [attr.aria-describedby]="hint() || rangeMsg() ? id + '-hint' : null"
         type="text"
         [attr.inputmode]="integer() ? 'numeric' : 'decimal'"
         autocomplete="off"
         [placeholder]="placeholder()"
         [value]="text()"
-        [class.invalid]="invalid()"
-        [attr.aria-invalid]="invalid()"
+        [class.invalid]="invalid() || !!rangeMsg()"
+        [attr.aria-invalid]="invalid() || !!rangeMsg()"
         (input)="onInput($any($event.target).value)"
         (blur)="onBlur()"
       />
-      @if (hint()) { <span class="hint" [id]="id + '-hint'">{{ hint() }}</span> }
+      @if (rangeMsg(); as m) { <span class="hint warn" [id]="id + '-hint'" role="alert">{{ m }}</span> }
+      @else if (hint()) { <span class="hint" [id]="id + '-hint'">{{ hint() }}</span> }
     </div>
   `,
   styles: `
     .invalid { border-color: var(--warn) !important; }
+    .warn { color: var(--warn); }
     .lab-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 22px; }
     .units { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 2px; overflow: hidden; flex: none; }
     .units button {
@@ -71,7 +73,17 @@ export class NumberInput {
   readonly unitLabels = input<[string, string]>(['kg', 'lb']);
   readonly unitNames = input<[string, string]>(['Kilograms', 'Pounds']);
 
+  /** Plausible range in model units; values outside it are ignored by the model, so say so. */
+  readonly range = input<readonly [number, number] | null>(null);
+
   protected readonly invalid = linkedSignal(() => false);
+
+  protected readonly rangeMsg = computed(() => {
+    const v = this.value();
+    const r = this.range();
+    if (v == null || !r || (v >= r[0] && v <= r[1])) return '';
+    return `${this.display(v)} isn't realistic, so it's ignored (expected ${this.display(r[0])}–${this.display(r[1])})`;
+  });
 
   private display(v: number | null): string {
     if (v == null) return '';

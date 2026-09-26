@@ -55,7 +55,9 @@ export class LiftInput {
     const l = this.lift();
     if (l.kg && this.multiRep()) {
       const rm = oneRepMax(l.kg, l.reps, this.rir());
-      const v = this.units() === 'kg' ? `${Math.round(rm)} kg` : `${Math.round(rm * LB_PER_KG)} lb`;
+      const kg = `${Math.round(rm)} kg`;
+      const lb = `${Math.round(rm * LB_PER_KG)} lb`;
+      const v = this.units() === 'kg' ? `${kg} / ${lb}` : `${lb} / ${kg}`;
       const toFailure = (l.reps ?? 1) + this.rir();
       return `Est. 1RM ${v} (Epley, ≈${Math.round(toFailure)} reps to failure${toFailure > 10 ? '; rougher above 10' : ''})`;
     }

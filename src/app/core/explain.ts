@@ -1,5 +1,6 @@
 import { AthleteProfile, emptyLifts, peerProfile } from './athlete';
 import { resolveAthlete } from './resolve';
+import { cmFtIn, kgLb } from './units';
 import { DivisionInfo } from './divisions';
 import { predictSolo, SoloPrediction } from './predictor';
 import { STATION_IDS, StationId } from './stations';
@@ -42,7 +43,7 @@ interface Factor {
   areas?: GapArea[];
 }
 
-const lbText = (kg: number) => `${Math.round(kg)} kg / ${Math.round(kg * 2.20462)} lb`;
+const lbText = kgLb;
 
 /** "squat ≈ 95 kg / 209 lb vs ≈ 120 kg / 265 lb for athletes like you" (estimated 1RMs). */
 function strengthVsPeer(a: AthleteProfile, lift: 'squat' | 'deadlift'): string {
@@ -140,7 +141,7 @@ const PROFILE_FACTORS: Factor[] = [
     applies: (a) => a.bodyweightKg != null,
     label: (a) =>
       `${a.bodyweightKg! < REF_BW[a.sex] ? 'Lighter' : 'Heavier'} bodyweight ` +
-      `(${Math.round(a.bodyweightKg!)} kg / ${Math.round(a.bodyweightKg! * 2.20462)} lb vs typical ${REF_BW[a.sex]} kg)`,
+      `(${kgLb(a.bodyweightKg!)} vs typical ${kgLb(REF_BW[a.sex])})`,
     neutral: (a) => ({ ...a, bodyweightKg: null }),
   },
   {
@@ -152,7 +153,7 @@ const PROFILE_FACTORS: Factor[] = [
   {
     id: 'height',
     applies: (a) => a.heightCm != null,
-    label: (a) => `Height (${Math.round(a.heightCm!)} cm vs typical ${REF_H[a.sex]} cm)`,
+    label: (a) => `Height (${cmFtIn(a.heightCm!)} vs typical ${cmFtIn(REF_H[a.sex])})`,
     neutral: (a) => ({ ...a, heightCm: null }),
   },
   {

@@ -3,6 +3,7 @@ import { atLevel, levelOf, resolveAthlete } from './resolve';
 import { PredictInput, Prediction, SoloPrediction, predict } from './predictor';
 import { STATIONS, STATION_IDS, StationId } from './stations';
 import { formatTime } from './time';
+import { kgLb } from './units';
 import { weightForAthlete } from './divisions';
 import { loadMultiplier } from './predictor';
 import { bandForSplit, bandForWork, bandIndex } from './split-tables';
@@ -94,7 +95,7 @@ export function realisticStrengthGain(kg: number, bw: number, perBw: readonly nu
   return atLevel(G().strengthPctByLevel, levelOf(perBw, kg / bw));
 }
 
-const kgText = (kg: number) => `${Math.round(kg)} kg (${Math.round(kg * 2.20462)} lb)`;
+const kgText = kgLb;
 
 /**
  * Improvements the athlete could realistically make in 8–12 weeks, only for abilities they

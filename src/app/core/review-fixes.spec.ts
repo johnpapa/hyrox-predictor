@@ -78,7 +78,7 @@ describe('input robustness', () => {
     expect(bad.lifts.deadlift.rir).toBe(1.5);
     // A working set with reps left estimates a bigger deadlift than the same set to failure.
     expect(resolveAthlete(now).deadlift.value).toBeGreaterThan(resolveAthlete(old).deadlift.value);
-    expect(resolveAthlete(now).sources.hinge).toContain('100 kg × 5 (3–4 left)');
+    expect(resolveAthlete(now).sources.hinge).toContain('100 kg / 220 lb × 5 (3–4 left)');
   });
 
   it('a sled self-rating only adjusts technique, not strength', () => {

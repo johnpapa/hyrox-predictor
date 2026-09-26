@@ -137,7 +137,7 @@ describe('realistic, honest suggestions (user feedback)', () => {
   it('measured lifts show kg (and lb) with a level-appropriate gain', () => {
     const i = run({ divisionId: 'men-open', athletes: [ath('male', { lifts: { ...emptyLifts(), backSquat: { kg: 80, reps: 1 } } })] });
     const w = i.whatIfs.find((x) => x.id === 'legs')!;
-    expect(w.detail).toMatch(/80 kg \(176 lb\) → 9\d kg/); // novice (≈1×BW) → ~+15–25%
+    expect(w.detail).toMatch(/80 kg \/ 176 lb → 9\d kg \/ \d+ lb \(\+1\d%\)/); // ≈1×BW squat is just above Fair → ~+10–15%
   });
 
   it('practical tips target the biggest limiters and always include pacing', () => {
@@ -235,7 +235,7 @@ describe('why each station differs (user question: "why am I worse than athletes
     const a = { ...john(), lifts: { ...emptyLifts(), backSquat: { kg: 60, reps: 10, rir: 1.5 } } };
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
     const w = run(input).whatIfs.find((x) => x.id === 'legs')!;
-    expect(w.detail).toMatch(/^Working set 60 kg \(132 lb\) × 10 → \d+ kg \(\d+ lb\) × 10/);
+    expect(w.detail).toMatch(/^Working set 60 kg \/ 132 lb × 10 → \d+ kg \/ \d+ lb × 10/);
     expect(w.saves).toBeGreaterThan(0);
   });
 

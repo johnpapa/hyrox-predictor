@@ -2,6 +2,7 @@ import { AbilityId, AthleteProfile, Level, LiftId, RIR_OPTIONS } from './athlete
 import { Sex } from './divisions';
 import { oneRepMax, paulsLaw, raceTimeFromVdot, riegel } from './formulas';
 import { FALLBACK } from './fallback-params';
+import { kgLb } from './units';
 
 /**
  * How a value was obtained. Drives the confidence range:
@@ -62,7 +63,7 @@ export interface ResolvedAthlete {
   otherTrainingHours: number | null;
 }
 
-const fmtKg = (kg: number) => `${Math.round(kg)} kg`;
+const fmtKg = kgLb;
 const fmtT = (s: number) => {
   const t = Math.round(s);
   const h = Math.floor(t / 3600);
