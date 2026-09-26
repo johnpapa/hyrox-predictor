@@ -1,4 +1,4 @@
-import { AbilityId, AthleteProfile, CompromisedRuns, hyroxAgeGroup, peerProfile } from './athlete';
+import { AbilityId, AthleteProfile, CompromisedRuns, hyroxAgeGroup, peerProfile, sanitizeRanges } from './athlete';
 import { FALLBACK } from './fallback-params';
 import { ResolvedAthlete, resolveAthlete } from './resolve';
 import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, nativeOpenDivision, weightForAthlete } from './divisions';
@@ -170,7 +170,8 @@ function strengthClamp(x: number): number {
 // Solo model
 // ─────────────────────────────────────────────────────────────────────────────────────
 
-export function predictSolo(a: AthleteProfile, division: DivisionInfo, withPeer = true): SoloPrediction {
+export function predictSolo(raw: AthleteProfile, division: DivisionInfo, withPeer = true): SoloPrediction {
+  const a = sanitizeRanges(raw);
   // A previous result is a singles time on the athlete's own weights: calibrate against that race.
   const calibration = previousResultCalibration(a);
   const sex = a.sex;
@@ -504,7 +505,7 @@ export function topPercent(divisionId: string, totalSec: number, medianFactor = 
 /** Position within the athlete's HYROX 5-year age group (singles; null if age unknown). */
 export function ageGroupPosition(division: DivisionInfo, athlete: AthleteProfile | undefined, totalSec: number): { label: string; topPercent: number } | null {
   if (division.format !== 'single' || !athlete) return null;
-  const group = hyroxAgeGroup(athlete.age);
+  const group = hyroxAgeGroup(sanitizeRanges(athlete).age);
   if (!group) return null;
   const factor = AGE_GROUP_FACTOR[athlete.sex][group];
   const top = topPercent(division.id, totalSec, factor);

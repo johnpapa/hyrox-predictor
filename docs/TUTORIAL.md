@@ -22,6 +22,8 @@ the doubles 10-second rule.
 Name, sex, bodyweight (switch **KG / LB** right on the field), height, age, HYROX experience, **weekly running
 distance** (km or mi) and **other training hours** (gym, HYROX classes, erg or sled work). They're separate because
 research shows running volume is what predicts HYROX times; gym hours help the stations a little.
+Type a value, or use the **− / +** buttons (hold to repeat) or the arrow keys. Anything unrealistic is flagged right
+on the field and ignored.
 Anything you don't know can stay on **Not sure**.
 Age shows your HYROX age group, and your field position is also estimated within it (e.g. **Top 17% of Men
 50–54**). Under **Physiology** you can add body fat %, VO₂max (lab or watch) and resting heart rate:

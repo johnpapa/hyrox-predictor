@@ -7,6 +7,18 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **− / + steppers on every number and time field.** Press and hold to repeat. Arrow keys step too (Shift × 10), and
+  each field has a sensible step (e.g. 5K ±5 s, bodyweight ±0.5 kg / 1 lb, lifts ±2.5 kg / 5 lb) and starting value.
+  Fields are spinbuttons for screen readers.
+- **Inline validation on every field:** out-of-range entries are flagged on the field ("150 isn't realistic, so it's
+  ignored (expected 16–95)"). Age, dead hang, pull-ups, burpees, unbroken wall balls and lift weights now have model
+  range checks too, so the message is always true.
+
+### Fixed
+- **Typing on a slow phone could rewrite the field**, e.g. "23:" jumping to "23:00" mid-entry, when the page's update
+  for an earlier keystroke arrived late. Fields now ignore late echoes of values they already sent. Component
+  regression tests added.
+
 - **Doubles hand-over tips** in Insights: how often to switch on each station and each partner's share of the work.
 - **Runs straight after stations** (compromised-running practice): a new input that adjusts lap pace and shrinks the
   first-race penalty.

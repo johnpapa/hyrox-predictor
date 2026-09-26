@@ -52,6 +52,17 @@ export class AthleteForm {
   protected readonly r = computed(() => this.solo().resolved);
   protected readonly unit = computed(() => this.store.units());
   protected readonly ranges = FALLBACK.ranges;
+  /** A previous result only calibrates between 40 min and 4 h. */
+  protected readonly previousRange = [40 * 60, 4 * 3600] as const;
+  /** Where the −/+ steppers start from on an empty field (model units, by sex). */
+  protected readonly starts = computed(() => {
+    const sex = this.a().sex;
+    return {
+      bodyweight: FALLBACK.refBodyweightKg[sex],
+      height: sex === 'male' ? 178 : 165,
+      bodyFat: FALLBACK.typicalBodyFatPct[sex],
+    };
+  });
 
   /** VO₂max and resting HR only estimate running when there's no race time. */
   protected readonly hasRace = computed(() => {

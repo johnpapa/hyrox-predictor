@@ -133,7 +133,9 @@ test.describe('athlete inputs & fallbacks', () => {
 
   test('implausible entries are ignored with a warning', async ({ app, page }) => {
     await page.getByLabel('5K', { exact: true }).fill('0:05');
-    await expect(app.card('Running').locator('.warn')).toContainText('ignored');
+    // Flagged on the field itself and in the card summary.
+    await expect(page.getByRole('alert').filter({ hasText: "00:05 isn't realistic, so it's ignored (expected 12:00–01:30:00)" })).toBeVisible();
+    await expect(app.card('Running').locator('.warn').last()).toContainText('ignored');
     await expect(app.clock).toHaveText(/\d{2}:\d{2}:\d{2}/);
   });
 
@@ -379,5 +381,68 @@ test.describe('responsive layout', () => {
     await expect(page.getByRole('region', { name: 'Predicted finish summary' })).toBeHidden();
     await page.getByText('How the prediction works').scrollIntoViewIfNeeded();
     await expect(page.locator('app-results-board .clock')).toBeInViewport();
+  });
+});
+
+test.describe('steppers and validation (user: "freeform text boxes… plus or minus, and validation")', () => {
+  const field = (page: import('@playwright/test').Page, label: string) =>
+    page.locator('app-number-input, app-time-input').filter({ has: page.getByLabel(label, { exact: true }) });
+
+  test('− / + buttons step numbers from a sensible start, snap to the step and stop at the limits', async ({ page }) => {
+    const age = field(page, 'Age');
+    await age.getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Age', { exact: true })).toHaveValue('35');
+    await age.getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Age', { exact: true })).toHaveValue('36');
+    await age.getByRole('button', { name: 'Decrease' }).click();
+    await expect(page.getByLabel('Age', { exact: true })).toHaveValue('35');
+    await expect(page.getByLabel('Age', { exact: true })).toHaveAttribute('role', 'spinbutton');
+    await page.getByLabel('Age', { exact: true }).fill('95');
+    await expect(age.getByRole('button', { name: 'Increase' })).toBeDisabled();
+
+    const bw = field(page, 'Bodyweight (kg)');
+    await page.getByLabel('Bodyweight (kg)').fill('73.3');
+    await bw.getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('73.5'); // snaps to 0.5 kg
+    await page.getByRole('button', { name: 'LB', exact: true }).click();
+    await field(page, 'Bodyweight (lb)').getByRole('button', { name: 'Increase' }).click();
+    await expect(page.getByLabel('Bodyweight (lb)')).toHaveValue('163'); // 1 lb steps
+  });
+
+  test('arrow keys step (Shift × 10) and time fields step in seconds', async ({ app, page }) => {
+    const fiveK = page.getByLabel('5K', { exact: true });
+    await field(page, '5K').getByRole('button', { name: 'Increase' }).click();
+    await expect(fiveK).toHaveValue('25:00');
+    await fiveK.press('ArrowUp');
+    await expect(fiveK).toHaveValue('25:05');
+    await fiveK.press('Shift+ArrowDown');
+    await expect(fiveK).toHaveValue('24:15');
+    await expect(app.card('Running').locator('.src')).toContainText('5K 24:15');
+    const hours = page.getByLabel('Other training (hrs / week)');
+    await hours.fill('5');
+    await hours.press('ArrowUp');
+    await expect(hours).toHaveValue('5.5');
+  });
+
+  test('press and hold repeats', async ({ page }) => {
+    const plus = field(page, 'Max unbroken wall balls').getByRole('button', { name: 'Increase' });
+    await plus.scrollIntoViewIfNeeded();
+    const box = (await plus.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(1000);
+    await page.mouse.up();
+    const v = Number(await page.getByLabel('Max unbroken wall balls').inputValue());
+    expect(v).toBeGreaterThanOrEqual(30 + 5 * 3); // starts at 30, then repeats every 70 ms after 450 ms
+  });
+
+  test('out-of-range numbers are flagged on the field and ignored', async ({ app, page }) => {
+    await page.getByLabel('5K', { exact: true }).fill('23:00');
+    const before = await app.total();
+    await page.getByLabel('Age', { exact: true }).fill('150');
+    await expect(page.getByRole('alert').filter({ hasText: "150 isn't realistic, so it's ignored (expected 16–95)" })).toBeVisible();
+    await page.getByLabel('Max unbroken wall balls').fill('900');
+    await expect(page.getByRole('alert').filter({ hasText: '900 isn' })).toBeVisible();
+    expect(await app.total()).toBe(before);
   });
 });

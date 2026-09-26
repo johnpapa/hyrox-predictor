@@ -1,4 +1,5 @@
 import { Sex } from './divisions';
+import { FALLBACK } from './fallback-params';
 
 /** Self-assessed level: 1 Weak · 2 Fair · 3 Solid · 4 Strong · 5 Elite. `null` = not sure. */
 export type Level = 1 | 2 | 3 | 4 | 5;
@@ -247,6 +248,29 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
     });
   }
   return out;
+}
+
+/**
+ * Out-of-range entries are ignored (set to "not sure") for fields the resolver has no range check
+ * of its own for, so the inline "isn't realistic, so it's ignored" messages are true everywhere.
+ */
+export function sanitizeRanges(a: AthleteProfile): AthleteProfile {
+  const R = FALLBACK.ranges;
+  const inR = (v: number | null, [lo, hi]: readonly number[]) => (v != null && v >= lo && v <= hi ? v : null);
+  const lifts = { ...a.lifts };
+  for (const id of LIFT_IDS) {
+    const l = lifts[id];
+    if (l.kg != null && inR(l.kg, R.liftKg) == null) lifts[id] = { ...l, kg: null };
+  }
+  return {
+    ...a,
+    age: inR(a.age, R.age),
+    deadHangSec: inR(a.deadHangSec, R.deadHang),
+    pullUps: inR(a.pullUps, R.pullUps),
+    burpees1Min: inR(a.burpees1Min, R.burpees1Min),
+    wallBallsUnbroken: inR(a.wallBallsUnbroken, R.wallBallsUnbroken),
+    lifts,
+  };
 }
 
 /** HYROX age groups (singles): 16–24, 25–29, 30–34 … 65–69, 70+. */

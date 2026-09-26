@@ -1,4 +1,4 @@
-import { AbilityId, AthleteProfile, Level, LiftId, RIR_OPTIONS } from './athlete';
+import { AbilityId, AthleteProfile, Level, LiftId, RIR_OPTIONS, sanitizeRanges } from './athlete';
 import { Sex } from './divisions';
 import { oneRepMax, paulsLaw, raceTimeFromVdot, riegel } from './formulas';
 import { FALLBACK } from './fallback-params';
@@ -342,7 +342,8 @@ function clampLevel(l: number): number {
 
 // ─────────────────────────────────────────────────────────────────────────────────────
 
-export function resolveAthlete(a: AthleteProfile): ResolvedAthlete {
+export function resolveAthlete(raw: AthleteProfile): ResolvedAthlete {
+  const a = sanitizeRanges(raw);
   const sex: Sex = a.sex;
   warnings = {};
   const bodyweightKnown = ok(a.bodyweightKg, 'bodyweightKg', 'legs', 'Bodyweight', (v) => `${Math.round(v)} kg`);
