@@ -96,6 +96,26 @@ export function bandForSplit(sex: Sex, id: StationId | 'run', sec: number, loadM
   return BAND_LABELS[best];
 }
 
+/** Which finish band a total of station work looks like (per-station loads applied). */
+export function bandForWork(sex: Sex, workSec: number, loadMult: Partial<Record<StationId, number>> = {}): { label: string; index: number } {
+  const table = tableFor(sex);
+  let best = 0;
+  let bestErr = Infinity;
+  table.forEach((row, i) => {
+    const ref = (Object.keys(row.stations) as StationId[]).reduce((acc, id) => acc + row.stations[id] * (loadMult[id] ?? 1), 0);
+    const err = Math.abs(Math.log(workSec / ref));
+    if (err < bestErr) {
+      bestErr = err;
+      best = i;
+    }
+  });
+  return { label: BAND_LABELS[best], index: best };
+}
+
+export function bandIndex(label: string): number {
+  return (BAND_LABELS as readonly string[]).indexOf(label);
+}
+
 export function tableFor(sex: Sex): BandRow[] {
   return sex === 'male' ? MEN_OPEN : WOMEN_OPEN;
 }

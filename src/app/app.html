@@ -65,10 +65,10 @@
 
 @let pr = store.prediction();
 @if (view() === 'predictor') {
-<div class="dock" role="region" aria-label="Predicted finish summary">
+<div class="dock" [class.show-desktop]="!clockVisible()" role="region" aria-label="Predicted finish summary">
   <div>
-    <span class="label">{{ pr.division.name }}</span>
-    <span class="mono dock-time">{{ fmt(pr.total, true) }}</span>
+    <span class="label">{{ pr.division.name }} · predicted finish</span>
+    <span class="dock-row"><span class="mono dock-time">{{ fmt(pr.total, true) }}</span><app-change-chip /></span>
   </div>
   <button type="button" class="btn primary" (click)="scrollToResults()">View splits</button>
 </div>

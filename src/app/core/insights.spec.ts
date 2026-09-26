@@ -88,3 +88,15 @@ describe('split bands (simulator)', () => {
     expect(bandForSplit('male', 'sledPush', 179 * 1.48, 1.48)).toBe('80–90');
   });
 });
+
+describe('running vs stations comparison', () => {
+  it('flags running as the relative strength for a runner with weak stations', () => {
+    const i = run({ divisionId: 'men-open', athletes: [ath('male', { fiveKSec: 19 * 60, wallBallsUnbroken: 10, lv: { legs: 1, hinge: 1, sled: 1 } })] });
+    expect(i.running.comparison).toContain('Running is your relative strength');
+  });
+
+  it('is omitted for team formats', () => {
+    const i = run({ divisionId: 'men-doubles', athletes: [ath('male'), ath('male')] });
+    expect(i.running.comparison).toBeNull();
+  });
+});

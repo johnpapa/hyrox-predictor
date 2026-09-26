@@ -3,6 +3,9 @@ import { atLevel, resolveAthlete } from './resolve';
 import { PredictInput, Prediction, SoloPrediction, predict } from './predictor';
 import { STATIONS, STATION_IDS, StationId } from './stations';
 import { formatTime } from './time';
+import { weightForAthlete } from './divisions';
+import { loadMultiplier } from './predictor';
+import { bandForSplit, bandForWork, bandIndex } from './split-tables';
 import { FALLBACK } from './fallback-params';
 
 /**
@@ -36,7 +39,7 @@ export interface Insights {
   limiters: StationGap[];
   strengths: StationGap[];
   whatIfs: WhatIf[];
-  running: { runFactorPct: number; typicalPct: number; note: string };
+  running: { runFactorPct: number; typicalPct: number; note: string; comparison: string | null };
   pacing: string[];
 }
 
@@ -155,6 +158,7 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   const running = {
     runFactorPct,
     typicalPct,
+    comparison: null as string | null,
     note:
       runFactorPct <= 14
         ? 'Your running holds up well between stations.'
@@ -162,6 +166,27 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
           ? 'Expect your HYROX laps to be much slower than your 5K pace. Practise running on tired legs (compromised running).'
           : 'Your HYROX laps will be about as much slower than 5K pace as most athletes.',
   };
+
+  // Singles: which finish band do your laps vs. your station work look like?
+  let comparison: string | null = null;
+  if (prediction.division.format === 'single') {
+    const loads = Object.fromEntries(
+      STATION_IDS.map((id) => [id, loadMultiplier(a.sex, id, weightForAthlete(prediction.division, a.sex, id))]),
+    );
+    const avgLap = solo.runs.reduce((x, y) => x + y, 0) / solo.runs.length;
+    const runBand = bandForSplit(a.sex, 'run', avgLap);
+    const work = STATION_IDS.reduce((acc, id) => acc + solo.stations[id], 0);
+    const workBand = bandForWork(a.sex, work, loads);
+    const diff = workBand.index - bandIndex(runBand);
+    comparison =
+      `Your laps (${formatTime(avgLap)}/km avg) look like a ${runBand} min finisher's; your station work looks like a ` +
+      `${workBand.label} min finisher's. ` +
+      (diff > 0
+        ? 'Running is your relative strength: the biggest gains are on the stations.'
+        : diff < 0
+          ? 'Your stations are your relative strength: running fitness is where most time is.'
+          : 'Running and stations are well matched.');
+  }
 
   const runs = prediction.segments.filter((s) => s.kind === 'run').map((s) => s.sec);
   const avg = runs.reduce((x, y) => x + y, 0) / runs.length;
@@ -179,5 +204,9 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
     ? `${who}Biggest opportunity is ${limiters[0].name} (${formatTime(limiters[0].gap)} slower than athletes who run like you).`
     : `${who}Well balanced. No station is slower than athletes who run like you.`;
 
+  running.comparison = comparison;
+  if (limiters.some((l) => l.id === 'roxzone') && a.experience === 'first' && !a.levels.transitions) {
+    running.note += ' Roxzone time includes a first-race allowance (+15%); rate your transitions to replace it.';
+  }
   return { athleteIndex: idx, headline, limiters, strengths, whatIfs, running, pacing };
 }

@@ -67,3 +67,46 @@ test.describe('race simulator page', () => {
     await expect(page.locator('app-results-board')).toBeVisible();
   });
 });
+
+test.describe('live total & units', () => {
+  test('bodyweight and lifts have an inline kg/lb switch', async ({ app, page }) => {
+    const bw = page.locator('app-number-input').filter({ hasText: 'Bodyweight' });
+    await bw.getByRole('button', { name: 'Pounds' }).click();
+    await page.getByLabel('Bodyweight (lb)').fill('162');
+    await bw.getByRole('button', { name: 'Kilograms' }).click();
+    await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('73.5');
+    await expect(app.card('Leg strength').getByLabel('Back squat (kg)')).toBeVisible();
+    await app.card('Leg strength').getByRole('button', { name: 'Pounds' }).click();
+    await expect(app.card('Leg strength').getByLabel('Back squat (lb)')).toBeVisible();
+  });
+
+  test('every change flashes how much it moved the finish time', async ({ page }) => {
+    await page.getByLabel('Current 5K best').fill('24:00');
+    await page.getByLabel('Current 5K best').fill('22:00');
+    await expect(page.locator('app-results-board app-change-chip .chip')).toContainText('faster');
+    await page.getByLabel('Max unbroken wall balls').fill('10');
+    await expect(page.locator('app-results-board app-change-chip .chip')).toContainText('slower');
+  });
+
+  test('the finish time stays visible while editing (dock on phone, floating pill on desktop)', async ({ page, isMobile }) => {
+    const dock = page.getByRole('region', { name: 'Predicted finish summary' });
+    if (isMobile) {
+      await page.getByText('Save my inputs on this device').scrollIntoViewIfNeeded();
+      await expect(dock).toBeVisible();
+    } else {
+      await expect(dock).toBeHidden(); // board clock is on screen
+      await page.locator('aside.results').evaluate((el) => el.scrollTo(0, 5000));
+      await expect(dock).toBeVisible();
+      await page.getByLabel('Current 5K best').fill('21:08');
+      await expect(dock.locator('.dock-time')).toHaveText(/\d{2}:\d{2}:\d{2}/);
+      await expect(dock.locator('app-change-chip .chip')).toBeVisible();
+    }
+  });
+
+  test('marathon time is accepted and shapes the running estimate', async ({ app, page }) => {
+    await page.getByLabel('Current 5K best').fill('21:08');
+    await app.openAlternatives('Running');
+    await app.card('Running').getByLabel('Marathon', { exact: true }).fill('3:24:00');
+    await expect(app.card('Running')).toContainText('Endurance: typical');
+  });
+});

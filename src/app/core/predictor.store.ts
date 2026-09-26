@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, signal, untracked } from '@angular/core';
 import { AbilityId, AthleteProfile, Level, Lift, LiftId, defaultAthlete, migrateAthlete } from './athlete';
 import { DIVISIONS, Sex, findDivision, sexIsChoosable } from './divisions';
 import { PredictInput, predict } from './predictor';
@@ -105,12 +105,25 @@ export class PredictorStore {
 
   readonly prediction = computed(() => predict(this.predictInput()));
 
+  /** How much the last input change moved the finish time (for live feedback). */
+  readonly lastChange = signal<{ delta: number; id: number } | null>(null);
+  private previousTotal: number | null = null;
+  private changeId = 0;
+
   /** Deterministic coaching insights for the selected athlete. */
   readonly insights = computed(() =>
     computeInsights(this.predictInput(), this.prediction(), Math.min(this.activeAthlete(), this.division().teamSize - 1)),
   );
 
   constructor() {
+    effect(() => {
+      const total = this.prediction().total;
+      untracked(() => {
+        const prev = this.previousTotal;
+        this.previousTotal = total;
+        if (prev != null && Math.abs(total - prev) >= 0.5) this.lastChange.set({ delta: total - prev, id: ++this.changeId });
+      });
+    });
     effect(() => {
       const store = storage();
       if (!store) return;

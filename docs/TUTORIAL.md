@@ -19,7 +19,8 @@ the doubles 10-second rule.
 
 ## 2. Tell it about yourself
 
-Name, sex, bodyweight, age, HYROX experience and weekly training hours. Anything you don't know can stay on **Not sure**.
+Name, sex, bodyweight (switch **KG / LB** right on the field), age, HYROX experience and weekly training hours.
+Anything you don't know can stay on **Not sure**.
 Age shows your HYROX age group. Under **Physiology** you can add a VO₂max (from a lab or a watch) and a resting heart
 rate. These are only used when you have no race time.
 
@@ -28,7 +29,9 @@ rate. These are only used when you have no race time.
 ## 3. Running: the strongest predictor
 
 Enter your current 5K best. No recent 5K? Open **Don't have that? Other ways to estimate** and enter a 10K, mile, half
-marathon or Cooper test instead. The hint shows your projected HYROX run pace.
+marathon, marathon or Cooper test instead. If you enter a 5K *and* a longer race, the app also judges your endurance
+(how well you hold pace over long efforts) and adjusts your HYROX laps a little. The hint shows your projected HYROX run
+pace.
 
 ![Running](tutorial/04-running.png)
 
@@ -62,6 +65,12 @@ self-rated or assumed. It also tells you which single input would narrow the ran
 
 ![Confidence](tutorial/08-confidence.png)
 
+## 7b. Watch every change land
+
+Every change you make briefly shows how much it moved your finish time, for example **▼ −0:39 faster**. On a phone the
+bar at the bottom always shows your time. On a laptop a floating time appears whenever the results clock scrolls out
+of view.
+
 ## 8. Read your race plan
 
 The results board mirrors the official results page: every run and station with pace or load and a running total, then
@@ -74,7 +83,8 @@ Roxzone Time, Run Total, Work Total and Overall Time. At the top you get a likel
 Under the results, **Insights** compares each station with athletes who run at your pace on the same weights. It shows
 your biggest limiters and strengths. **Fastest time savings** re-runs the whole prediction with one improvement at a
 time (a faster 5K, a heavier squat, more unbroken wall balls, and so on) and ranks what saves the most. You also get
-notes on your running and race-day pacing. In doubles and relay, switch between athletes at the top of the panel.
+notes on your running and race-day pacing, including whether your laps or your station work is your relative
+strength. In doubles and relay, switch between athletes at the top of the panel.
 Everything is calculated in your browser; no AI and no data leaves your device.
 
 ![Insights](tutorial/09b-insights.png)
