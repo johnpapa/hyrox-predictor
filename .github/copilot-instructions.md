@@ -37,10 +37,10 @@ These come from the expert reviews recorded in `CHANGELOG.md` and `RESEARCH.md`,
 - Model tests are Vitest specs next to the code in `src/app/core/*.spec.ts`:
   - `predictor.spec.ts` / `resolve.spec.ts`: units and cascades;
   - `realism.spec.ts`: personas, cause-and-effect sweeps, seeded fuzzing (human limits per split);
+  - `review-fixes.spec.ts`: review regressions;
   - `insights.spec.ts`: the Insights panel;
   - `weighting.spec.ts`: how much each input moves the prediction relative to the others (update with RESEARCH.md
     "Input weighting review" when weights change).
-  - `insights.spec.ts`: the Insights panel.
 - E2E tests are Playwright specs in `e2e/*.spec.ts`, using the `app` auto-fixture in `e2e/fixtures.ts`. Tests run on
   the `desktop` and `iphone` projects against the production build. Use `pressSequentially` for typing,
   `{ exact: true }` for ambiguous labels, and `isMobile` for layout-specific assertions.
