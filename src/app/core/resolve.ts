@@ -149,7 +149,17 @@ function resolveRaces(a: AthleteProfile): Resolved | null {
 
 function resolveFiveK(a: AthleteProfile): Resolved {
   const races = resolveRaces(a);
-  if (races) return races;
+  if (races) {
+    // Race times beat VO₂max for predicting running; show the cross-check so it's visible it was considered.
+    if (pos(a.vo2max) && a.vo2max >= FALLBACK.ranges.vo2[0] && a.vo2max <= FALLBACK.ranges.vo2[1]) {
+      const vdot = a.vo2maxSource === 'lab' ? a.vo2max : a.vo2max - FALLBACK.watchVo2Offset;
+      const implied = raceTimeFromVdot(vdot, 5000);
+      const ratio = implied / races.value;
+      const verdict = ratio > 0.95 && ratio < 1.05 ? 'consistent with your races' : ratio <= 0.95 ? 'suggests more potential than your races show' : 'lower than your races suggest';
+      races.source += ` · VO₂max ${a.vo2max} ${verdict} (races are used)`;
+    }
+    return races;
+  }
   if (ok(a.vo2max, 'vo2', 'run', 'VO₂max', plain)) {
     const lab = a.vo2maxSource === 'lab';
     // Wearables read high vs race-derived VDOT, and are loose, so they count like a self-rating.
@@ -263,14 +273,25 @@ function resolveDeadlift(a: AthleteProfile, bw: number): Resolved {
   return fromStrengthLevel(a, bw, 'hinge', FALLBACK.deadliftPerBw[a.sex], 'deadlift');
 }
 
+/** Lean mass vs. a typical athlete of the same bodyweight (1 when body fat is unknown). */
+export function leanMassFactor(a: AthleteProfile): number {
+  const bf = a.bodyFatPct;
+  const [lo, hi] = FALLBACK.ranges.bodyFat;
+  if (bf == null || !isFinite(bf) || bf < lo || bf > hi) return 1;
+  const ref = FALLBACK.typicalBodyFatPct[a.sex];
+  return (1 - bf / 100) / (1 - ref / 100);
+}
+
 function fromStrengthLevel(a: AthleteProfile, bw: number, ability: 'legs' | 'hinge', perBw: readonly number[], name: string): Resolved {
   const own = a.levels[ability];
   if (own) {
     const v = bw * atLevel(perBw, own);
     return { value: v, quality: 'rated', source: `${levelName(own)} strength ≈ ${fmtKg(v)} ${name}` };
   }
-  const v = bw * FALLBACK.typicalPerBw[ability][a.sex];
-  return { value: v, quality: 'assumed', source: `typical ≈ ${fmtKg(v)} ${name}` };
+  const lean = leanMassFactor(a);
+  const v = bw * FALLBACK.typicalPerBw[ability][a.sex] * lean;
+  const note = lean !== 1 ? ` (lean mass at ${a.bodyFatPct}% body fat)` : '';
+  return { value: v, quality: 'assumed', source: `typical ≈ ${fmtKg(v)} ${name}${note}` };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────

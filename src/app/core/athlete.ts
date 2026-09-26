@@ -38,6 +38,8 @@ export interface AthleteProfile {
   age: number | null;
   /** Height in cm; null = unknown. Small effect on ergs, lunges and burpee broad jumps. */
   heightCm: number | null;
+  /** Body fat %; null = unknown. Used for lean mass when strength has to be estimated. */
+  bodyFatPct: number | null;
   /** Bodyweight in kg (always stored in kg); null = unknown. */
   bodyweightKg: number | null;
   experience: Experience;
@@ -127,6 +129,7 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
     sex,
     age: null,
     heightCm: null,
+    bodyFatPct: null,
     bodyweightKg: null,
     experience: 'unknown',
     runningKmPerWeek: null,
@@ -182,7 +185,7 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   if (r['vo2maxSource'] === 'lab') out.vo2maxSource = 'lab';
   const numeric: (keyof AthleteProfile)[] = [
     'age', 'bodyweightKg', 'runningKmPerWeek', 'otherTrainingHours', 'fiveKSec', 'tenKSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
-    'heightCm', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
+    'heightCm', 'bodyFatPct', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
     'row5kSec', 'deadHangSec', 'pullUps', 'burpees1Min', 'sledPushTestSec', 'sledPullTestSec', 'bbjTestSec',
     'farmersTestSec', 'lungesTestSec', 'wallBalls100Sec', 'wallBallsUnbroken', 'karenSec', 'previousHyroxSec',
   ];

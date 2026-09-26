@@ -1,6 +1,7 @@
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { weightForAthlete } from '../core/divisions';
-import { loadMultiplier, topPercent } from '../core/predictor';
+import { ageGroupPosition, loadMultiplier, topPercent } from '../core/predictor';
 import { PredictorStore } from '../core/predictor.store';
 import { bandForSplit } from '../core/split-tables';
 import { StationId } from '../core/stations';
@@ -23,6 +24,7 @@ interface SimRow {
 @Component({
   selector: 'app-simulator-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DecimalPipe],
   templateUrl: './simulator-page.html',
   styleUrl: './simulator-page.scss',
 })
@@ -71,6 +73,7 @@ export class SimulatorPage {
   protected readonly runTotal = computed(() => this.sumKind('run'));
   protected readonly workTotal = computed(() => this.sumKind('station'));
   protected readonly top = computed(() => topPercent(this.store.division().id, this.total()));
+  protected readonly ageGroup = computed(() => ageGroupPosition(this.store.division(), this.store.athletes()[0], this.total()));
   protected readonly changed = computed(
     () => Object.keys(this.edits()).length > 0 || this.runScale() !== 0 || this.stationScale() !== 0,
   );
