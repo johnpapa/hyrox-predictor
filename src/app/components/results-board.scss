@@ -18,6 +18,7 @@
 @keyframes pulse { 50% { opacity: 0.25; } }
 
 .clock-wrap { text-align: center; padding: 18px 0 8px; }
+.change { margin-top: 6px; }
 
 .clock {
   font-size: clamp(3rem, 11vw, 5.4rem);

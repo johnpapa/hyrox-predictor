@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { PredictorStore } from '../core/predictor.store';
+import { ChangeChip } from './change-chip';
 import { Segment } from '../core/predictor';
 import { StationId } from '../core/stations';
 import { formatTime, parseTime } from '../core/time';
@@ -16,6 +17,7 @@ const SIM_DURATION_MS = 24000;
 @Component({
   selector: 'app-results-board',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ChangeChip],
   templateUrl: './results-board.html',
   styleUrl: './results-board.scss',
 })

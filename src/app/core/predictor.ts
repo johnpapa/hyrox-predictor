@@ -152,7 +152,11 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
 
   // Running ────────────────────────────────────────────────────────────────────────
   const hours = a.trainingHours ?? 6;
+  const E = rf.endurance;
+  const k0 = r.fiveK.quality === 'measured' ? enduranceExponent(a) : null;
+  const enduranceAdj = k0 == null ? 0 : clamp((k0 - E.refExponent) * E.scale, E.min, E.max);
   const runFactor = clamp(
+    enduranceAdj +
     rf.base +
       (rf.per5kMinSlower * (fiveK - rf.ref5kSec[sex])) / 60 +
       rf.experience[a.experience] +
@@ -257,7 +261,10 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
   for (const id of STATION_IDS) st[id] = Math.max(st[id], STATION_FLOOR[sex][id] * loadMult[id]);
 
   // Roxzone ──────────────────────────────────────────────────────────────────────────
-  let roxzone = band.roxzone * PARAMS.roxzoneExperienceMult[a.experience] * r.transitions.value;
+  // A transitions self-rating describes how you actually move, so it replaces the
+  // experience-based allowance instead of stacking with it.
+  let roxzone =
+    band.roxzone * (a.levels.transitions ? 1 : PARAMS.roxzoneExperienceMult[a.experience]) * r.transitions.value;
 
   // Calibration from a previous result ───────────────────────────────────────────────
   if (calibration !== 1) {
@@ -280,6 +287,23 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     typicalWallBallsUnbroken: band.wbUnbroken / Math.pow(loadMult.wallBalls, PARAMS.wallBallsLoadUnbrokenExp),
     total: sum(runs) + sum(STATION_IDS.map((id) => st[id])) + roxzone,
   };
+}
+
+/** Riegel exponent between the 5K and the longest other race entered (null if none). */
+export function enduranceExponent(a: AthleteProfile): number | null {
+  if (!a.fiveKSec || a.fiveKSec <= 0) return null;
+  const races: [number | null, number][] = [
+    [a.marathonSec, 42195],
+    [a.halfMarathonSec, 21097.5],
+    [a.tenKSec, 10000],
+  ];
+  for (const [t, d] of races) {
+    if (t && t > a.fiveKSec) {
+      const k = Math.log(t / a.fiveKSec) / Math.log(d / 5000);
+      if (k > 0.95 && k < 1.3) return k; // ignore implausible combinations
+    }
+  }
+  return null;
 }
 
 /**

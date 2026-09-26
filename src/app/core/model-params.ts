@@ -26,6 +26,12 @@ export const PARAMS = {
     trainingClamp: 0.02,
     min: 1.1,
     max: 1.42,
+    /**
+     * Endurance: with a 5K and a longer race, the Riegel exponent k = ln(T₂/T₁)/ln(D₂/D₁) says
+     * how well pace holds over long efforts (≈1.06 very durable … 1.12+ fades). A HYROX is a
+     * 55–120 min effort, so durable athletes compromise less: factor += (k − ref)·scale.
+     */
+    endurance: { refExponent: 1.07, scale: 0.8, min: -0.03, max: 0.04 },
   },
   /**
    * Relative shape of runs 1–8 (normalised to mean 1). From the data: runs 2–7 average

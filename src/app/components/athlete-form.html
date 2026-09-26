@@ -46,7 +46,8 @@
         </div>
       </div>
       <app-number-input [label]="'Bodyweight (' + unit() + ')'" [value]="ath.bodyweightKg" [factor]="weightFactor()"
-        [decimals]="unit() === 'kg' ? 1 : 0" (valueChange)="patch({ bodyweightKg: $event })" />
+        [decimals]="unit() === 'kg' ? 1 : 0" [units]="unit()" (unitsChange)="store.units.set($event)"
+        (valueChange)="patch({ bodyweightKg: $event })" />
       <app-number-input label="Age" [value]="ath.age" [integer]="true"
         [hint]="ageGroup() ? 'HYROX age group ' + ageGroup() : ''" (valueChange)="patch({ age: $event })" />
       <label class="field">
@@ -110,7 +111,7 @@
     <!-- Running -->
     <app-ability-card heading="Running" [source]="res.sources.run" [warnings]="res.warnings.run ?? []" [quality]="res.quality.run" [anchors]="an.run"
       [level]="ath.levels.run" levelPrompt="No recent race? Rate your running"
-      [altOpen]="any(ath.tenKSec, ath.mileSec, ath.halfMarathonSec, ath.cooperMeters)"
+      [altOpen]="any(ath.tenKSec, ath.mileSec, ath.halfMarathonSec, ath.marathonSec, ath.cooperMeters)"
       (levelChange)="level('run', $event)">
       <div primary class="grid">
         <app-time-input label="Current 5K best" [seconds]="ath.fiveKSec" placeholder="e.g. 23:30" [hint]="runHint()"
@@ -121,6 +122,8 @@
         <app-time-input label="1 mile" [seconds]="ath.mileSec" placeholder="e.g. 6:45" (secondsChange)="patch({ mileSec: $event })" />
         <app-time-input label="Half marathon" [seconds]="ath.halfMarathonSec" placeholder="h:mm:ss"
           (secondsChange)="patch({ halfMarathonSec: $event })" />
+        <app-time-input label="Marathon" [seconds]="ath.marathonSec" placeholder="h:mm:ss"
+          hint="With a 5K, also shows how well you hold pace" (secondsChange)="patch({ marathonSec: $event })" />
         <app-number-input label="Cooper test (m in 12 min)" placeholder="e.g. 2600" [value]="ath.cooperMeters" [integer]="true"
           (valueChange)="patch({ cooperMeters: $event })" />
       </div>
@@ -154,13 +157,13 @@
       [altOpen]="any(ath.lifts.frontSquat.kg, ath.lifts.legPress.kg)"
       (levelChange)="level('legs', $event)">
       <div primary class="grid">
-        <app-lift-input label="Back squat" [lift]="ath.lifts.backSquat" [units]="unit()" hint="Drives sled push & lunges"
+        <app-lift-input label="Back squat" [lift]="ath.lifts.backSquat" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Drives sled push & lunges"
           (liftChange)="lift('backSquat', $event)" />
       </div>
       <div alternatives class="grid">
-        <app-lift-input label="Front squat" [lift]="ath.lifts.frontSquat" [units]="unit()" hint="≈ 85% of back squat"
+        <app-lift-input label="Front squat" [lift]="ath.lifts.frontSquat" [units]="unit()" (unitsChange)="store.units.set($event)" hint="≈ 85% of back squat"
           (liftChange)="lift('frontSquat', $event)" />
-        <app-lift-input label="Leg press (45°)" [lift]="ath.lifts.legPress" [units]="unit()" hint="Rough: machines vary"
+        <app-lift-input label="Leg press (45°)" [lift]="ath.lifts.legPress" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Rough: machines vary"
           (liftChange)="lift('legPress', $event)" />
         <p class="note span-all">A deadlift, trap-bar or Romanian deadlift entered under Pulling strength also estimates your squat.</p>
       </div>
@@ -172,15 +175,15 @@
       [altOpen]="any(ath.lifts.trapBar.kg, ath.lifts.romanianDeadlift.kg, ath.lifts.benchPress.kg)"
       (levelChange)="level('hinge', $event)">
       <div primary class="grid">
-        <app-lift-input label="Deadlift" [lift]="ath.lifts.deadlift" [units]="unit()" hint="Drives sled pull & farmers carry"
+        <app-lift-input label="Deadlift" [lift]="ath.lifts.deadlift" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Drives sled pull & farmers carry"
           (liftChange)="lift('deadlift', $event)" />
       </div>
       <div alternatives class="grid">
-        <app-lift-input label="Trap-bar deadlift" [lift]="ath.lifts.trapBar" [units]="unit()" hint="≈ 108% of deadlift"
+        <app-lift-input label="Trap-bar deadlift" [lift]="ath.lifts.trapBar" [units]="unit()" (unitsChange)="store.units.set($event)" hint="≈ 108% of deadlift"
           (liftChange)="lift('trapBar', $event)" />
-        <app-lift-input label="Romanian deadlift" [lift]="ath.lifts.romanianDeadlift" [units]="unit()" hint="≈ 75% of deadlift"
+        <app-lift-input label="Romanian deadlift" [lift]="ath.lifts.romanianDeadlift" [units]="unit()" (unitsChange)="store.units.set($event)" hint="≈ 75% of deadlift"
           (liftChange)="lift('romanianDeadlift', $event)" />
-        <app-lift-input label="Bench press" [lift]="ath.lifts.benchPress" [units]="unit()" hint="Rough overall-strength proxy"
+        <app-lift-input label="Bench press" [lift]="ath.lifts.benchPress" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Rough overall-strength proxy"
           (liftChange)="lift('benchPress', $event)" />
       </div>
     </app-ability-card>

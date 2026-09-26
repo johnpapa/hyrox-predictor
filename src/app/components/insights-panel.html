@@ -52,6 +52,7 @@
     Your HYROX laps are projected <strong>{{ i.running.runFactorPct }}%</strong> slower than your 5K pace
     (typical ≈ {{ i.running.typicalPct }}%). {{ i.running.note }}
   </p>
+  @if (i.running.comparison) { <p class="txt cmp">{{ i.running.comparison }}</p> }
 
   <h3>Race-day pacing</h3>
   <ul class="pacing">

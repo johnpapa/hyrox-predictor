@@ -127,6 +127,13 @@ function resolveFiveK(a: AthleteProfile): Resolved {
       source: `from half marathon ${fmtT(a.halfMarathonSec)} (Riegel)`,
     };
   }
+  if (ok(a.marathonSec, 'marathon', 'run', 'Marathon')) {
+    return {
+      value: riegel(a.marathonSec, 42195, 5000, FALLBACK.riegelExp.marathon),
+      quality: 'converted',
+      source: `from marathon ${fmtT(a.marathonSec)} (Riegel)`,
+    };
+  }
   if (ok(a.cooperMeters, 'cooperM', 'run', 'Cooper test', (v) => `${Math.round(v)} m`)) {
     const vo2 = (a.cooperMeters - 504.9) / 44.73;
     return {

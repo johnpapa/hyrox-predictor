@@ -128,9 +128,9 @@ legend {
   font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.75rem; font-weight: 600;
   padding: 3px 8px; border-radius: 2px; color: var(--text-dim);
 }
-[data-quality='measured'] { --c: var(--good); }
-[data-quality='converted'] { --c: var(--run); }
-[data-quality='rated'] { --c: var(--accent); }
+.confidence [data-quality='measured'] { --c: var(--good); }
+.confidence [data-quality='converted'] { --c: var(--run); }
+.confidence [data-quality='rated'] { --c: var(--accent); }
 .ci[data-quality='measured'], .ci[data-quality='converted'], .ci[data-quality='rated'] { color: var(--c); }
 .conf-tip { margin: 10px 0 0; font-size: 0.85rem; color: var(--text); }
 .conf-legend {

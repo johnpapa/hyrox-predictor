@@ -321,3 +321,37 @@ describe('fuzz: random athletes never produce impossible splits', () => {
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────────────
+describe('user-reported scenario: 54-year-old, 162 lb, VO₂max 53, 21:08 5K, 3:24 marathon', () => {
+  const john = (p: Partial<AthleteProfile> & { lv?: Levels } = {}) =>
+    athlete('male', { fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, vo2max: 53, bodyweightKg: 162 / 2.20462, age: 54, ...p });
+
+  it('running is solid: laps around marathon pace, never slow', () => {
+    const p = run('men-open', john());
+    const marathonPace = (3 * 3600 + 24 * 60) / 42.195; // ≈ 4:50/km
+    within(p.avgRun, marathonPace * 0.95, marathonPace * 1.12);
+    for (const r of runs(p)) expect(r).toBeLessThan(min(6));
+    within(p.total, min(72), min(90));
+  });
+
+  it('a Strong Roxzone rating is faster than typical, even on a first race', () => {
+    for (const experience of ['first', 'some', 'unknown'] as const) {
+      const p = run('men-open', john({ experience, lv: { transitions: 4 } }));
+      expect(p.solos[0].roxzone).toBeLessThan(p.solos[0].typicalRoxzone);
+    }
+  });
+
+  it('marathon endurance nudges the running: durable is faster than fading', () => {
+    const durable = run('men-open', john({ marathonSec: 3 * 3600 + 12 * 60 }));
+    const fading = run('men-open', john({ marathonSec: 3 * 3600 + 50 * 60 }));
+    expect(durable.runTotal).toBeLessThan(fading.runTotal);
+    // …but only modestly: the 5K stays the anchor
+    expect(fading.runTotal / durable.runTotal).toBeLessThan(1.08);
+  });
+
+  it('a marathon alone (no 5K) still predicts sensible running', () => {
+    const p = run('men-open', john({ fiveKSec: null }));
+    within(p.avgRun, min(4, 45), min(5, 40));
+  });
+});

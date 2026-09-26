@@ -68,6 +68,21 @@
 }
 
 .dock { display: none; }
+/* Desktop: a floating time pill appears whenever the board's clock scrolls out of view. */
+@media (min-width: 1024px) {
+  .dock.show-desktop {
+    display: flex; align-items: center; gap: 16px;
+    position: fixed; right: 24px; bottom: 24px; z-index: 30;
+    padding: 10px 12px 10px 16px;
+    background: rgba(10, 10, 10, 0.94); border: 1px solid var(--accent); border-radius: var(--radius);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    > div { display: flex; flex-direction: column; }
+    .label { font-size: 0.68rem; }
+    .dock-time { font-size: 1.5rem; font-weight: 700; color: var(--accent); line-height: 1.1; }
+    .btn { display: none; }
+  }
+}
+.dock-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 @media (max-width: 1023px) {
   .layout { grid-template-columns: minmax(0, 1fr); }

@@ -13,6 +13,7 @@
 
   <div class="clock-wrap">
     <div class="clock mono">{{ fmt(simT() ?? pr.total, true) }}</div>
+    @if (simT() == null) { <app-change-chip class="change" /> }
     @if (simPiece(); as piece) {
       <div class="sim-now">
         <span class="kind" [attr.data-kind]="piece.kind">{{ piece.kind === 'run' ? 'RUN' : piece.kind === 'station' ? 'STATION' : 'ROXZONE' }}</span>

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { AbilityId, AthleteProfile, Experience, Level, Lift, LiftId, hyroxAgeGroup } from '../core/athlete';
 import { FALLBACK } from '../core/fallback-params';
 import { levelAnchors } from '../core/level-anchors';
+import { enduranceExponent } from '../core/predictor';
 import { LB_PER_KG, PredictorStore } from '../core/predictor.store';
 import { Quality } from '../core/resolve';
 import { formatTime } from '../core/time';
@@ -95,7 +96,10 @@ export class AthleteForm {
   protected readonly runHint = computed(() => {
     const s = this.solo();
     const avg = (s.fiveKSec / 5) * s.runFactor;
-    return `HYROX run pace ≈ ${formatTime(avg)}/km (${Math.round((s.runFactor - 1) * 100)}% slower than 5K pace)`;
+    const k = enduranceExponent(this.a());
+    const endurance =
+      k == null ? '' : k <= 1.055 ? ' · Endurance: strong (long races hold pace well)' : k >= 1.09 ? ' · Endurance: fades over long races' : ' · Endurance: typical';
+    return `HYROX run pace ≈ ${formatTime(avg)}/km (${Math.round((s.runFactor - 1) * 100)}% slower than 5K pace)${endurance}`;
   });
 
   protected patch(p: Partial<AthleteProfile>): void {

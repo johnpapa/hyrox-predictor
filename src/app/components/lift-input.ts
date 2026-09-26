@@ -12,7 +12,8 @@ import { NumberInput } from './number-input';
   template: `
     <div class="lift">
       <app-number-input class="w" [label]="label() + ' (' + units() + ')'" placeholder="—" [value]="lift().kg"
-        [factor]="factor()" [decimals]="units() === 'kg' ? 1 : 0" (valueChange)="liftChange.emit({ kg: $event })" />
+        [factor]="factor()" [decimals]="units() === 'kg' ? 1 : 0" [units]="units()" (unitsChange)="unitsChange.emit($event)"
+        (valueChange)="liftChange.emit({ kg: $event })" />
       <app-number-input class="r" label="Reps" [ariaLabel]="label() + ' reps'" placeholder="1" [value]="lift().reps" [integer]="true"
         (valueChange)="onReps($event)" />
       <span class="hint">{{ hintText() }}</span>
@@ -29,6 +30,7 @@ export class LiftInput {
   readonly units = input<Units>('kg');
   readonly hint = input('');
   readonly liftChange = output<Partial<Lift>>();
+  readonly unitsChange = output<Units>();
 
   protected readonly factor = computed(() => (this.units() === 'kg' ? 1 : LB_PER_KG));
 

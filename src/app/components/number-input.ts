@@ -11,7 +11,17 @@ let nextId = 0;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="field">
-      <label class="label" [for]="id">{{ label() }}</label>
+      <div class="lab-row">
+        <label class="label" [for]="id">{{ label() }}</label>
+        @if (units(); as u) {
+          <span class="units" role="group" aria-label="Weight units">
+            <button type="button" [class.on]="u === 'kg'" [attr.aria-pressed]="u === 'kg'" aria-label="Kilograms"
+              (click)="unitsChange.emit('kg')">kg</button>
+            <button type="button" [class.on]="u === 'lb'" [attr.aria-pressed]="u === 'lb'" aria-label="Pounds"
+              (click)="unitsChange.emit('lb')">lb</button>
+          </span>
+        }
+      </div>
       <input
         [id]="id"
         [attr.aria-label]="ariaLabel() || null"
@@ -29,7 +39,16 @@ let nextId = 0;
       @if (hint()) { <span class="hint" [id]="id + '-hint'">{{ hint() }}</span> }
     </div>
   `,
-  styles: `.invalid { border-color: var(--warn) !important; }`,
+  styles: `
+    .invalid { border-color: var(--warn) !important; }
+    .lab-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 22px; }
+    .units { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 2px; overflow: hidden; flex: none; }
+    .units button {
+      min-height: 24px; min-width: 30px; padding: 0 6px; border: 0; background: transparent; color: var(--text-dim); cursor: pointer;
+      font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase;
+    }
+    .units button.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  `,
 })
 export class NumberInput {
   protected readonly id = `num-${nextId++}`;
@@ -45,6 +64,9 @@ export class NumberInput {
   readonly placeholder = input('Not sure');
   readonly hint = input('');
   readonly valueChange = output<number | null>();
+  /** When set, shows an inline kg/lb switch (weights only). */
+  readonly units = input<'kg' | 'lb' | null>(null);
+  readonly unitsChange = output<'kg' | 'lb'>();
 
   protected readonly invalid = linkedSignal(() => false);
 

@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { AthleteForm } from './components/athlete-form';
+import { ChangeChip } from './components/change-chip';
 import { DivisionPicker } from './components/division-picker';
 import { InsightsPanel } from './components/insights-panel';
 import { SimulatorPage } from './components/simulator-page';
@@ -12,7 +13,7 @@ import { formatTime } from './core/time';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DivisionPicker, AthleteForm, TeamTactics, ResultsBoard, InsightsPanel, Methodology, SimulatorPage],
+  imports: [ChangeChip, DivisionPicker, AthleteForm, TeamTactics, ResultsBoard, InsightsPanel, Methodology, SimulatorPage],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -24,10 +25,30 @@ export class App {
   /** Two views, addressed by URL hash so links like …/#simulator work on static hosting. */
   protected readonly view = signal<'predictor' | 'simulator'>(App.viewFromHash());
 
+  /** Whether the results board's clock is on screen (the floating bar shows when it isn't). */
+  protected readonly clockVisible = signal(true);
+  private observer: IntersectionObserver | null = null;
+
   constructor() {
-    const onHash = () => this.view.set(App.viewFromHash());
+    const onHash = () => {
+      this.view.set(App.viewFromHash());
+      queueMicrotask(() => this.observeClock());
+    };
     window.addEventListener('hashchange', onHash);
-    inject(DestroyRef).onDestroy(() => window.removeEventListener('hashchange', onHash));
+    const destroy = inject(DestroyRef);
+    destroy.onDestroy(() => {
+      window.removeEventListener('hashchange', onHash);
+      this.observer?.disconnect();
+    });
+    afterNextRender(() => this.observeClock());
+  }
+
+  private observeClock(): void {
+    this.observer?.disconnect();
+    const clock = document.querySelector('app-results-board .clock');
+    if (!clock || typeof IntersectionObserver === 'undefined') return;
+    this.observer = new IntersectionObserver(([e]) => this.clockVisible.set(e.isIntersecting), { rootMargin: '-60px 0px 0px 0px' });
+    this.observer.observe(clock);
   }
 
   private static viewFromHash(): 'predictor' | 'simulator' {
@@ -38,6 +59,7 @@ export class App {
     this.view.set(view);
     history.replaceState(null, '', view === 'simulator' ? '#simulator' : location.pathname + location.search);
     window.scrollTo({ top: 0 });
+    queueMicrotask(() => this.observeClock());
   }
 
   protected scrollToResults(): void {

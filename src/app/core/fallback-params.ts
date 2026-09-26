@@ -23,7 +23,7 @@ export const FALLBACK = {
     female: [36 * 60, 30 * 60 + 30, 26 * 60 + 30, 23 * 60, 19 * 60 + 30],
   } as BySex<ByLevel>,
   /** Riegel exponents: recreational runners fade more than 1.06 from short → long. */
-  riegelExp: { tenK: 1.06, mile: 1.07, half: 1.07 },
+  riegelExp: { tenK: 1.06, mile: 1.07, half: 1.07, marathon: 1.07 },
   /**
    * Age only matters when running ability is unknown: typical 5K slows ~0.7%/yr from 35 to 55
    * and ~1.1%/yr beyond (approximating WMA age-grading factors).
@@ -36,6 +36,7 @@ export const FALLBACK = {
   /** Plausible input ranges (seconds unless noted); values outside are ignored with a warning. */
   ranges: {
     fiveK: [12 * 60, 90 * 60], tenK: [26 * 60, 3 * 3600], mile: [3.6 * 60, 20 * 60], half: [58 * 60, 4 * 3600],
+    marathon: [2 * 3600, 7 * 3600],
     erg500: [70, 300], erg1k: [150, 600], erg2k: [330, 1200], erg5k: [900, 2700],
     sled: [30, 15 * 60], bbj: [90, 20 * 60], farmers: [45, 10 * 60], lunges: [90, 20 * 60],
     wallBalls100: [150, 25 * 60], karen: [240, 40 * 60],
