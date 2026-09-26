@@ -10,11 +10,26 @@ export const LEVEL_LABELS = ['Weak', 'Fair', 'Solid', 'Strong', 'Elite'] as cons
 /** 'unknown' behaves like 'some' but widens the confidence range. */
 export type Experience = 'unknown' | 'first' | 'some' | 'experienced' | 'competitive';
 
-/** A lift entered as weight × reps (reps 1 = true 1RM). */
+/**
+ * A lift entered as weight × reps (reps 1 = true 1RM). For multi-rep working sets, `rir` is how
+ * many more reps were left in the tank ("reps in reserve"); ignored for singles.
+ */
 export interface Lift {
   kg: number | null;
   reps: number | null;
+  rir?: number | null;
 }
+
+/** "How hard was the set?" choices, as reps in reserve. Hard (1–2 left) is the default. */
+export const RIR_OPTIONS = [
+  { rir: 0, label: 'To failure (0 left)' },
+  { rir: 1.5, label: 'Hard (1–2 left)' },
+  { rir: 3.5, label: 'Moderate (3–4 left)' },
+  { rir: 5.5, label: 'Easy (5+ left)' },
+] as const;
+export const DEFAULT_RIR = 1.5;
+/** Most reps a set can have and still give a usable 1RM estimate. */
+export const MAX_LIFT_REPS = 15;
 
 export type LiftId = 'backSquat' | 'frontSquat' | 'legPress' | 'deadlift' | 'trapBar' | 'romanianDeadlift' | 'benchPress';
 
@@ -101,7 +116,7 @@ export interface AthleteProfile {
   previousHyroxSec: number | null;
 }
 
-const emptyLift = (): Lift => ({ kg: null, reps: 1 });
+const emptyLift = (): Lift => ({ kg: null, reps: 1, rir: DEFAULT_RIR });
 
 export function emptyLifts(): Record<LiftId, Lift> {
   return {
@@ -194,7 +209,13 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   for (const id of LIFT_IDS) {
     const l = lifts[id] ?? {};
     const reps = numOrNull(l.reps);
-    out.lifts[id] = { kg: numOrNull(l.kg), reps: reps && reps >= 1 ? Math.min(12, Math.round(reps)) : 1 };
+    const rir = numOrNull(l.rir);
+    out.lifts[id] = {
+      kg: numOrNull(l.kg),
+      reps: reps && reps >= 1 ? Math.min(MAX_LIFT_REPS, Math.round(reps)) : 1,
+      // Saves from before the effort choice existed meant a set to failure.
+      rir: 'rir' in l ? (rir != null && rir <= 10 ? rir : DEFAULT_RIR) : 0,
+    };
   }
   const levels = r['levels'] ?? {};
   for (const id of ABILITY_IDS) {
@@ -208,8 +229,8 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
     out.otherTrainingHours = oldHours * 0.5;
   }
   // v1 → v2
-  if (numOrNull(r['backSquatKg']) && !out.lifts.backSquat.kg) out.lifts.backSquat = { kg: r['backSquatKg'], reps: 1 };
-  if (numOrNull(r['deadliftKg']) && !out.lifts.deadlift.kg) out.lifts.deadlift = { kg: r['deadliftKg'], reps: 1 };
+  if (numOrNull(r['backSquatKg']) && !out.lifts.backSquat.kg) out.lifts.backSquat = { kg: r['backSquatKg'], reps: 1, rir: 0 };
+  if (numOrNull(r['deadliftKg']) && !out.lifts.deadlift.kg) out.lifts.deadlift = { kg: r['deadliftKg'], reps: 1, rir: 0 };
   const old = r['ratings'];
   if (old && typeof old === 'object' && !r['levels']) {
     const lv = (v: unknown) => ([1, 2, 4, 5].includes(v as number) ? (v as Level) : null);
@@ -228,4 +249,33 @@ export function hyroxAgeGroup(age: number | null): string | null {
   if (age >= 70) return '70+';
   const lo = Math.floor(age / 5) * 5;
   return `${lo}–${lo + 4}`;
+}
+
+/**
+ * "An athlete like you": same sex, age, height, bodyweight, body fat, experience, race times,
+ * physiology and training volume, but typical ("not sure") on every trainable HYROX ability:
+ * lifts, ergs, station tests and self-ratings. Insights compare against this athlete, so the
+ * gaps show only what training could change.
+ */
+export function peerProfile(a: AthleteProfile): AthleteProfile {
+  const blank = defaultAthlete(a.sex);
+  return {
+    ...blank,
+    name: a.name,
+    age: a.age,
+    heightCm: a.heightCm,
+    bodyFatPct: a.bodyFatPct,
+    bodyweightKg: a.bodyweightKg,
+    experience: a.experience,
+    runningKmPerWeek: a.runningKmPerWeek,
+    otherTrainingHours: a.otherTrainingHours,
+    fiveKSec: a.fiveKSec,
+    tenKSec: a.tenKSec,
+    halfMarathonSec: a.halfMarathonSec,
+    marathonSec: a.marathonSec,
+    vo2max: a.vo2max,
+    vo2maxSource: a.vo2maxSource,
+    restingHr: a.restingHr,
+    levels: { ...blank.levels, run: a.levels.run },
+  };
 }

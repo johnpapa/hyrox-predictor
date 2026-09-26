@@ -26,10 +26,11 @@ src/
       split-tables.ts        median split tables by finish band, PRO_MULT, FIELD, floors, band helpers
       model-params.ts        prediction tuning constants (run factor, doubles, relay, height, masters)
       fallback-params.ts     fallback/conversion constants, level tables, ranges, realistic gains
-      athlete.ts             AthleteProfile, defaults, migrateAthlete() (sanitises saved data)
+      athlete.ts             AthleteProfile, defaults, migrateAthlete() (sanitises saved data), peerProfile()
       resolve.ts             input cascades → ResolvedAthlete (value + quality + source + warnings)
       predictor.ts           predictSolo(), doubles/relay combination, predict()
       insights.ts, tips.ts   deterministic Insights (gaps, realistic gains, unknowns, tips)
+      explain.ts             leave-one-out "why" attribution + build/background effects
       formulas.ts            Epley, Riegel, Paul's law, Daniels VDOT
       predictor.store.ts     signals store, opt-in localStorage persistence
       *.spec.ts              Vitest: unit, realism, fuzz, review-regression tests
@@ -72,6 +73,9 @@ npm run docs:screenshots   # regenerates docs/tutorial/*.png (Playwright "tutori
 - **Deterministic model.** No AI or network calls in `core/`. See `docs/AI-ANALYSIS.md`.
 - **Input cascades.** Every ability resolves measured › converted › self-rated › assumed. "Not sure" (assumed) must
   never shift a prediction, only widen the range. Insights must never invent numbers for unknown abilities.
+- **Insights compare with "athletes like you"** (`peerProfile`): same build, age, experience, race times and training
+  volume, typical on trainable abilities. New fixed traits belong in `peerProfile` and `PROFILE_FACTORS`; new trainable
+  inputs belong in `FACTORS` (`core/explain.ts`) and must be cleared by `peerProfile`.
 - **Every model number is sourced** in `RESEARCH.md`. Estimates are labelled as estimates.
 - **The in-app "How the prediction works" section** (`components/methodology.html`) is user-facing documentation of the
   model. Update it in the same change whenever model behaviour changes.

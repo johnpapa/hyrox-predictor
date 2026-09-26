@@ -13,10 +13,21 @@
   </header>
   <p class="headline">{{ i.headline }}</p>
 
-  <h3>Vs. athletes who run like you</h3>
+  @if (i.profile.length) {
+    <h3>Your build and background</h3>
+    <p class="sub">What each of these does to your finish time, compared with an average athlete who has your race times.</p>
+    <ul class="profile">
+      @for (r of i.profile; track r.id) {
+        <li><span>{{ r.label }}</span><b class="mono" [class.slow]="r.sec > 0" [class.fast]="r.sec < 0">{{ signed(r.sec) }}</b></li>
+      }
+    </ul>
+  }
+
+  <h3>Vs. athletes like you</h3>
   <p class="sub">
-    "Athletes who run like you" are typical finishers in race results with your lap pace. Each bar is how far your
-    inputs move you from them on that station. <strong>Tap a station to see why.</strong>
+    "Athletes like you" share your sex, age, height, weight, body fat, experience, race times and weekly training.
+    They are typical only on trainable things: strength, grip, wall balls, burpees, sleds, lunges, ergs and
+    transitions. Each bar shows how your strength and station inputs move you from them. <strong>Tap a station to see why.</strong>
   </p>
   @if (i.explanation.overall.length) {
     <div class="why-all">
@@ -33,7 +44,7 @@
       @let reasons = i.explanation.byArea[b.id];
       <div role="listitem" class="bar-item" [class.open]="open().has(b.id)">
         <button type="button" class="bar-row" [attr.aria-expanded]="open().has(b.id)" [disabled]="!reasons.length"
-          [attr.aria-label]="b.name + ' ' + signed(b.gap) + ' versus typical' + (reasons.length ? ', show why' : '')"
+          [attr.aria-label]="b.name + ' ' + signed(b.gap) + ' versus athletes like you' + (reasons.length ? ', show why' : '')"
           (click)="toggle(b.id)">
           <span class="bn">{{ b.name }}</span>
           <span class="track">
@@ -57,10 +68,10 @@
     }
   </div>
   @if (allTypical()) {
-    <p class="hint">Everything matches the typical athlete because no station benchmarks or self-ratings are entered yet.
-      Add some in the Athlete section to see your strengths and limiters.</p>
+    <p class="hint">You match athletes like you everywhere because no lifts, station benchmarks or self-ratings are
+      entered yet. Add some in the Athlete section to see your strengths and limiters.</p>
   }
-  <p class="legend"><span class="fast">■</span> faster than typical <span class="slow">■</span> slower than typical</p>
+  <p class="legend"><span class="fast">■</span> faster than athletes like you <span class="slow">■</span> slower than athletes like you</p>
 
   @if (i.whatIfs.length) {
     <h3>Realistic gains in 8–12 weeks</h3>

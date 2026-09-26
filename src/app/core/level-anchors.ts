@@ -1,4 +1,5 @@
-import { AbilityId } from './athlete';
+import { AbilityId, DEFAULT_RIR } from './athlete';
+import { LB_PER_KG } from './units';
 import { Sex } from './divisions';
 import { FALLBACK } from './fallback-params';
 import { formatTime } from './time';
@@ -8,7 +9,17 @@ import { formatTime } from './time';
  * something observable. Numeric anchors come from the same tables the model uses.
  */
 export function levelAnchors(id: AbilityId, sex: Sex, bwKg: number, units: 'kg' | 'lb'): string[] {
-  const w = (kg: number) => (units === 'kg' ? `${Math.round(kg / 2.5) * 2.5} kg` : `${Math.round((kg * 2.20462) / 5) * 5} lb`);
+  // Both units, the selected one first, rounded to plate jumps (2.5 kg / 5 lb).
+  const w = (kg: number) => {
+    const k = `${Math.round(kg / 2.5) * 2.5} kg`;
+    const l = `${Math.round((kg * LB_PER_KG) / 5) * 5} lb`;
+    return units === 'kg' ? `${k} / ${l}` : `${l} / ${k}`;
+  };
+  // A max, plus the usual working set it corresponds to (10 reps with 1–2 left ≈ 72% of max).
+  const lift = (name: string, m: number) => {
+    const max = m * bwKg;
+    return `${name} ≈ ${m}× bodyweight: max ≈ ${w(max)}, or sets of 10 at ≈ ${w(max / (1 + (10 + DEFAULT_RIR) / 30))}`;
+  };
   const ranges = (t: readonly number[], f: (x: number) => string) => t.map((x) => f(x));
   switch (id) {
     case 'run':
@@ -22,11 +33,11 @@ export function levelAnchors(id: AbilityId, sex: Sex, bwKg: number, units: 'kg' 
         'Competitive rower / skier splits',
       ];
     case 'legs':
-      return ranges(FALLBACK.squatPerBw[sex], (m) => `Back squat ≈ ${m}× bodyweight (${w(m * bwKg)})`).map((s, i) =>
+      return ranges(FALLBACK.squatPerBw[sex], (m) => lift('Back squat', m)).map((s, i) =>
         i === 0 ? `${s} — or I don't really lift` : s,
       );
     case 'hinge':
-      return ranges(FALLBACK.deadliftPerBw[sex], (m) => `Deadlift ≈ ${m}× bodyweight (${w(m * bwKg)})`).map((s, i) =>
+      return ranges(FALLBACK.deadliftPerBw[sex], (m) => lift('Deadlift', m)).map((s, i) =>
         i === 0 ? `${s} — or I don't really lift` : s,
       );
     case 'grip':

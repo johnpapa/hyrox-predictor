@@ -1,3 +1,4 @@
+import { LB_PER_KG } from './units';
 import { Injectable, computed, effect, signal, untracked } from '@angular/core';
 import { AbilityId, AthleteProfile, Level, Lift, LiftId, defaultAthlete, migrateAthlete } from './athlete';
 import { DIVISIONS, Sex, findDivision, sexIsChoosable } from './divisions';
@@ -25,7 +26,7 @@ interface Persisted {
 const STORAGE_KEY = 'hyrox-predictor:saved';
 /** Pre-opt-in versions auto-saved here; removed on startup. */
 const LEGACY_KEY = 'hyrox-predictor:v1';
-export const LB_PER_KG = 2.20462;
+export { LB_PER_KG } from './units';
 
 function storage(): Storage | null {
   try {

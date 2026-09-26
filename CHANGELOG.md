@@ -7,6 +7,32 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Working-set lifts:** enter your usual set (weight × reps) and **How hard was the set?** (to failure, 1–2, 3–4 or 5+
+  reps left). Reps in reserve are added before the Epley 1RM estimate (capped at 15 reps to failure). Realistic
+  strength gains are shown as working sets too.
+- **Your build and background** (Insights): what bodyweight, body fat, height, age, first race, weekly running and other
+  training do to your finish time.
+
+### Changed
+- **Insights compare with "athletes like you"** instead of "athletes who run like you": the comparison athlete shares
+  your sex, age, height, weight, body fat, experience, race times and training volume and is typical only on trainable
+  abilities, so the bars show only what training can change. Strength reasons show your estimated 1RM against the one
+  assumed for athletes like you.
+- "Worth measuring" asks for a squat or deadlift working set instead of a heavy test.
+
+### Fixed
+- **Strength standards were far too high** ("Solid" deadlift was 2× bodyweight, e.g. 147 kg / 330 lb for a 73.5 kg
+  man). Now set for recreational HYROX athletes: Solid = 1.25× squat, 1.5× deadlift for men (0.9× / 1.1× for women).
+  Level anchors also show the matching working set.
+- **Weights are shown in both kg and lb** everywhere (station loads, lift sources, 1RM estimates, anchors, Insights),
+  and heights in cm and ft/in.
+- **Impossible body fat (e.g. 114%) was silently ignored.** Out-of-range profile and physiology entries now show a
+  warning. The body fat field also says what it's doing (e.g. "+5% estimated strength") or that it has no effect once
+  lifts are entered.
+- The "why" breakdown could credit a below-typical squat as faster when a deadlift was also entered (the cleared squat
+  was re-estimated from the deadlift). It now resets to the comparison athlete's value. Regression test added.
+
+### Added
 - AI-ready repo configuration:
   - `AGENTS.md`;
   - `.github/copilot-instructions.md` with a maintenance matrix;

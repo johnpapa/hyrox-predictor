@@ -65,8 +65,20 @@ describe('input robustness', () => {
     expect(m.experience).toBe('unknown');
     expect(m.fiveKSec).toBeNull();
     expect(m.levels.run).toBeNull();
-    expect(m.lifts.backSquat).toEqual({ kg: null, reps: 12 });
+    expect(m.lifts.backSquat).toEqual({ kg: null, reps: 15, rir: 0 });
     expect(isFinite(predict({ divisionId: 'men-open', athletes: [m] }).total)).toBe(true);
+  });
+
+  it('REGRESSION: lifts saved before the effort choice existed keep meaning a set to failure', () => {
+    const old = migrateAthlete({ sex: 'male', lifts: { deadlift: { kg: 100, reps: 5 } } }, 0);
+    expect(old.lifts.deadlift.rir).toBe(0);
+    const now = migrateAthlete({ sex: 'male', lifts: { deadlift: { kg: 100, reps: 5, rir: 3.5 } } }, 0);
+    expect(now.lifts.deadlift.rir).toBe(3.5);
+    const bad = migrateAthlete({ sex: 'male', lifts: { deadlift: { kg: 100, reps: 5, rir: 'x' } } }, 0);
+    expect(bad.lifts.deadlift.rir).toBe(1.5);
+    // A working set with reps left estimates a bigger deadlift than the same set to failure.
+    expect(resolveAthlete(now).deadlift.value).toBeGreaterThan(resolveAthlete(old).deadlift.value);
+    expect(resolveAthlete(now).sources.hinge).toContain('100 kg / 220 lb × 5 (3–4 left)');
   });
 
   it('a sled self-rating only adjusts technique, not strength', () => {
