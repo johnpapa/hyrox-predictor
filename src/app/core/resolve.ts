@@ -112,9 +112,9 @@ export function levelOf(table: readonly number[], value: number): number {
   return asc ? 5 + over : 1 - over;
 }
 
-/** Station multiplier for a level (3 ⇒ 1.0). */
-function levelMult(level: number): number {
-  return atLevel(FALLBACK.levelMult, level);
+/** Station multiplier for a level (3 ⇒ 1.0), spread to match how much that station varies. */
+export function levelMult(level: number, ability: AbilityId): number {
+  return 1 + (atLevel(FALLBACK.levelMult, level) - 1) * FALLBACK.levelSpread[ability];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ function fromStrengthLevel(a: AthleteProfile, bw: number, ability: 'legs' | 'hin
 
 function fromLevel(a: AthleteProfile, id: AbilityId, what: string): Resolved {
   const l = a.levels[id];
-  if (l) return { value: levelMult(l), quality: 'rated', source: `${levelName(l)} ${what}` };
+  if (l) return { value: levelMult(l, id), quality: 'rated', source: `${levelName(l)} ${what}` };
   return { value: 1, quality: 'assumed', source: `typical ${what} for your level` };
 }
 
@@ -312,17 +312,17 @@ function resolveGrip(a: AthleteProfile): Resolved {
   const pull = a.pullUps != null && a.pullUps >= 0 ? levelOf(FALLBACK.pullUpsByLevel[a.sex], a.pullUps) : null;
   if (hang != null && pull != null) {
     const l = (hang + pull) / 2;
-    return { value: levelMult(l), quality: 'converted', source: `dead hang ${a.deadHangSec}s + ${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
+    return { value: levelMult(l, 'grip'), quality: 'converted', source: `dead hang ${a.deadHangSec}s + ${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
   }
-  if (hang != null) return { value: levelMult(hang), quality: 'converted', source: `dead hang ${a.deadHangSec}s ≈ ${levelName(Math.round(clampLevel(hang)) as Level)} grip` };
-  if (pull != null) return { value: levelMult(pull), quality: 'converted', source: `${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(pull)) as Level)} grip` };
+  if (hang != null) return { value: levelMult(hang, 'grip'), quality: 'converted', source: `dead hang ${a.deadHangSec}s ≈ ${levelName(Math.round(clampLevel(hang)) as Level)} grip` };
+  if (pull != null) return { value: levelMult(pull, 'grip'), quality: 'converted', source: `${a.pullUps} pull-ups ≈ ${levelName(Math.round(clampLevel(pull)) as Level)} grip` };
   return fromLevel(a, 'grip', 'grip');
 }
 
 function resolveBurpees(a: AthleteProfile): Resolved {
   if (a.burpees1Min != null && a.burpees1Min > 0) {
     const l = levelOf(FALLBACK.burpees1MinByLevel[a.sex], a.burpees1Min);
-    return { value: levelMult(l), quality: 'converted', source: `${a.burpees1Min} burpees in 1 min ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
+    return { value: levelMult(l, 'burpees'), quality: 'converted', source: `${a.burpees1Min} burpees in 1 min ≈ ${levelName(Math.round(clampLevel(l)) as Level)}` };
   }
   return fromLevel(a, 'burpees', 'burpee conditioning');
 }

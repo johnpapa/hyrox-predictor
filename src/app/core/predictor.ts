@@ -1,4 +1,4 @@
-import { AbilityId, AthleteProfile, hyroxAgeGroup, peerProfile } from './athlete';
+import { AbilityId, AthleteProfile, CompromisedRuns, hyroxAgeGroup, peerProfile } from './athlete';
 import { FALLBACK } from './fallback-params';
 import { ResolvedAthlete, resolveAthlete } from './resolve';
 import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, nativeOpenDivision, weightForAthlete } from './divisions';
@@ -118,12 +118,15 @@ export function runShapeFor(runFactor: number, runningKm: number | null = null):
  * First-race lap penalty: a fixed pacing allowance plus an "unfamiliar with compromised running"
  * part that fitness indicators shrink (running volume, durable race times, other training).
  */
-export function firstRaceRunPenalty(runningKm: number | null, enduranceK: number | null, otherHours: number | null): number {
+export function firstRaceRunPenalty(
+  runningKm: number | null, enduranceK: number | null, otherHours: number | null, compromised: CompromisedRuns | null = null,
+): number {
   const F = PARAMS.runFactor.firstRace;
   const extraKm = runningKm == null ? 0 : Math.max(0, runningKm - PARAMS.runFactor.runningVolume.refKm);
   let offset = F.volumeOffsetMax * Math.min(1, extraKm / F.volumeFullAtExtraKm);
   if (enduranceK != null && enduranceK <= PARAMS.runFactor.endurance.refExponent) offset += F.enduranceOffset;
   if (otherHours != null && otherHours >= F.otherTrainingHours) offset += F.otherTrainingOffset;
+  if (compromised) offset += PARAMS.runFactor.compromised.firstRaceOffset[compromised];
   return F.pacing + F.unfamiliar * (1 - Math.min(F.maxOffset, offset));
 }
 
@@ -190,7 +193,8 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo, withPeer 
     rf.base +
       (rf.per5kMinSlower * (fiveK - rf.ref5kSec[sex])) / 60 +
       rf.experience[a.experience] +
-      (a.experience === 'first' ? firstRaceRunPenalty(r.runningKmPerWeek, k0, r.otherTrainingHours) : 0) +
+      (a.experience === 'first' ? firstRaceRunPenalty(r.runningKmPerWeek, k0, r.otherTrainingHours, a.compromisedRuns) : 0) +
+      (a.compromisedRuns ? rf.compromised.adj[a.compromisedRuns] : 0) +
       (heavy ? rf.pro : 0) +
       runningVolumeAdj(r.runningKmPerWeek, k0 != null),
     rf.min,

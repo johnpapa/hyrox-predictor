@@ -106,6 +106,17 @@
     }
   </ul>
 
+  @if (i.doubles) {
+    <h3>Doubles: how to split each station</h3>
+    <p class="sub">Only one of you works at a time and you can switch as often as you like. Short, frequent swaps keep you
+      both near your best pace; the plan uses the split from Team tactics.</p>
+    <ul class="tips doubles">
+      @for (t of i.doubles; track t.id) {
+        <li><strong>{{ t.title }}</strong><span>{{ t.how }}</span><span class="plan">{{ t.plan }}</span></li>
+      }
+    </ul>
+  }
+
   <h3>Running</h3>
   <p class="txt">
     Your HYROX laps are projected <strong>{{ i.running.runFactorPct }}%</strong> slower than your 5K pace

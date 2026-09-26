@@ -247,3 +247,73 @@ weight × (1 + (reps + RIR) / 30) (Epley, with reps to failure = reps + RIR). Th
 5.5; the default "1–2 left" matches typical hypertrophy-style sets of 3 × 8–12. Rep-based estimates lose accuracy
 beyond about 10 reps to failure (LeSuer et al. 1997; Reynolds et al. 2006), so the total is capped at 15. Isolation
 lifts like biceps curls are not used: they don't predict sled, carry or lunge performance.
+
+## Input weighting review (Sept 2026)
+
+An expert pass over every input: how much does each one move the prediction, and does that match how much it matters
+in a real race? Sweep for a typical man (23:00 5K, 82 kg, 35, 1–2 races; ≈ 89 min), each input set to a realistic
+"worse" and "better" value (seconds on the finish time):
+
+| Input (worse vs better) | Effect | Verdict |
+|---|---|---|
+| 5K 26:00 vs 20:00 | 28:54 | Running dominates HYROX (8 km of running plus pacing between stations). Correct. |
+| Marathon 4:15 vs 3:20 (with a 5K) | 13:47 | Durability over ~90 min matters; the pair is unusually inconsistent, so the effect is large. OK. |
+| Experience: first vs 3+ races | 6:26 (was 8:20) | Reduced: see below. |
+| Squat Fair vs Strong | 3:00 | Drives both sleds and lunges. OK. |
+| Bodyweight 95 vs 70 kg (same 5K) | −2:58 | Heavier is stronger on sleds at the same run pace. OK. |
+| Weekly running 10 vs 60 km | 2:41 | OK. |
+| Wall balls 15 vs 50 unbroken | 2:37 | The most variable station. OK. |
+| Deadlift Fair vs Strong | 2:12 | OK. |
+| Compromised runs never vs weekly | 2:00 | **New input.** |
+| Body fat 28 vs 12% (strength unknown) | 1:51 | Only while strength is estimated. OK. |
+| Other training 1 vs 7 h | 1:37 | OK. |
+| Age 60 vs 35 (same race times) | 1:20 | Race times already carry age; this is only recovery. OK. |
+| Transitions Fair vs Strong | 1:20 (was 0:59) | Increased. |
+| Wall balls Fair vs Strong | 1:10 (was 0:52) | Increased. |
+| Height 168 vs 190 cm | 1:07 | Small, real (ergs, BBJ, lunges). OK. |
+| Burpees Fair vs Strong | 1:02 (was 0:42) | Increased. |
+| Lunges Fair vs Strong | 0:55 (was 0:41) | Increased. |
+| Erg Fair vs Strong | 0:36 (was 1:12) | Reduced. |
+| Grip Fair vs Strong | 0:37 | Grip rarely limits Open athletes. OK. |
+| VO₂max, resting HR (with a race time) | 0 | By design: races measure the engine directly. The fields now say so. |
+
+**Rating spread per station.** Every self-rating used the same multiplier (Weak +16% … Elite −12%). The split tables
+show stations separate athletes very differently. The ratio of the slowest to the fastest band's median is: ergs
+×1.21–1.28, sled push ×1.66, farmers ×1.72, sled pull ×2.0, lunges ×2.26, wall balls ×2.23, BBJ ×2.59, Roxzone ×2.22
+(men; women similar). Each rating's spread is now scaled by ln(ratio) ÷ the station average: ergs 0.5, sleds and grip
+1.0, lunges, wall balls and transitions 1.35, burpees 1.5 (`FALLBACK.levelSpread`). The combined skill floor moved
+from 0.90 to 0.86 so Elite ratings can take effect, still above world-class floors.
+
+**Wall-ball anchors.** The Weak…Elite descriptions said 15/30/50/75/100 unbroken for everyone. But the model compares
+unbroken sets with the typical set for your running level (≈ 36 for an 89-minute finisher), so "Solid ≈ 50" was
+scored like Elite. Anchors are now relative to your level and derived from the same formula, so rating a level and
+entering its count give the same wall-ball time (regression test).
+
+**Experience.** Repeat racers improve a lot between races, but most of that is training, which the fitness inputs
+already capture. At the same fitness, race craft is worth less. First race vs 1–2 races stays about +5% (+3% for a
+high-volume runner). 3+ races is now about −1.5% (was −3.6%) and competitive about −4% (was −6%).
+
+**Missing inputs considered.**
+- **Added:** compromised-running practice (how often you run straight after station work). It is the specific skill
+  behind the gap between 5K pace and HYROX laps. Weekly practice gives −1.2% on the run factor and offsets 40% of the
+  first-race "unfamiliar" penalty. "Rarely or never" gives +1%. These are estimates: brick-training studies in
+  triathlon show the run-after-bike decrement shrinks with practice, and HYROX coaching treats it as the key specific
+  session.
+- **Not added:**
+  - Previous per-station splits: high value but a long form. The previous total already calibrates the prediction.
+  - Venue / sled surface: large effect, but athletes rarely know it before race day.
+  - Lactate threshold and heart-rate zones: race times already measure this.
+  - Isolation lifts (e.g. curls): don't predict any station.
+
+**Doubles hand-over tips.** In doubles only one partner works at a time and you can switch freely, so the tips give a
+switch pattern per station and each partner's share from the doubles optimiser:
+- SkiErg every 100–250 m;
+- row every 250 m (straps cost about 4–6 s per swap);
+- sleds every 12.5 m length;
+- burpee broad jumps every 10–20 m;
+- farmers every 50 m;
+- lunges every 12.5–25 m;
+- wall balls every 10–15 reps.
+
+These come from common HYROX doubles coaching guidance (roxlyfe, official HYROX training content). They are rules of
+thumb, not measured optima.
