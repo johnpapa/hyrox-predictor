@@ -8,6 +8,7 @@ import { loadMultiplier } from './predictor';
 import { bandForSplit, bandForWork, bandIndex } from './split-tables';
 import { FALLBACK } from './fallback-params';
 import { Tip, tipsFor } from './tips';
+import { GapExplanation, explainGaps } from './explain';
 export type { Tip } from './tips';
 
 /**
@@ -45,6 +46,8 @@ export interface Insights {
   /** Unknown abilities, ranked by how much measuring them could change the prediction. */
   unknowns: UnknownInput[];
   tips: Tip[];
+  /** Why each station differs from athletes who run like you (per input). */
+  explanation: GapExplanation;
   /** Whether masters (50+) scaling was applied to the realistic gains. */
   masters: boolean;
   running: { runFactorPct: number; typicalPct: number; note: string; comparison: string | null };
@@ -319,5 +322,6 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   }
   const unknowns = unknownsWorthMeasuring(input, idx, prediction.total);
   const tips = tipsFor(limiters.map((l) => l.id), a.experience === 'first' || a.experience === 'unknown');
-  return { athleteIndex: idx, headline, limiters, strengths, whatIfs, unknowns, tips, masters: (a.age ?? 0) >= 50, running, pacing };
+  const explanation = explainGaps(a, prediction.division);
+  return { athleteIndex: idx, headline, limiters, strengths, whatIfs, unknowns, tips, explanation, masters: (a.age ?? 0) >= 50, running, pacing };
 }

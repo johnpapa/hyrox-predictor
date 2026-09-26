@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { PredictorStore } from '../core/predictor.store';
 import { formatTime } from '../core/time';
 import { stationGaps } from '../core/insights';
@@ -13,6 +13,7 @@ export class InsightsPanel {
   protected readonly store = inject(PredictorStore);
   protected readonly ins = this.store.insights;
   protected readonly fmt = formatTime;
+  protected readonly abs = Math.abs;
 
   protected readonly names = computed(() =>
     this.store.teamAthletes().map((a, i) => a.name?.trim() || `Athlete ${i + 1}`),
@@ -28,6 +29,17 @@ export class InsightsPanel {
 
   /** True when nothing entered makes the athlete differ from the typical athlete. */
   protected readonly allTypical = computed(() => this.bars().every((b) => Math.abs(b.gap) < 1));
+
+  /** Which station rows are expanded to show their reasons. */
+  protected readonly open = signal<Set<string>>(new Set());
+  protected toggle(id: string): void {
+    this.open.update((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
 
   protected signed(sec: number): string {
     const s = Math.round(sec);

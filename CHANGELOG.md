@@ -15,6 +15,11 @@ All notable changes to this project are documented here. The format follows
   - issue forms and a PR template.
 - This changelog.
 
+### Added
+- **Insights → "why" breakdown:** tap any station in "Vs. athletes who run like you" to see which of your inputs cause
+  the difference and by how much, plus a "main reasons overall" summary. Uses leave-one-out attribution in
+  `core/explain.ts`.
+
 ### Changed
 - Replaced the single "training hours" input with **weekly running distance** (km or mi) and **other training hours**.
   - Running volume reduces compromised running and lap fade, with diminishing returns.

@@ -83,7 +83,8 @@ Roxzone Time, Run Total, Work Total and Overall Time. At the top you get a likel
 ## 8b. Read your Insights
 
 Under the results, **Insights** compares each station with athletes who run at your pace on the same weights. It shows
-your biggest limiters and strengths. Then:
+your biggest limiters and strengths. **Tap a station to see why** it differs (for example: lighter bodyweight +0:33,
+first race +0:17), and read the **main reasons overall** above the bars. Then:
 - **Realistic gains in 8–12 weeks:** only for things you actually entered or rated, sized for your level and age (a
   well-trained 54-year-old gets about 1% on the 5K, not "a minute faster"). Each one re-runs the whole prediction.
 - **Worth measuring:** anything you left on "Not sure", ranked by how much the answer could move your finish time. The
