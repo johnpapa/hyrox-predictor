@@ -17,6 +17,8 @@ Angular 21 (standalone components, signals, zoneless) static app deployed to Git
    `src/index.html` enforces this, and the e2e suite checks it.
 4. **Model constants live in `model-params.ts`, `fallback-params.ts` and `split-tables.ts`**, and every number is
    documented in `RESEARCH.md` with its source.
+5. **Keep "How the prediction works" current:** `components/methodology.html` must describe the current model. Update it
+   whenever model behaviour changes.
 
 ## Commands
 

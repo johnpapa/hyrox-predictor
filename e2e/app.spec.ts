@@ -8,6 +8,8 @@ test.describe('first visit', () => {
       await expect(page.locator('.totals')).toContainText(label);
     }
     expect(await app.confidencePct()).toBeGreaterThan(12);
+    // The low–high bar is labelled so its meaning is clear (user question), and matches the confidence panel.
+    await expect(page.locator('app-results-board .range-label')).toHaveText(/Likely range ±\d+%/);
     await expect(app.card('Running').locator('.q')).toHaveText('Assumed');
     await expect(app.card('Running').locator('.src')).toContainText('enter a run time');
   });
@@ -81,6 +83,14 @@ test.describe('divisions', () => {
 });
 
 test.describe('athlete inputs & fallbacks', () => {
+  test('the likely range narrows as benchmarks are added', async ({ page }) => {
+    const pct = async () => Number((await page.locator('app-results-board .range-label').textContent())!.replace(/\D/g, ''));
+    const before = await pct();
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('Max unbroken wall balls').fill('40');
+    expect(await pct()).toBeLessThan(before);
+  });
+
   test('entering a 5K updates the prediction and marks running as measured', async ({ app, page }) => {
     const before = await app.confidencePct();
     await page.getByLabel('5K', { exact: true }).fill('19:30');
@@ -272,6 +282,12 @@ test.describe('results board', () => {
   test('methodology section expands', async ({ page }) => {
     await page.getByText('How the prediction works').click();
     await expect(page.getByText('Missing data? Every ability has fallbacks')).toBeVisible();
+    // Keep the in-app methodology in sync with the model (see CLAUDE.md rule 5).
+    const body = page.locator('app-methodology .body');
+    for (const phrase of ['5K, 10K, half marathon, marathon', 'Weekly running distance', 'mostly fitness, not inexperience',
+      'Other training hours', 'Insights', 'Simulator']) {
+      await expect(body).toContainText(phrase);
+    }
   });
 });
 

@@ -18,7 +18,27 @@ export const PARAMS = {
     /** Added per minute of 5K slower than 24:00 (men) / 27:00 (women); subtracted when faster. */
     per5kMinSlower: 0.004,
     ref5kSec: { male: 24 * 60, female: 27 * 60 } satisfies Record<Sex, number>,
-    experience: { unknown: 0.015, first: 0.05, some: 0.015, experienced: -0.01, competitive: -0.025 } satisfies Record<Experience, number>,
+    /**
+     * Experience effect on the lap factor. For a first race it is split in two:
+     * - `firstRace.pacing`: race-craft every first-timer pays (going out too fast, unfamiliar course);
+     * - `firstRace.unfamiliar`: never having run on legs tired from stations. Fitness shrinks it:
+     *   high running volume, durable race times (short + long race) and regular gym/HYROX work.
+     * Beginners' typical "~25–30% slower than 5K pace" is mostly low fitness, not inexperience.
+     */
+    experience: { unknown: 0.015, first: 0, some: 0.015, experienced: -0.01, competitive: -0.025 } satisfies Record<Experience, number>,
+    firstRace: {
+      pacing: 0.015,
+      unfamiliar: 0.035,
+      /** Offset (0–1) of the unfamiliar part from running volume, up to this at +50 km/week over 25. */
+      volumeOffsetMax: 0.6,
+      volumeFullAtExtraKm: 50,
+      /** Offset when a short + long race show typical-or-better durability (Riegel k ≤ 1.07). */
+      enduranceOffset: 0.2,
+      /** Offset when doing ≥ this many other training hours (muscular endurance, station work). */
+      otherTrainingHours: 4,
+      otherTrainingOffset: 0.2,
+      maxOffset: 0.8,
+    },
     /** Heavier Pro stations compromise the runs more. */
     pro: 0.012,
     /**
