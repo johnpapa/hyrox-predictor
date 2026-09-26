@@ -59,12 +59,18 @@ export class App {
   }
 }
 
-/** Every test starts on a freshly loaded app (auto fixture), whether or not it uses `app`. */
-export const test = base.extend<{ app: App }>({
+/**
+ * Every test starts on a freshly loaded app (auto fixture), whether or not it uses `app`.
+ * New visitors see the Quick view; most tests exercise every input, so they switch to Detailed
+ * unless they opt in with `test.use({ formMode: 'quick' })`.
+ */
+export const test = base.extend<{ app: App; formMode: 'quick' | 'detailed' }>({
+  formMode: ['detailed', { option: true }],
   app: [
-    async ({ page }, use) => {
+    async ({ page, formMode }, use) => {
       const app = new App(page);
       await app.open();
+      if (formMode === 'detailed') await page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Detailed' }).click();
       await use(app);
     },
     { auto: true },

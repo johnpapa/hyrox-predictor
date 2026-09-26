@@ -1,7 +1,7 @@
 @use '../shared' as *;
 @include block;
 
-.block-head { .units { margin-left: auto; } }
+.block-head { flex-wrap: wrap; row-gap: 8px; }
 
 .units, .seg {
   display: inline-flex;
@@ -143,3 +143,13 @@ legend {
 
 .field .uses { font-size: 0.74rem; color: var(--text-faint); }
 .field .uses b { color: var(--accent); font-weight: 600; }
+
+.mode { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; margin-left: auto; margin-right: 8px; }
+.mode button {
+  min-height: 32px; padding: 0 12px; border: 0; background: transparent; color: var(--text-dim); cursor: pointer;
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.78rem;
+}
+.mode button.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
+.quick-foot { margin-top: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.quick-foot p { margin: 0; font-size: 0.8rem; color: var(--text-dim); }

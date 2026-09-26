@@ -9,6 +9,16 @@ prediction updates as you type.
 
 ---
 
+## Quick or Detailed?
+
+The form opens in **Quick**: the 10 inputs that move the prediction most (sex, age, bodyweight, HYROX experience,
+weekly running, 5K or a running rating, leg and pulling strength ratings, and max unbroken wall balls). They're the same
+fields, in the same units, as the full form. Switch to **Detailed** at the top of the Athlete panel for everything else
+(other races, lifts, ergs, station tests, physiology, previous result); anything you enter there keeps counting when you
+switch back, and Quick lists what it's still using.
+
+![Quick view](tutorial/00-quick.png)
+
 ## 1. Pick your division
 
 Choose Singles (Open, Pro, Elite 15, Adaptive), Doubles, or Relay. Loads such as sled weights, kettlebells, the sandbag
