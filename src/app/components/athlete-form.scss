@@ -153,3 +153,5 @@ legend {
 .linkish { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
 .quick-foot { margin-top: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .quick-foot p { margin: 0; font-size: 0.8rem; color: var(--text-dim); }
+
+.cards-head { display: flex; justify-content: flex-end; margin: 0 0 6px; font-size: 0.8rem; }

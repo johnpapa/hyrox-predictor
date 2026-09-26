@@ -2,12 +2,13 @@
   <section class="panel block">
     <header class="block-head">
       <span class="step">03</span>
-      <h2>Work split</h2>
+      <h2><app-fold key="work-split" controls="fold-work-split">Work split</app-fold></h2>
       <span class="head-btns">
         <button type="button" class="btn small" (click)="suggest()">Suggest a split</button>
         <button type="button" class="btn small" [disabled]="isEven()" (click)="even()">Reset to 50/50</button>
       </span>
     </header>
+    <div id="fold-work-split" [hidden]="!fold.isOpen('work-split')">
     <p class="sub">
       You run every kilometre together and take turns on each station. Everything starts at 50/50; drag a slider to give
       one of you more, or <strong>Suggest a split</strong> for a practical plan (30–70%) based on who is faster where.
@@ -36,6 +37,7 @@
         </div>
       }
     </div>
+    </div>
   </section>
 }
 
@@ -43,9 +45,10 @@
   <section class="panel block">
     <header class="block-head">
       <span class="step">03</span>
-      <h2>Relay order</h2>
+      <h2><app-fold key="relay-order" controls="fold-relay-order">Relay order</app-fold></h2>
       <button type="button" class="btn small" (click)="store.relayOrder.set(null)">Auto (fastest)</button>
     </header>
+    <div id="fold-relay-order" [hidden]="!fold.isOpen('relay-order')">
     <p class="sub">
       Each athlete runs 2 × 1 km and completes 2 stations, then tags the next teammate.
       @if (store.relayOrder() == null) { <strong>Showing the fastest order.</strong> }
@@ -62,6 +65,7 @@
           </select>
         </label>
       }
+    </div>
     </div>
   </section>
 }

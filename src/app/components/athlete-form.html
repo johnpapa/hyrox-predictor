@@ -34,8 +34,8 @@
   @let an = anchors();
 
   <fieldset>
-    <legend>Profile</legend>
-    <div class="grid">
+    <legend><app-fold key="profile" controls="fold-profile">Profile</app-fold></legend>
+    <div class="grid" id="fold-profile" [hidden]="!fold.isOpen('profile')">
 @if (!quick()) {
       <label class="field span-2">
         <span class="label">Name</span>
@@ -83,8 +83,8 @@
 
 @if (!quick()) {
   <fieldset>
-    <legend>Physiology <span class="opt">optional · leave blank if unknown</span></legend>
-    <div class="grid">
+    <legend><app-fold key="physiology" controls="fold-physiology">Physiology</app-fold> <span class="opt">optional · leave blank if unknown</span></legend>
+    <div class="grid" id="fold-physiology" [hidden]="!fold.isOpen('physiology')">
       <app-number-input label="VO₂max (ml/kg/min)" [value]="ath.vo2max" uses="All 8 runs" [range]="ranges.vo2" [start]="45"
         [hint]="hasRace() ? 'Small weight: your race times count most' : 'Estimates your running'" (valueChange)="patch({ vo2max: $event })" />
       <label class="field">
@@ -136,6 +136,9 @@
   </p>
   }
 
+  <div class="cards-head">
+    <button type="button" class="linkish" (click)="toggleAllCards()">{{ allCardsOpen() ? 'Collapse all' : 'Expand all' }}</button>
+  </div>
   <div class="cards">
     <!-- Running -->
     <app-ability-card heading="Running" uses="All 8 runs, and the baseline for every station and the Roxzone" [source]="res.sources.run" [warnings]="res.warnings.run ?? []" [quality]="res.quality.run"
@@ -321,8 +324,8 @@
 
 @if (!quick()) {
   <fieldset class="calibrate">
-    <legend>Calibrate <span class="opt">optional</span></legend>
-    <div class="grid">
+    <legend><app-fold key="calibrate" controls="fold-calibrate">Calibrate</app-fold> <span class="opt">optional</span></legend>
+    <div class="grid" id="fold-calibrate" [hidden]="!fold.isOpen('calibrate')">
       <app-time-input class="span-2" label="Previous HYROX finish (singles, same weights)" uses="Scales the whole prediction" [range]="previousRange" [step]="30" [start]="5400" placeholder="h:mm:ss"
         [seconds]="ath.previousHyroxSec" hint="Pulls the projection towards your real result."
         (secondsChange)="patch({ previousHyroxSec: $event })" />
