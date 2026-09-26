@@ -11,9 +11,9 @@ you can play back.
 
 **New here? Read the [screenshot tutorial](docs/TUTORIAL.md).**
 
-| Results board | Confidence & fallbacks | iPhone |
-|---|---|---|
-| ![results](docs/tutorial/09-results.png) | ![confidence](docs/tutorial/08-confidence.png) | ![iphone](docs/tutorial/16-iphone-results.png) |
+| Results board | Insights | Simulator | iPhone |
+|---|---|---|---|
+| ![results](docs/tutorial/09-results.png) | ![insights](docs/tutorial/09b-insights.png) | ![simulator](docs/tutorial/17-simulator.png) | ![iphone](docs/tutorial/16-iphone-results.png) |
 
 ## Features
 
@@ -30,14 +30,20 @@ you can play back.
 - **Doubles:** tune both partners. Each station's work split is auto-optimised, or you can drag it yourself.
 - **Relay:** tune all four athletes. The fastest leg order is chosen automatically, or you can set it.
 - **Lock in known splits:** tap any station time to override it.
+- **Insights:** limiters and strengths compared with athletes who run at your pace, and the fastest time savings
+  (each computed by re-running the model with one improvement). Also running and race-day pacing notes.
+  Deterministic, with no AI.
+- **Simulator page** (`#simulator`): drag a slider for every run, station and the Roxzone and watch the finish time
+  and field position change. It shows which finish band each split is typical of, scales all runs or stations at
+  once, and can solve for a target time.
 - **Race simulator:** plays the race back along a run/station/Roxzone timeline.
 - Supports kg and lb. Mobile-first, with a sticky summary dock on phones.
 
 ## AI analysis?
 
 Should the app add Claude-powered coaching? See the research and recommendation in [docs/AI-ANALYSIS.md](docs/AI-ANALYSIS.md).
-In short: keep the prediction deterministic, add a free rule-based Insights panel first, and if AI is added, make it
-opt-in with bring-your-own-key.
+In short: keep the prediction deterministic (the rule-based Insights panel is now built), and if AI is ever added, make
+it opt-in with bring-your-own-key. There are no plans to add it for now.
 
 ## Privacy
 

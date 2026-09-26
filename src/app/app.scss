@@ -26,6 +26,16 @@
 }
 .brand-sub { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.18em; color: var(--text-faint); text-transform: uppercase; margin-top: 4px; }
 .btn.ghost { min-height: 36px; font-size: 0.85rem; color: var(--text-dim); }
+.topbar-inner { gap: 12px; }
+.views {
+  display: flex; gap: 2px; margin-left: auto; background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 2px;
+  a {
+    min-height: 34px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 2px;
+    font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.9rem;
+    color: var(--text-dim); text-decoration: none;
+    &.on { background: var(--accent); color: var(--accent-ink); }
+  }
+}
 
 .layout {
   max-width: 1320px;
@@ -75,6 +85,11 @@
     .label { font-size: 0.7rem; }
   }
   .dock-time { font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1.1; }
+}
+
+@media (max-width: 600px) {
+  .brand-text { display: none; }
+  .views a { padding: 0 10px; font-size: 0.8rem; }
 }
 
 @media (max-width: 480px) {

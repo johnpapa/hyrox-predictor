@@ -1,7 +1,8 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
 import { AbilityId, AthleteProfile, Level, Lift, LiftId, defaultAthlete, migrateAthlete } from './athlete';
 import { DIVISIONS, Sex, findDivision, sexIsChoosable } from './divisions';
-import { predict } from './predictor';
+import { PredictInput, predict } from './predictor';
+import { computeInsights } from './insights';
 import { STATION_IDS, StationId } from './stations';
 
 export type Units = 'kg' | 'lb';
@@ -94,14 +95,19 @@ export class PredictorStore {
   readonly division = computed(() => findDivision(this.divisionId()));
   readonly teamAthletes = computed(() => this.athletes().slice(0, this.division().teamSize));
 
-  readonly prediction = computed(() =>
-    predict({
-      divisionId: this.divisionId(),
-      athletes: this.athletes(),
-      doublesShares: this.doublesShares(),
-      relayOrder: this.relayOrder(),
-      overrides: this.overrides(),
-    }),
+  readonly predictInput = computed<PredictInput>(() => ({
+    divisionId: this.divisionId(),
+    athletes: this.athletes(),
+    doublesShares: this.doublesShares(),
+    relayOrder: this.relayOrder(),
+    overrides: this.overrides(),
+  }));
+
+  readonly prediction = computed(() => predict(this.predictInput()));
+
+  /** Deterministic coaching insights for the selected athlete. */
+  readonly insights = computed(() =>
+    computeInsights(this.predictInput(), this.prediction(), Math.min(this.activeAthlete(), this.division().teamSize - 1)),
   );
 
   constructor() {

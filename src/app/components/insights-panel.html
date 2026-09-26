@@ -1,0 +1,60 @@
+@let i = ins();
+<section class="panel insights" aria-labelledby="insights-title">
+  <header class="head">
+    <h2 id="insights-title">Insights</h2>
+    @if (names().length > 1) {
+      <div class="who" role="group" aria-label="Insights for athlete">
+        @for (n of names(); track $index) {
+          <button type="button" [class.on]="i.athleteIndex === $index" [attr.aria-pressed]="i.athleteIndex === $index"
+            (click)="store.activeAthlete.set($index)">{{ n }}</button>
+        }
+      </div>
+    }
+  </header>
+  <p class="headline">{{ i.headline }}</p>
+
+  <h3>Vs. athletes who run like you</h3>
+  <p class="sub">Each station compared with the typical split of athletes at your running pace, on the same weights.</p>
+  <div class="bars" role="list">
+    @for (b of bars(); track b.id) {
+      <div class="bar-row" role="listitem" [attr.aria-label]="b.name + ' ' + signed(b.gap) + ' versus typical'">
+        <span class="bn">{{ b.name }}</span>
+        <span class="track">
+          <span class="mid"></span>
+          <span class="fill" [class.slow]="b.gap > 0" [class.fast]="b.gap < 0"
+            [style.width.%]="b.pct" [style.left.%]="b.gap < 0 ? 50 - b.pct : 50"></span>
+        </span>
+        <span class="bv mono" [class.slow]="b.gap > 5" [class.fast]="b.gap < -5">{{ signed(b.gap) }}</span>
+      </div>
+    }
+  </div>
+  @if (allTypical()) {
+    <p class="hint">Everything matches the typical athlete because no station benchmarks or self-ratings are entered yet.
+      Add some in the Athlete section to see your strengths and limiters.</p>
+  }
+  <p class="legend"><span class="fast">■</span> faster than typical <span class="slow">■</span> slower than typical</p>
+
+  @if (i.whatIfs.length) {
+    <h3>Fastest time savings</h3>
+    <p class="sub">Each change re-runs the full prediction on its own.</p>
+    <ol class="whatifs">
+      @for (w of i.whatIfs; track w.id) {
+        <li>
+          <span class="wl"><strong>{{ w.label }}</strong><small>{{ w.detail }}</small></span>
+          <span class="ws mono">−{{ fmt(w.saves) }}</span>
+        </li>
+      }
+    </ol>
+  }
+
+  <h3>Running</h3>
+  <p class="txt">
+    Your HYROX laps are projected <strong>{{ i.running.runFactorPct }}%</strong> slower than your 5K pace
+    (typical ≈ {{ i.running.typicalPct }}%). {{ i.running.note }}
+  </p>
+
+  <h3>Race-day pacing</h3>
+  <ul class="pacing">
+    @for (p of i.pacing; track $index) { <li>{{ p }}</li> }
+  </ul>
+</section>

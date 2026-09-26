@@ -1,6 +1,7 @@
 # Should the predictor use AI (the Claude API)?
 
-**Status:** research and recommendation only. Nothing here is implemented yet.
+**Status:** research only. The deterministic **Insights** panel recommended below has been built; AI features are
+not planned for now.
 
 ## TL;DR
 
