@@ -2,6 +2,10 @@
   <header class="block-head">
     <span class="step">02</span>
     <h2>{{ store.division().teamSize > 1 ? 'Athletes' : 'Athlete' }}</h2>
+    <div class="mode" role="group" aria-label="Form view">
+      <button type="button" [class.on]="quick()" [attr.aria-pressed]="quick()" (click)="store.mode.set('quick')">Quick</button>
+      <button type="button" [class.on]="!quick()" [attr.aria-pressed]="!quick()" (click)="store.mode.set('detailed')">Detailed</button>
+    </div>
     <div class="units" role="group" aria-label="Weight units">
       <button type="button" [class.on]="unit() === 'kg'" (click)="store.units.set('kg')">KG</button>
       <button type="button" [class.on]="unit() === 'lb'" (click)="store.units.set('lb')">LB</button>
@@ -32,11 +36,13 @@
   <fieldset>
     <legend>Profile</legend>
     <div class="grid">
+@if (!quick()) {
       <label class="field span-2">
         <span class="label">Name</span>
         <input type="text" [value]="ath.name" maxlength="24" (input)="patch({ name: $any($event.target).value })" />
       </label>
-      <div class="field">
+
+}      <div class="field">
         <span class="label">Sex</span>
         <div class="seg" role="group" aria-label="Sex">
           <button type="button" [attr.aria-pressed]="ath.sex === 'male'" [class.on]="ath.sex === 'male'"
@@ -48,9 +54,11 @@
       <app-number-input [label]="'Bodyweight (' + unit() + ')'" [value]="ath.bodyweightKg" [factor]="weightFactor()"
         [decimals]="unit() === 'kg' ? 1 : 0" [units]="unit()" (unitsChange)="store.units.set($event)"
         uses="Sleds · Lunges · Burpee broad jumps · Ergs" [range]="ranges.bodyweightKg" [step]="unit() === 'kg' ? 0.5 : 1" [start]="starts().bodyweight" (valueChange)="patch({ bodyweightKg: $event })" />
+@if (!quick()) {
       <app-number-input [label]="unit() === 'kg' ? 'Height (cm)' : 'Height (in)'" [value]="ath.heightCm"
         [factor]="unit() === 'kg' ? 1 : 1 / 2.54" [decimals]="0" uses="Ergs · Burpee broad jumps · Lunges" [range]="ranges.heightCm" [start]="starts().height" (valueChange)="patch({ heightCm: $event })"
         [hint]="heightHint()" />
+}
       <app-number-input label="Age" [value]="ath.age" [integer]="true" uses="Age-group position · Station recovery from 50" [range]="ranges.age" [start]="35"
         [hint]="ageGroup() ? 'HYROX age group ' + ageGroup() : ''" (valueChange)="patch({ age: $event })" />
       <label class="field">
@@ -66,11 +74,14 @@
         [factor]="unit() === 'kg' ? 1 : 0.621371" [decimals]="0" [allowZero]="true" [units]="unit()"
         [unitLabels]="['km', 'mi']" [unitNames]="['Kilometres', 'Miles']" (unitsChange)="store.units.set($event)"
         hint="Your usual week, all runs" uses="All 8 runs (pace and fade)" [range]="ranges.runningKm" [step]="5" [start]="25" (valueChange)="patch({ runningKmPerWeek: $event })" />
+@if (!quick()) {
       <app-number-input label="Other training (hrs / week)" [value]="ath.otherTrainingHours" [allowZero]="true"
         hint="Gym, HYROX classes, erg or sled work" uses="All 8 stations (up to ±3%)" [range]="ranges.otherHours" [step]="0.5" [start]="3" (valueChange)="patch({ otherTrainingHours: $event })" />
+}
     </div>
   </fieldset>
 
+@if (!quick()) {
   <fieldset>
     <legend>Physiology <span class="opt">optional · leave blank if unknown</span></legend>
     <div class="grid">
@@ -93,6 +104,7 @@
     </div>
   </fieldset>
 
+}
   @let conf = confidence();
   <div class="confidence" aria-live="polite">
     <div class="conf-head">
@@ -111,10 +123,18 @@
     </p>
   </div>
 
+  @if (quick()) {
+    <p class="intro">
+      <strong>Quick view:</strong> the {{ quickCount }} inputs that move your prediction most. Leave anything on "Not sure";
+      switch to <button type="button" class="linkish" (click)="store.mode.set('detailed')">Detailed</button> for lifts,
+      ergs, station tests and more to narrow the range.
+    </p>
+  } @else {
   <p class="intro">
     Fill in what you know and leave the rest blank. Each ability uses the best information available: a measured test first,
     then a conversion from a related test, then your self-rating, and finally a typical athlete at your running level.
   </p>
+  }
 
   <div class="cards">
     <!-- Running -->
@@ -123,18 +143,25 @@
       (levelChange)="level('run', $event)">
       <div primary class="grid">
         <app-time-input label="5K" [range]="ranges.fiveK" [step]="5" [start]="1500" [seconds]="ath.fiveKSec" placeholder="e.g. 23:30" (secondsChange)="patch({ fiveKSec: $event })" />
+@if (!quick()) {
         <app-time-input label="10K" [range]="ranges.tenK" [step]="10" [start]="3120" [seconds]="ath.tenKSec" placeholder="e.g. 49:00" (secondsChange)="patch({ tenKSec: $event })" />
         <app-time-input label="Half marathon" [range]="ranges.half" [step]="30" [start]="6900" [seconds]="ath.halfMarathonSec" placeholder="h:mm:ss"
           (secondsChange)="patch({ halfMarathonSec: $event })" />
         <app-time-input label="Marathon" [range]="ranges.marathon" [step]="60" [start]="14400" [seconds]="ath.marathonSec" placeholder="h:mm:ss"
           (secondsChange)="patch({ marathonSec: $event })" />
+}
+        @if (quick()) {
+          <p class="note span-all">Only know a 10K, half or marathon? Enter it in Detailed. No race at all? Rate your running below.</p>
+        } @else {
         <p class="note span-all">
           Enter any recent races you know. More is better: 10K and half marathon best match a HYROX effort, the 5K
           reflects your top-end fitness, and a longer race shows how well you hold pace. {{ runHint() }}
         </p>
+        }
       </div>
     </app-ability-card>
 
+@if (!quick()) {
     <!-- Ergs -->
     <app-ability-card heading="SkiErg & Row" uses="SkiErg · Rowing" [source]="res.sources.erg" [warnings]="res.warnings.erg ?? []" [quality]="res.quality.erg" [anchors]="an.erg"
       [level]="ath.levels.erg"
@@ -157,17 +184,21 @@
       </div>
     </app-ability-card>
 
+}
     <!-- Leg strength -->
     <app-ability-card heading="Leg strength" uses="Sled Push · Sandbag Lunges (and Sled Pull when no deadlift)" [source]="res.sources.legs" [warnings]="res.warnings.legs ?? []" [quality]="res.quality.legs" [anchors]="an.legs"
       [level]="ath.levels.legs" levelPrompt="Don't lift or don't know? Rate yourself"
       [altOpen]="any(ath.lifts.frontSquat.kg, ath.lifts.legPress.kg)"
-      (levelChange)="level('legs', $event)">
+      [hasAlternatives]="!quick()" (levelChange)="level('legs', $event)">
+      @if (!quick()) {
       <div primary class="grid">
         <app-lift-input label="Back squat" [lift]="ath.lifts.backSquat" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Drives sled push & lunges"
           (liftChange)="lift('backSquat', $event)" />
         <p class="note span-all">No max test needed: enter your usual working set (e.g. 10 reps) and how many more reps you could
           have done. The app estimates your max from that.</p>
       </div>
+      }
+      @if (!quick()) {
       <div alternatives class="grid">
         <app-lift-input label="Front squat" [lift]="ath.lifts.frontSquat" [units]="unit()" (unitsChange)="store.units.set($event)" hint="≈ 85% of back squat"
           (liftChange)="lift('frontSquat', $event)" />
@@ -175,18 +206,22 @@
           (liftChange)="lift('legPress', $event)" />
         <p class="note span-all">A deadlift, trap-bar or Romanian deadlift entered under Pulling strength also estimates your squat.</p>
       </div>
+      }
     </app-ability-card>
 
     <!-- Pulling strength -->
     <app-ability-card heading="Pulling strength" uses="Sled Pull · Farmers Carry" [source]="res.sources.hinge" [warnings]="res.warnings.hinge ?? []" [quality]="res.quality.hinge" [anchors]="an.hinge"
       [level]="ath.levels.hinge" levelPrompt="Don't lift or don't know? Rate yourself"
       [altOpen]="any(ath.lifts.trapBar.kg, ath.lifts.romanianDeadlift.kg, ath.lifts.benchPress.kg)"
-      (levelChange)="level('hinge', $event)">
+      [hasAlternatives]="!quick()" (levelChange)="level('hinge', $event)">
+      @if (!quick()) {
       <div primary class="grid">
         <app-lift-input label="Deadlift" [lift]="ath.lifts.deadlift" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Drives sled pull & farmers carry"
           (liftChange)="lift('deadlift', $event)" />
         <p class="note span-all">Your usual working set is fine, e.g. 3 × 8–12: enter the weight, the reps and how hard it felt.</p>
       </div>
+      }
+      @if (!quick()) {
       <div alternatives class="grid">
         <app-lift-input label="Trap-bar deadlift" [lift]="ath.lifts.trapBar" [units]="unit()" (unitsChange)="store.units.set($event)" hint="≈ 108% of deadlift"
           (liftChange)="lift('trapBar', $event)" />
@@ -195,8 +230,10 @@
         <app-lift-input label="Bench press" [lift]="ath.lifts.benchPress" [units]="unit()" (unitsChange)="store.units.set($event)" hint="Rough overall-strength proxy"
           (liftChange)="lift('benchPress', $event)" />
       </div>
+      }
     </app-ability-card>
 
+@if (!quick()) {
     <!-- Grip -->
     <app-ability-card heading="Grip" uses="Farmers Carry · Sled Pull" [source]="res.sources.grip" [warnings]="res.warnings.grip ?? []" [quality]="res.quality.grip" [anchors]="an.grip"
       [level]="ath.levels.grip" [altOpen]="any(ath.farmersTestSec)" (levelChange)="level('grip', $event)">
@@ -212,6 +249,8 @@
       </div>
     </app-ability-card>
 
+}
+@if (!quick()) {
     <!-- Sleds -->
     <app-ability-card heading="Sleds" uses="Sled Push · Sled Pull" [source]="res.sources.sled" [warnings]="res.warnings.sled ?? []" [quality]="res.quality.sled" [anchors]="an.sled"
       [level]="ath.levels.sled" levelPrompt="How do heavy sleds feel?" [hasAlternatives]="false"
@@ -225,6 +264,8 @@
       </div>
     </app-ability-card>
 
+}
+@if (!quick()) {
     <!-- Burpees -->
     <app-ability-card heading="Burpee broad jumps" uses="Burpee Broad Jumps" [source]="res.sources.burpees" [warnings]="res.warnings.burpees ?? []" [quality]="res.quality.burpees"
       [anchors]="an.burpees" [level]="ath.levels.burpees" [altOpen]="any(ath.bbjTestSec)"
@@ -239,6 +280,8 @@
       </div>
     </app-ability-card>
 
+}
+@if (!quick()) {
     <!-- Lunges -->
     <app-ability-card heading="Sandbag lunges" uses="Sandbag Lunges" [source]="res.sources.lunges" [warnings]="res.warnings.lunges ?? []" [quality]="res.quality.lunges"
       [anchors]="an.lunges" [level]="ath.levels.lunges" [hasAlternatives]="false" (levelChange)="level('lunges', $event)">
@@ -249,28 +292,34 @@
       </div>
     </app-ability-card>
 
+}
     <!-- Wall balls -->
     <app-ability-card heading="Wall balls" uses="Wall Balls" [source]="res.sources.wallBalls" [warnings]="res.warnings.wallBalls ?? []" [quality]="res.quality.wallBalls"
       [anchors]="an.wallBalls" [level]="ath.levels.wallBalls" [altOpen]="any(ath.wallBalls100Sec, ath.karenSec)"
-      (levelChange)="level('wallBalls', $event)">
+      [showLevels]="!quick()" [hasAlternatives]="!quick()" (levelChange)="level('wallBalls', $event)">
       <div primary class="grid">
         <app-number-input label="Max unbroken wall balls" placeholder="e.g. 35" [value]="ath.wallBallsUnbroken" [integer]="true" [range]="ranges.wallBallsUnbroken" [step]="5" [start]="30"
           hint="Race ball & target" (valueChange)="patch({ wallBallsUnbroken: $event })" />
       </div>
+      @if (!quick()) {
       <div alternatives class="grid">
         <app-time-input label="100 wall balls for time" [range]="ranges.wallBalls100" [step]="5" [start]="360" [seconds]="ath.wallBalls100Sec" placeholder="e.g. 6:10"
           (secondsChange)="patch({ wallBalls100Sec: $event })" />
         <app-time-input label='"Karen" (150 reps)' [range]="ranges.karen" [step]="10" [start]="600" [seconds]="ath.karenSec" placeholder="e.g. 10:30"
           (secondsChange)="patch({ karenSec: $event })" />
       </div>
+      }
     </app-ability-card>
 
+@if (!quick()) {
     <!-- Transitions -->
     <app-ability-card heading="Roxzone transitions" uses="Roxzone" [source]="res.sources.transitions" [warnings]="res.warnings.transitions ?? []" [quality]="res.quality.transitions"
       [anchors]="an.transitions" [level]="ath.levels.transitions" levelPrompt="How do you move between stations?"
       [hasAlternatives]="false" (levelChange)="level('transitions', $event)" />
+}
   </div>
 
+@if (!quick()) {
   <fieldset class="calibrate">
     <legend>Calibrate <span class="opt">optional</span></legend>
     <div class="grid">
@@ -279,5 +328,14 @@
         (secondsChange)="patch({ previousHyroxSec: $event })" />
     </div>
   </fieldset>
+
+}  @if (quick()) {
+    <div class="quick-foot">
+      @if (hiddenUsed().length) {
+        <p>Also using from Detailed: {{ hiddenUsed().join(', ') }}.</p>
+      }
+      <button type="button" class="btn" (click)="store.mode.set('detailed')">Add more detail →</button>
+    </div>
+  }
   </div>
 </section>

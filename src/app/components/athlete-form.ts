@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { AbilityId, AthleteProfile, Experience, Level, Lift, LiftId, hyroxAgeGroup } from '../core/athlete';
+import { AbilityId, AthleteProfile, Experience, Level, Lift, LiftId, QUICK_ABILITIES, detailOnlyInputs, hyroxAgeGroup } from '../core/athlete';
 import { FALLBACK } from '../core/fallback-params';
 import { levelAnchors } from '../core/level-anchors';
 import { enduranceExponent } from '../core/predictor';
@@ -37,6 +37,14 @@ const NEXT_STEP: Record<AbilityId, string> = {
   transitions: 'a Roxzone self-rating',
 };
 
+/** What to do in the Quick view, where lifts are rated rather than entered. */
+const QUICK_STEP: Partial<Record<AbilityId, string>> = {
+  run: 'Enter your 5K (or rate your running)',
+  legs: 'Rate your leg strength',
+  hinge: 'Rate your pulling strength',
+  wallBalls: 'Enter your max unbroken wall balls',
+};
+
 @Component({
   selector: 'app-athlete-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +59,11 @@ export class AthleteForm {
   protected readonly solo = computed(() => this.store.prediction().solos[this.idx()]);
   protected readonly r = computed(() => this.solo().resolved);
   protected readonly unit = computed(() => this.store.units());
+  protected readonly quick = computed(() => this.store.mode() === 'quick');
+  /** Inputs in the Quick view: sex, age, bodyweight, experience, weekly running, 5K, running / leg / pulling ratings, max unbroken wall balls. */
+  protected readonly quickCount = 10;
+  /** Values entered in Detailed that Quick hides but still uses. */
+  protected readonly hiddenUsed = computed(() => detailOnlyInputs(this.a()));
   protected readonly ranges = FALLBACK.ranges;
   /** A previous result only calibrates between 40 min and 4 h. */
   protected readonly previousRange = [40 * 60, 4 * 3600] as const;
@@ -104,6 +117,8 @@ export class AthleteForm {
     const counts: Record<Quality, number> = { measured: 0, converted: 0, rated: 0, assumed: 0 };
     let best: AbilityId | null = null;
     let bestGain = 0;
+    let bestQuick: AbilityId | null = null;
+    let bestQuickGain = 0;
     for (const id of Object.keys(q) as AbilityId[]) {
       counts[q[id]]++;
       const gain = FALLBACK.abilityWeight[id] * FALLBACK.qualityFactor[q[id]];
@@ -111,13 +126,29 @@ export class AthleteForm {
         bestGain = gain;
         best = id;
       }
+      // Only assumed Quick inputs are worth suggesting there (a rating is as far as Quick goes).
+      if (QUICK_ABILITIES.includes(id) && q[id] === 'assumed' && gain > bestQuickGain + 1e-9) {
+        bestQuickGain = gain;
+        bestQuick = id;
+      }
+    }
+    // In Quick, point at a visible field first; only then suggest switching to Detailed.
+    if (this.quick() && bestQuick && bestQuickGain > 0.002) {
+      best = bestQuick;
+      bestGain = bestQuickGain;
     }
     const items = (Object.keys(q) as AbilityId[]).map((id) => ({ id, name: ABILITY_NAMES[id], quality: q[id] }));
     return {
       pct: Math.round(this.solo().uncertainty * 100),
       counts,
       items,
-      tip: best && bestGain > 0.002 ? `Add ${NEXT_STEP[best]} to narrow the range most.` : 'Great, your inputs are well covered.',
+      tip: !best || bestGain <= 0.002
+        ? 'Great, your inputs are well covered.'
+        : this.quick() && !QUICK_ABILITIES.includes(best)
+          ? `Switch to Detailed and add ${NEXT_STEP[best]} to narrow the range most.`
+          : this.quick()
+            ? `${QUICK_STEP[best]} to narrow the range most.`
+            : `Add ${NEXT_STEP[best]} to narrow the range most.`,
     };
   });
 

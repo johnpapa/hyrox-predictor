@@ -95,17 +95,29 @@ test('desktop walkthrough', async ({ app, page }) => {
   await page.screenshot({ path: out('17-simulator') });
 });
 
+test.describe('Quick view', () => {
+  test.use({ formMode: 'quick' });
+  test('quick view', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addStyleTag({ content: '.dock{display:none!important} .topbar{position:relative!important}' });
+    await page.getByLabel('Bodyweight (kg)').fill('78');
+    await page.getByLabel('Age', { exact: true }).fill('38');
+    await page.getByLabel('5K', { exact: true }).fill('22:40');
+    await page.locator('#athlete-panel').screenshot({ path: out('00-quick') });
+  });
+});
+
 test.describe('iPhone', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { defaultBrowserType, ...iphone } = devices['iPhone 14'];
-  test.use(iphone);
+  test.use({ ...iphone, formMode: 'quick' });
 
   test('iPhone walkthrough', async ({ page }) => {
     await page.getByLabel('5K', { exact: true }).fill('24:10');
     await page.getByLabel('5K', { exact: true }).evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await page.waitForTimeout(300);
     await page.screenshot({ path: out('15-iphone-form') });
-    await page.getByRole('button', { name: 'View splits' }).click();
+    await page.getByRole('region', { name: 'Predicted finish', exact: true }).getByRole('button', { name: 'Splits' }).click();
     await page.waitForTimeout(800);
     await page.screenshot({ path: out('16-iphone-results') });
     await page.getByRole('link', { name: 'Simulator' }).click();

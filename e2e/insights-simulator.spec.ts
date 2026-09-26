@@ -89,11 +89,11 @@ test.describe('live total & units', () => {
     await expect(page.locator('app-results-board app-change-chip .chip')).toContainText('slower');
   });
 
-  test('the finish time stays visible while editing (dock on phone, floating pill on desktop)', async ({ page, isMobile }) => {
+  test('the finish time stays visible while editing (top bar on phone, floating pill on desktop)', async ({ page, isMobile }) => {
     const dock = page.getByRole('region', { name: 'Predicted finish summary' });
     if (isMobile) {
       await page.getByText('Save my inputs on this device').scrollIntoViewIfNeeded();
-      await expect(dock).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Predicted finish', exact: true })).toBeInViewport();
     } else {
       await expect(dock).toBeHidden(); // board clock is on screen
       await page.locator('aside.results').evaluate((el) => el.scrollTo(0, 5000));

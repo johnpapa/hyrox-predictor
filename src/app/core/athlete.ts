@@ -263,6 +263,40 @@ export function sanitizeRanges(a: AthleteProfile): AthleteProfile {
   };
 }
 
+/**
+ * Inputs shown in the Quick view: the ones that move the prediction most (see RESEARCH.md
+ * "Quick view"). Detailed shows everything. Both views edit the same fields, in the same units.
+ */
+export const QUICK_ABILITIES: readonly AbilityId[] = ['run', 'legs', 'hinge', 'wallBalls'];
+
+/** Labels of values entered that only the Detailed view shows (so Quick can say they're still used). */
+export function detailOnlyInputs(a: AthleteProfile): string[] {
+  const out: string[] = [];
+  const add = (v: unknown, label: string) => {
+    if (v != null && v !== '') out.push(label);
+  };
+  add(a.heightCm, 'height');
+  add(a.otherTrainingHours, 'other training');
+  add(a.vo2max, 'VO₂max');
+  add(a.bodyFatPct, 'body fat');
+  add(a.tenKSec, '10K');
+  add(a.halfMarathonSec, 'half marathon');
+  add(a.marathonSec, 'marathon');
+  if ([a.skiErg1kSec, a.skiErg500Sec, a.skiErg2kSec, a.row1kSec, a.row500Sec, a.row2kSec, a.row5kSec].some((x) => x != null)) out.push('erg times');
+  if (LIFT_IDS.some((id) => a.lifts[id].kg != null)) out.push('lifts');
+  if (a.deadHangSec != null || a.pullUps != null) out.push('grip tests');
+  add(a.burpees1Min, 'burpees');
+  if ([a.sledPushTestSec, a.sledPullTestSec, a.bbjTestSec, a.farmersTestSec, a.lungesTestSec, a.wallBalls100Sec, a.karenSec].some((x) => x != null)) {
+    out.push('station tests');
+  }
+  for (const [id, label] of [['erg', 'erg rating'], ['grip', 'grip rating'], ['burpees', 'burpee rating'], ['sled', 'sled rating'],
+    ['lunges', 'lunge rating'], ['wallBalls', 'wall-ball rating'], ['transitions', 'Roxzone rating']] as [AbilityId, string][]) {
+    add(a.levels[id], label);
+  }
+  add(a.previousHyroxSec, 'previous result');
+  return out;
+}
+
 /** HYROX age groups (singles): 16–24, 25–29, 30–34 … 65–69, 70+. */
 export function hyroxAgeGroup(age: number | null): string | null {
   if (age == null || !isFinite(age) || age < 16) return null;

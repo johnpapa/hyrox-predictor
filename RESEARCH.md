@@ -341,3 +341,30 @@ thumb, not measured optima.
 - **Running pace in doubles** is still the slower partner's (both run every kilometre together), with 80% of the solo
   compromise. With a much slower-running partner, the time saved on stations is largely spent on the runs. The app now
   says so in Team tactics.
+
+## Quick view (Sept 2026)
+
+Quick shows only the inputs with the largest effect in the input weighting review. Sensitivity for a typical
+89-minute athlete:
+
+| Input | Effect |
+|---|---|
+| 5K (or a running rating when no race is known) | up to 29 min |
+| HYROX experience | 6:26 |
+| Leg strength rating | 3:00 |
+| Bodyweight | 2:58 |
+| Weekly running | 2:41 |
+| Max unbroken wall balls | 2:37 |
+| Pulling strength rating | 2:12 |
+| Age | age group, and 1:20 from 35 to 60 |
+| Sex | sets the division, loads and baselines |
+
+That's 10 inputs, counting the running rating. Just outside the cut:
+- body fat, 1:51, and only while strength is estimated;
+- other training, 1:37;
+- the Roxzone rating, 1:20;
+- height, 1:07;
+- everything else, under about 1 min each.
+
+Lifts are rated in Quick because most people can't give a number quickly. The rating anchors show both a max and the
+matching working set. Quick and Detailed edit the same fields in the same units, and hidden values keep counting.
