@@ -73,6 +73,8 @@ npm run docs:screenshots   # regenerates docs/tutorial/*.png (Playwright "tutori
 - **Input cascades.** Every ability resolves measured › converted › self-rated › assumed. "Not sure" (assumed) must
   never shift a prediction, only widen the range. Insights must never invent numbers for unknown abilities.
 - **Every model number is sourced** in `RESEARCH.md`. Estimates are labelled as estimates.
+- **The in-app "How the prediction works" section** (`components/methodology.html`) is user-facing documentation of the
+  model. Update it in the same change whenever model behaviour changes.
 - **Every bug fix ships with a regression test** named after the behaviour that broke.
 - **Privacy.** No cookies, no third-party requests, nothing stored unless the user opts in ("Save my inputs"). The CSP
   in `src/index.html` enforces this; e2e checks it.

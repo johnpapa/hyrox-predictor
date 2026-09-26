@@ -272,6 +272,12 @@ test.describe('results board', () => {
   test('methodology section expands', async ({ page }) => {
     await page.getByText('How the prediction works').click();
     await expect(page.getByText('Missing data? Every ability has fallbacks')).toBeVisible();
+    // Keep the in-app methodology in sync with the model (see CLAUDE.md rule 5).
+    const body = page.locator('app-methodology .body');
+    for (const phrase of ['5K, 10K, half marathon, marathon', 'Weekly running distance', 'mostly fitness, not inexperience',
+      'Other training hours', 'Insights', 'Simulator']) {
+      await expect(body).toContainText(phrase);
+    }
   });
 });
 

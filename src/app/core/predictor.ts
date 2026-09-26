@@ -109,6 +109,19 @@ export function runShapeFor(runFactor: number, runningKm: number | null = null):
   return RUN_SHAPE.map((x) => 1 + (x - 1) * scale);
 }
 
+/**
+ * First-race lap penalty: a fixed pacing allowance plus an "unfamiliar with compromised running"
+ * part that fitness indicators shrink (running volume, durable race times, other training).
+ */
+export function firstRaceRunPenalty(runningKm: number | null, enduranceK: number | null, otherHours: number | null): number {
+  const F = PARAMS.runFactor.firstRace;
+  const extraKm = runningKm == null ? 0 : Math.max(0, runningKm - PARAMS.runFactor.runningVolume.refKm);
+  let offset = F.volumeOffsetMax * Math.min(1, extraKm / F.volumeFullAtExtraKm);
+  if (enduranceK != null && enduranceK <= PARAMS.runFactor.endurance.refExponent) offset += F.enduranceOffset;
+  if (otherHours != null && otherHours >= F.otherTrainingHours) offset += F.otherTrainingOffset;
+  return F.pacing + F.unfamiliar * (1 - Math.min(F.maxOffset, offset));
+}
+
 /** Run-factor change from weekly running volume (diminishing returns; 0 when unknown). */
 export function runningVolumeAdj(km: number | null, enduranceKnown: boolean): number {
   if (km == null) return 0;
@@ -172,6 +185,7 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo): SoloPred
     rf.base +
       (rf.per5kMinSlower * (fiveK - rf.ref5kSec[sex])) / 60 +
       rf.experience[a.experience] +
+      (a.experience === 'first' ? firstRaceRunPenalty(r.runningKmPerWeek, k0, r.otherTrainingHours) : 0) +
       (heavy ? rf.pro : 0) +
       runningVolumeAdj(r.runningKmPerWeek, k0 != null),
     rf.min,

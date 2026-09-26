@@ -54,7 +54,7 @@ These come from the expert reviews recorded in `CHANGELOG.md` and `RESEARCH.md`,
 
 | When you change… | Also update… |
 |---|---|
-| A model constant (`model-params.ts`, `fallback-params.ts`, `split-tables.ts`) | `RESEARCH.md` (source/rationale); run `realism.spec.ts` with several seeds; `CHANGELOG.md` |
+| A model constant or model behaviour (`model-params.ts`, `fallback-params.ts`, `split-tables.ts`, `predictor.ts`, `resolve.ts`) | `RESEARCH.md` (source/rationale); **the in-app "How the prediction works" section (`components/methodology.html`)**, which must always describe the current model; run `realism.spec.ts` with several seeds; `CHANGELOG.md` |
 | `AthleteProfile` (`athlete.ts`) | `defaultAthlete()`, the `numeric` list in `migrateAthlete()`, `FALLBACK.ranges`, `resolve.ts` cascade/`sources`/`quality`, `athlete-form.html/.ts`, `insights.ts` (`realisticGains`/`UNKNOWN_HOW`), tests, `components/methodology.html`, `docs/TUTORIAL.md` |
 | A new ability (`AbilityId`) | `emptyLevels()`, `ABILITY_IDS`, `FALLBACK.abilityWeight`, `level-anchors.ts`, `ABILITY_NAMES`/`NEXT_STEP` in `athlete-form.ts`, `resolve.ts` `quality`/`sources` |
 | Divisions or loads (`divisions.ts`) | `weightForAthlete()`, `sexIsChoosable()`, `FIELD` in `split-tables.ts`, the division list in `e2e/app.spec.ts`, `README.md`, `RESEARCH.md` |
