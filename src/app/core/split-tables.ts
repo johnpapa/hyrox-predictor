@@ -154,6 +154,23 @@ export function interpolateBand(table: BandRow[], runSec: number): BandRow {
  * Singles from the scraped dataset (p10–p90 ≈ 70–112 min for Open Men ⇒ σ ≈ 0.18);
  * doubles medians from HyroxDataLab.
  */
+/**
+ * Age-group median finish relative to the division median, by HYROX 5-year age group.
+ * HyroxDataLab (~700k results): times rise ~1.5–3% per 5-year bracket after 30; at 50–54 men
+ * are ~11% and women ~10% slower than their peak group; decline accelerates after 50.
+ * The division median sits near the 30–39 groups (most entrants). Estimate; see RESEARCH.md.
+ */
+export const AGE_GROUP_FACTOR: Record<Sex, Record<string, number>> = {
+  male: {
+    '16–24': 0.99, '25–29': 0.97, '30–34': 0.97, '35–39': 0.99, '40–44': 1.02, '45–49': 1.05,
+    '50–54': 1.09, '55–59': 1.14, '60–64': 1.2, '65–69': 1.28, '70+': 1.38,
+  },
+  female: {
+    '16–24': 0.99, '25–29': 0.97, '30–34': 0.97, '35–39': 0.99, '40–44': 1.02, '45–49': 1.05,
+    '50–54': 1.08, '55–59': 1.12, '60–64': 1.18, '65–69': 1.26, '70+': 1.35,
+  },
+};
+
 /** Adaptive has no single field distribution, so it has no entry (no field position shown). */
 export const FIELD: Record<string, { medianMin: number; sigma: number }> = {
   'men-open': { medianMin: 89, sigma: 0.18 },

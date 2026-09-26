@@ -164,3 +164,20 @@ test.describe('insights: why each station differs', () => {
     await expect(panel.locator('.bar-item.open')).toHaveCount(0);
   });
 });
+
+test.describe('age group & body fat', () => {
+  test('REGRESSION: shows position within the 5-year age group next to overall', async ({ page }) => {
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('Age', { exact: true }).fill('54');
+    await expect(page.locator('app-results-board .field-pos')).toContainText('of Men 50–54');
+    await page.getByRole('link', { name: 'Simulator' }).click();
+    await expect(page.locator('app-simulator-page .pos')).toContainText('Men 50–54');
+  });
+
+  test('body fat is used for estimated strength and explained', async ({ app, page }) => {
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('Body fat (%)').fill('14');
+    await expect(app.card('Leg strength').locator('.src')).toContainText('lean mass at 14% body fat');
+    await expect(page.locator('app-insights-panel .why-all')).toContainText('Body fat 14%');
+  });
+});

@@ -1,9 +1,9 @@
-import { AbilityId, AthleteProfile } from './athlete';
+import { AbilityId, AthleteProfile, hyroxAgeGroup } from './athlete';
 import { FALLBACK } from './fallback-params';
 import { ResolvedAthlete, resolveAthlete } from './resolve';
 import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, nativeOpenDivision, weightForAthlete } from './divisions';
 import { PARAMS } from './model-params';
-import { FIELD, PRO_MULT, STATION_FLOOR, interpolateBand, tableFor } from './split-tables';
+import { AGE_GROUP_FACTOR, FIELD, PRO_MULT, STATION_FLOOR, interpolateBand, tableFor } from './split-tables';
 import { STATIONS, STATION_IDS, StationId } from './stations';
 
 // ─────────────────────────────────────────────────────────────────────────────────────
@@ -67,6 +67,8 @@ export interface Prediction {
   avgRun: number;
   /** Estimated % of the division field finishing faster than this time (null: no field data). */
   topPercent: number | null;
+  /** Singles: estimated position within the athlete's HYROX age group. */
+  ageGroup: { label: string; topPercent: number } | null;
   solos: SoloPrediction[];
   /** Doubles: share of each station taken by athlete 0. */
   doublesShares?: StationTimes;
@@ -480,11 +482,22 @@ function normCdf(z: number): number {
   return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
 }
 
-export function topPercent(divisionId: string, totalSec: number): number | null {
+export function topPercent(divisionId: string, totalSec: number, medianFactor = 1): number | null {
   const f = FIELD[divisionId];
   if (!f) return null;
-  const z = (Math.log(totalSec / 60) - Math.log(f.medianMin)) / f.sigma;
+  const z = (Math.log(totalSec / 60) - Math.log(f.medianMin * medianFactor)) / f.sigma;
   return clamp(normCdf(z) * 100, 0.1, 99.9);
+}
+
+/** Position within the athlete's HYROX 5-year age group (singles; null if age unknown). */
+export function ageGroupPosition(division: DivisionInfo, athlete: AthleteProfile | undefined, totalSec: number): { label: string; topPercent: number } | null {
+  if (division.format !== 'single' || !athlete) return null;
+  const group = hyroxAgeGroup(athlete.age);
+  if (!group) return null;
+  const factor = AGE_GROUP_FACTOR[athlete.sex][group];
+  const top = topPercent(division.id, totalSec, factor);
+  if (top == null) return null;
+  return { label: `${athlete.sex === 'male' ? 'Men' : 'Women'} ${group}`, topPercent: top };
 }
 
 export function predict(input: PredictInput): Prediction {
@@ -608,6 +621,7 @@ export function predict(input: PredictInput): Prediction {
     bestRun: Math.min(...runSecs),
     avgRun: runTotal / 8,
     topPercent: topPercent(division.id, total),
+    ageGroup: ageGroupPosition(division, athletes[0], total),
     solos,
     doublesShares,
     relayOrder,

@@ -194,3 +194,17 @@ The model now splits the first-race lap penalty into:
   - at least 4 hours a week of other training: 20%.
 
 A fit, high-volume first-timer now pays about +0.02; a low-volume first-timer about +0.05, as before. (Estimate.)
+
+## Age groups, body fat and VO₂max (Sept 2026)
+
+- **Age-group field position.** HYROX ranks by 5-year age group (16–24, 25–29 … 65–69, 70+). HyroxDataLab (about 700k
+  results) reports times rising about 1.5–3% per 5-year bracket after 30. At 50–54, men are about 11% and women about
+  10% slower than their peak group, and the decline accelerates after 50. The division median sits near the 30–39
+  groups, so the 50–54 median is about 1.09× (men) and 1.08× (women) the division median. The full table is
+  `AGE_GROUP_FACTOR` in `split-tables.ts`. (Estimate from published group averages.)
+- **Body fat.** It is redundant for running once race times are known. For estimated strength, lean mass matters: when
+  lifts are unknown, the typical strength per kilogram is scaled by (1 − body fat) / (1 − typical body fat). Typical is
+  18% for men and 25% for women. Measured lifts are unaffected. Brandt 2025 found lower body fat linked to faster
+  times (ρ = +0.67, n = 11).
+- **VO₂max and resting heart rate** stay fallbacks. With race times present they are shown as a cross-check, because
+  race times are the more direct measure and VO₂max did not predict station time in Brandt 2025 (ρ = −0.11).

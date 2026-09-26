@@ -10,7 +10,10 @@
       <div class="delta mono" [class.faster]="delta() < -0.5" [class.slower]="delta() > 0.5">
         {{ signed(delta()) }} vs prediction {{ fmt(predicted(), true) }}
       </div>
-      <div class="pos">Est. field position <strong>{{ topLabel() }}</strong></div>
+      <div class="pos">
+        Est. field position <strong>{{ topLabel() }}</strong>
+        @if (ageGroup(); as g) { · <strong>Top {{ g.topPercent < 1 ? 1 : (g.topPercent | number: '1.0-0') }}%</strong> {{ g.label }} }
+      </div>
     </div>
     <div class="sb-stats">
       <div><span class="label">Run total</span><span class="mono run">{{ fmt(runTotal()) }}</span></div>

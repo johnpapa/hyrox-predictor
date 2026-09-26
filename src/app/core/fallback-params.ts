@@ -45,7 +45,7 @@ export const FALLBACK = {
     erg500: [70, 300], erg1k: [150, 600], erg2k: [330, 1200], erg5k: [900, 2700],
     sled: [30, 15 * 60], bbj: [90, 20 * 60], farmers: [45, 10 * 60], lunges: [90, 20 * 60],
     wallBalls100: [150, 25 * 60], karen: [240, 40 * 60],
-    heightCm: [135, 225], runningKm: [0, 250], otherHours: [0, 30], vo2: [20, 90], restingHr: [30, 110], bodyweightKg: [35, 200],
+    heightCm: [135, 225], bodyFat: [4, 50], runningKm: [0, 250], otherHours: [0, 30], vo2: [20, 90], restingHr: [30, 110], bodyweightKg: [35, 200],
   },
 
   // ── Ergs ────────────────────────────────────────────────────────────────────────────
@@ -65,6 +65,11 @@ export const FALLBACK = {
    * Typical strength of a HYROX athlete when nothing is known — equal to "Solid" so that
    * "Not sure" and "Solid" mean the same. This is also the model's reference athlete.
    */
+  /**
+   * Typical HYROX body fat (%). When strength is assumed, it scales with lean mass relative to
+   * this reference: a leaner athlete of the same bodyweight carries more muscle.
+   */
+  typicalBodyFatPct: { male: 18, female: 25 } as BySex<number>,
   typicalPerBw: {
     legs: { male: 1.5, female: 1.25 },
     hinge: { male: 2.0, female: 1.25 },

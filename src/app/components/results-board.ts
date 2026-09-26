@@ -180,11 +180,14 @@ export class ResultsBoard {
     return Math.round(((p.high - p.low) / 2 / p.total) * 100);
   });
 
+  protected agPct(t: number): number {
+    return Math.max(1, Math.round(t));
+  }
+
   protected topLabel(): string {
     const t = this.p().topPercent;
     if (t == null) return 'n/a for this division';
     if (t < 1) return 'Top 1%';
-    if (t > 50) return `Top ${Math.round(t)}% · bottom ${Math.round(100 - t)}%`;
     return `Top ${Math.round(t)}%`;
   }
 }
