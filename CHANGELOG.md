@@ -30,6 +30,8 @@ All notable changes to this project are documented here. The format follows
 - **"Runs straight after stations":** most people can't answer it reliably.
 
 ### Fixed
+- **The always-visible finish time could be hidden by the iPhone keyboard.** On phones and tablets it now sits in the
+  sticky top bar (the keyboard covers the bottom of the screen). Desktop keeps the floating pill. Regression test added.
 - **Doubles could predict slower than your singles time with a strong partner.** The doubles Roxzone took the slower
   partner's full singles Roxzone. It now sits between the two partners (weighted 60/40 towards the slower) and
   allows for resting while your partner works. Regression test added.

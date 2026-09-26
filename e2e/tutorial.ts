@@ -117,7 +117,7 @@ test.describe('iPhone', () => {
     await page.getByLabel('5K', { exact: true }).evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await page.waitForTimeout(300);
     await page.screenshot({ path: out('15-iphone-form') });
-    await page.getByRole('button', { name: 'View splits' }).click();
+    await page.getByRole('region', { name: 'Predicted finish', exact: true }).getByRole('button', { name: 'Splits' }).click();
     await page.waitForTimeout(800);
     await page.screenshot({ path: out('16-iphone-results') });
     await page.getByRole('link', { name: 'Simulator' }).click();

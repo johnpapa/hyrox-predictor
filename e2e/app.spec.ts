@@ -382,17 +382,34 @@ test.describe('responsive layout', () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test('phone: summary dock jumps to the splits', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'dock is phone/tablet only');
-    const dock = page.getByRole('region', { name: 'Predicted finish summary' });
-    await expect(dock).toBeVisible();
-    await dock.getByRole('button', { name: 'View splits' }).click();
+  test('phone: the finish time in the top bar jumps to the splits', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'top-bar finish time is phone/tablet only');
+    const top = page.getByRole('region', { name: 'Predicted finish', exact: true });
+    await expect(top).toBeVisible();
+    await top.getByRole('button', { name: 'Splits' }).click();
     await expect(page.locator('app-results-board .board-head')).toBeInViewport();
+  });
+
+  test('REGRESSION: on a phone the finish time sits at the top, where the keyboard cannot cover it', async ({ page, isMobile }) => {
+    // User: "the ever-present HYROX time gets hidden by the iPhone's keyboard… put it at the top."
+    test.skip(!isMobile, 'phone only');
+    await expect(page.getByRole('region', { name: 'Predicted finish summary' })).toBeHidden(); // no bottom bar
+    const field = page.getByLabel('Max unbroken wall balls');
+    await field.scrollIntoViewIfNeeded();
+    await field.focus();
+    await field.fill('30');
+    const top = page.getByRole('region', { name: 'Predicted finish', exact: true });
+    await expect(top).toBeInViewport();
+    const box = (await top.boundingBox())!;
+    expect(box.y).toBeLessThan(160); // pinned in the top bar, not at the bottom of the screen
+    await expect(top.locator('.topdock-time')).toHaveText(/\d{2}:\d{2}:\d{2}/);
+    await expect(top.locator('app-change-chip .chip')).toBeVisible();
   });
 
   test('desktop: results stay visible beside the form', async ({ page, isMobile }) => {
     test.skip(!!isMobile, 'desktop only');
     await expect(page.getByRole('region', { name: 'Predicted finish summary' })).toBeHidden();
+    await expect(page.getByRole('region', { name: 'Predicted finish', exact: true })).toBeHidden();
     await page.getByText('How the prediction works').scrollIntoViewIfNeeded();
     await expect(page.locator('app-results-board .clock')).toBeInViewport();
   });
