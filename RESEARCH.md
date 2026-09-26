@@ -368,3 +368,30 @@ That's 10 inputs, counting the running rating. Just outside the cut:
 
 Lifts are rated in Quick because most people can't give a number quickly. The rating anchors show both a max and the
 matching working set. Quick and Detailed edit the same fields in the same units, and hidden values keep counting.
+
+## Real-result check: S9 Washington DC 2026 mixed doubles (Sept 2026)
+
+A user shared a friend pair's result from hyresult.com: both 45, second HYROX, regular gym and DECA athletes, good
+runners (the woman the stronger runner).
+
+| | Actual | Rank | Model |
+|---|---|---|---|
+| Total | 1:19:14 | 670 / 2,814 | 1:19:07 |
+| Runs | 44:12 | 827 | 44:17 |
+| Stations | 27:41 | 525 | 27:52 |
+| Roxzone | 7:21 | 795 | 6:59 |
+
+The model column uses a 22:55 / 23:25 5K pair, chosen so the runs match, with typical ("Solid") station ability for
+that running level. With those inputs the model lands within 7 s of the finish time.
+
+With every station rated "Strong" it predicts 1:16:01, 3 minutes fast. That's a useful check on self-ratings: they
+are strong at the stations compared with the whole field (top 19%), but about typical for athletes who run as fast
+as they do. The strength anchors (× bodyweight and working sets) help people rate themselves honestly.
+
+**Field position.** The model placed 1:19:14 in the top 34%; the actual rank is top 23.8%. The 2026 field is slower
+than the older data behind `FIELD`. With the same spread (σ = 0.18), the mixed doubles median becomes ≈ 90 min, a
+factor of 1.055. The same factor is applied to men's and women's doubles so the three stay in their usual order. Singles
+are unchanged until there's a comparable anchor.
+
+(hyresult's "top X%" labels don't match rank ÷ field size, e.g. Roxzone 795th of 2,814 is labelled top 56.6%, so
+ranks are used.)
