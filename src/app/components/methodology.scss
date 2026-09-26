@@ -1,0 +1,18 @@
+.method { padding: 0; }
+summary {
+  list-style: none; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 18px; min-height: 52px;
+  &::-webkit-details-marker { display: none; }
+  .label { color: var(--text); font-size: 0.95rem; }
+  svg { width: 18px; height: 18px; color: var(--accent); transition: transform 0.2s; }
+}
+details[open] summary svg { transform: rotate(180deg); }
+.body {
+  padding: 0 18px 18px; color: var(--text-dim); font-size: 0.9rem;
+  h3 { color: var(--text); font-size: 1.05rem; margin: 18px 0 6px; &:first-child { margin-top: 0; } }
+  p { margin: 0 0 8px; }
+  ul { margin: 0; padding-left: 18px; li { margin-bottom: 6px; } }
+  b { color: var(--text); font-weight: 600; }
+  .fine { font-size: 0.75rem; color: var(--text-faint); margin-top: 14px; }
+}

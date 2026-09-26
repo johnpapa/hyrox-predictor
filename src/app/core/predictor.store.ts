@@ -1,0 +1,185 @@
+import { Injectable, computed, effect, signal } from '@angular/core';
+import { AbilityId, AthleteProfile, Level, Lift, LiftId, defaultAthlete, migrateAthlete } from './athlete';
+import { DIVISIONS, Sex, findDivision } from './divisions';
+import { predict } from './predictor';
+import { StationId } from './stations';
+
+export type Units = 'kg' | 'lb';
+
+interface Persisted {
+  v: 1;
+  divisionId: string;
+  athletes: AthleteProfile[];
+  units: Units;
+  doublesShares: Partial<Record<StationId, number | null>>;
+  relayOrder: number[] | null;
+  overrides: Partial<Record<StationId, number | null>>;
+}
+
+/**
+ * Inputs are only persisted when the user opts in ("Save my inputs on this device").
+ * They go to this browser's localStorage, never to a server and never in a cookie, so
+ * nothing is sent with network requests. Turning the option off deletes the saved copy.
+ */
+const STORAGE_KEY = 'hyrox-predictor:saved';
+/** Pre-opt-in versions auto-saved here; removed on startup. */
+const LEGACY_KEY = 'hyrox-predictor:v1';
+export const LB_PER_KG = 2.20462;
+
+function storage(): Storage | null {
+  try {
+    return typeof localStorage === 'undefined' ? null : localStorage;
+  } catch {
+    return null; // blocked by browser settings
+  }
+}
+
+function load(): Persisted | null {
+  const store = storage();
+  try {
+    store?.removeItem(LEGACY_KEY);
+    const raw = store?.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Persisted;
+    if (p?.v !== 1 || !Array.isArray(p.athletes) || p.athletes.length < 4) return null;
+    // Upgrade older saves and fill in newly added fields.
+    p.athletes = p.athletes.map((a, i) => migrateAthlete(a, i));
+    return p;
+  } catch {
+    return null;
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class PredictorStore {
+  private readonly saved = load();
+
+  /** Opt-in persistence; true only if the user previously chose to save. */
+  readonly remember = signal(this.saved != null);
+  readonly storageAvailable = storage() != null;
+
+  readonly divisionId = signal(this.saved?.divisionId ?? DIVISIONS[0].id);
+  readonly athletes = signal<AthleteProfile[]>(
+    this.saved?.athletes ?? [defaultAthlete('male', 0), defaultAthlete('male', 1), defaultAthlete('female', 2), defaultAthlete('female', 3)],
+  );
+  readonly units = signal<Units>(this.saved?.units ?? 'kg');
+  readonly doublesShares = signal<Partial<Record<StationId, number | null>>>(this.saved?.doublesShares ?? {});
+  readonly relayOrder = signal<number[] | null>(this.saved?.relayOrder ?? null);
+  readonly overrides = signal<Partial<Record<StationId, number | null>>>(this.saved?.overrides ?? {});
+  readonly activeAthlete = signal(0);
+
+  readonly division = computed(() => findDivision(this.divisionId()));
+  readonly teamAthletes = computed(() => this.athletes().slice(0, this.division().teamSize));
+
+  readonly prediction = computed(() =>
+    predict({
+      divisionId: this.divisionId(),
+      athletes: this.athletes(),
+      doublesShares: this.doublesShares(),
+      relayOrder: this.relayOrder(),
+      overrides: this.overrides(),
+    }),
+  );
+
+  constructor() {
+    effect(() => {
+      const store = storage();
+      if (!store) return;
+      if (!this.remember()) {
+        store.removeItem(STORAGE_KEY);
+        return;
+      }
+      const state: Persisted = {
+        v: 1,
+        divisionId: this.divisionId(),
+        athletes: this.athletes(),
+        units: this.units(),
+        doublesShares: this.doublesShares(),
+        relayOrder: this.relayOrder(),
+        overrides: this.overrides(),
+      };
+      try {
+        store.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        /* quota exceeded / private mode — the app still works without saving */
+      }
+    });
+  }
+
+  /** Whether athlete sex is fixed by the division (e.g. Men's Doubles) rather than chosen. */
+  readonly sexLocked = computed(() => {
+    const d = this.division();
+    return d.weights !== 'mixedOpen' && d.id !== 'corporate-relay' && d.id !== 'adaptive';
+  });
+
+  setDivision(id: string): void {
+    const d = findDivision(id);
+    this.divisionId.set(id);
+    this.relayOrder.set(null);
+    this.doublesShares.set({});
+    if (this.activeAthlete() >= d.teamSize) this.activeAthlete.set(0);
+    const team = this.athletes().slice(0, d.teamSize);
+    const alreadyMixed = team.some((a) => a.sex !== team[0].sex);
+    const applyDefaults = this.sexLocked() || (d.teamSize > 1 && !alreadyMixed);
+    if (!applyDefaults) return;
+    // Align athlete sexes with the division, keeping everything else the user entered.
+    this.athletes.update((list) =>
+      list.map((a, i) => {
+        const want: Sex | undefined = d.defaultSexes[i];
+        return !want || a.sex === want ? a : { ...a, sex: want };
+      }),
+    );
+  }
+
+  updateAthlete(index: number, patch: Partial<AthleteProfile>): void {
+    this.athletes.update((list) => list.map((a, i) => (i === index ? { ...a, ...patch } : a)));
+  }
+
+  setLevel(index: number, key: AbilityId, value: Level | null): void {
+    this.athletes.update((list) =>
+      list.map((a, i) => (i === index ? { ...a, levels: { ...a.levels, [key]: value } } : a)),
+    );
+  }
+
+  setLift(index: number, id: LiftId, patch: Partial<Lift>): void {
+    this.athletes.update((list) =>
+      list.map((a, i) => (i === index ? { ...a, lifts: { ...a.lifts, [id]: { ...a.lifts[id], ...patch } } } : a)),
+    );
+  }
+
+  setShare(id: StationId, share: number | null): void {
+    this.doublesShares.update((s) => ({ ...s, [id]: share }));
+  }
+
+  setOverride(id: StationId, sec: number | null): void {
+    this.overrides.update((o) => ({ ...o, [id]: sec }));
+  }
+
+  setRelayLeg(leg: number, athlete: number): void {
+    const current = this.relayOrder() ?? this.prediction().relayOrder ?? [0, 1, 2, 3];
+    const next = [...current];
+    const other = next.indexOf(athlete);
+    if (other >= 0) next[other] = next[leg];
+    next[leg] = athlete;
+    this.relayOrder.set(next);
+  }
+
+  reset(): void {
+    this.athletes.set([defaultAthlete('male', 0), defaultAthlete('male', 1), defaultAthlete('female', 2), defaultAthlete('female', 3)]);
+    this.doublesShares.set({});
+    this.relayOrder.set(null);
+    this.overrides.set({});
+    this.setDivision(this.divisionId());
+  }
+
+  // ── Unit helpers ──────────────────────────────────────────────────────────────────
+  toDisplayWeight(kg: number | null): number | null {
+    if (kg == null) return null;
+    return this.units() === 'kg' ? Math.round(kg * 10) / 10 : Math.round(kg * LB_PER_KG);
+  }
+
+  fromDisplayWeight(v: number | null): number | null {
+    if (v == null || !isFinite(v) || v <= 0) return null;
+    return this.units() === 'kg' ? v : v / LB_PER_KG;
+  }
+}

@@ -1,0 +1,60 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><path d="M4 4h6l6 9 6-9h6l-9 12 9 12h-6l-6-9-6 9H4l9-12z" fill="currentColor" /></svg>
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">HYROX <em>//</em> Predictor</span>
+        <span class="brand-sub">Finish time simulator</span>
+      </span>
+    </div>
+    <button type="button" class="btn ghost" (click)="reset()">Reset</button>
+  </div>
+</header>
+
+<main class="layout">
+  <div class="config">
+    <section class="hero">
+      <h1>Know your <span>splits</span> before the start line.</h1>
+      <p>
+        Pick your division and enter your 5K plus whatever benchmarks you know. You get a station-by-station race plan with runs,
+        stations and Roxzone, laid out like the official results page.
+      </p>
+    </section>
+    <app-division-picker />
+    <app-athlete-form />
+    <app-team-tactics />
+    <section class="panel privacy">
+      <label class="save">
+        <input type="checkbox" [checked]="store.remember()" [disabled]="!store.storageAvailable"
+          (change)="store.remember.set($any($event.target).checked)" />
+        <span>
+          <strong>Save my inputs on this device</strong>
+          <small>
+            Off by default. When on, your inputs stay in this browser only (local storage, not cookies) so the predictor is
+            pre-filled next time. Nothing is ever sent to a server. Untick to delete the saved copy.
+          </small>
+        </span>
+      </label>
+    </section>
+    <app-methodology />
+  </div>
+
+  <aside class="results" #results>
+    <app-results-board />
+  </aside>
+</main>
+
+<footer class="foot">
+  Unofficial fan-made tool. Not affiliated with or endorsed by HYROX. Predictions are estimates. No accounts, no tracking, and no data leaves your device.
+</footer>
+
+@let pr = store.prediction();
+<div class="dock" role="region" aria-label="Predicted finish summary">
+  <div>
+    <span class="label">{{ pr.division.name }}</span>
+    <span class="mono dock-time">{{ fmt(pr.total, true) }}</span>
+  </div>
+  <button type="button" class="btn primary" (click)="scrollToResults()">View splits</button>
+</div>

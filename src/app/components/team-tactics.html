@@ -1,0 +1,60 @@
+@if (format() === 'doubles') {
+  <section class="panel block">
+    <header class="block-head">
+      <span class="step">03</span>
+      <h2>Work split</h2>
+      <button type="button" class="btn small" (click)="autoAll()">Auto all</button>
+    </header>
+    <p class="sub">
+      You run every kilometre together and split each station however you like. "Auto" picks the split that
+      minimises station time, accounting for how much faster each of you can go when you only do part of the work.
+    </p>
+    <div class="split-rows">
+      @for (r of doublesRows(); track r.station.id) {
+        <div class="srow">
+          <div class="srow-head">
+            <span class="sname">{{ r.station.name }}</span>
+            <span class="mono stime">{{ fmt(r.sec) }}</span>
+            <button type="button" class="auto" [class.on]="r.auto" (click)="store.setShare(r.station.id, r.auto ? r.share : null)"
+              [attr.aria-pressed]="r.auto">Auto</button>
+          </div>
+          <div class="slider-line">
+            <span class="who a">{{ names()[0] }} <b class="mono">{{ (r.share * 100).toFixed(0) }}%</b></span>
+            <input type="range" min="0" max="100" step="5" [value]="r.share * 100"
+              [attr.aria-label]="r.station.name + ' share for ' + names()[0]"
+              (input)="setShare(r.station.id, $any($event.target).value)" />
+            <span class="who b"><b class="mono">{{ ((1 - r.share) * 100).toFixed(0) }}%</b> {{ names()[1] }}</span>
+          </div>
+          <div class="solo">Solo: {{ names()[0] }} {{ fmt(r.soloA) }} · {{ names()[1] }} {{ fmt(r.soloB) }}</div>
+        </div>
+      }
+    </div>
+  </section>
+}
+
+@if (format() === 'relay') {
+  <section class="panel block">
+    <header class="block-head">
+      <span class="step">03</span>
+      <h2>Relay order</h2>
+      <button type="button" class="btn small" (click)="store.relayOrder.set(null)">Auto (fastest)</button>
+    </header>
+    <p class="sub">
+      Each athlete runs 2 × 1 km and completes 2 stations, then tags the next teammate.
+      @if (store.relayOrder() == null) { <strong>Showing the fastest order.</strong> }
+    </p>
+    <div class="legs">
+      @for (l of relayLegs(); track l.leg) {
+        <label class="leg field">
+          <span class="label">Leg {{ l.leg + 1 }} · {{ l.runs }}</span>
+          <span class="leg-st">{{ l.label }}</span>
+          <select [value]="l.athlete" (change)="store.setRelayLeg(l.leg, +$any($event.target).value)">
+            @for (n of names(); track $index) {
+              <option [value]="$index" [selected]="$index === l.athlete">{{ n }}</option>
+            }
+          </select>
+        </label>
+      }
+    </div>
+  </section>
+}
