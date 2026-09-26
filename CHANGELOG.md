@@ -30,6 +30,9 @@ All notable changes to this project are documented here. The format follows
 - **"Runs straight after stations":** most people can't answer it reliably.
 
 ### Fixed
+- **Doubles field positions were too harsh.** They're recalibrated from a real S9 (2026) Washington DC mixed doubles result:
+  1:19:14 placed 670th of 2,814 (top 24%), where the app said top 34%. With plausible inputs, that pair's prediction
+  is within 7 s of their time; both are now regression tests.
 - **The always-visible finish time could be hidden by the iPhone keyboard.** On phones and tablets it now sits in the
   sticky top bar (the keyboard covers the bottom of the screen). Desktop keeps the floating pill. Regression test added.
 - **Doubles could predict slower than your singles time with a strong partner.** The doubles Roxzone took the slower

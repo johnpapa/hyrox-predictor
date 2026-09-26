@@ -179,9 +179,11 @@ export const FIELD: Record<string, { medianMin: number; sigma: number }> = {
   'women-pro': { medianMin: 85.6, sigma: 0.17 },
   'men-elite': { medianMin: 58.5, sigma: 0.05 },
   'women-elite': { medianMin: 64.5, sigma: 0.05 },
-  'men-doubles': { medianMin: 79.4, sigma: 0.18 },
-  'women-doubles': { medianMin: 88.7, sigma: 0.18 },
-  'mixed-doubles': { medianMin: 85.4, sigma: 0.18 },
+  // Doubles: × 1.055 from the S9 (2026) Washington DC mixed doubles field: 1:19:14 placed 670th of 2,814
+  // (23.8% faster), which puts the median at ≈ 90 min. Applied to all doubles to keep their order.
+  'men-doubles': { medianMin: 83.8, sigma: 0.18 },
+  'women-doubles': { medianMin: 93.6, sigma: 0.18 },
+  'mixed-doubles': { medianMin: 90.1, sigma: 0.18 },
   'men-pro-doubles': { medianMin: 72, sigma: 0.15 },
   'women-pro-doubles': { medianMin: 80, sigma: 0.15 },
   'men-relay': { medianMin: 68, sigma: 0.15 },
