@@ -14,17 +14,45 @@
   <p class="headline">{{ i.headline }}</p>
 
   <h3>Vs. athletes who run like you</h3>
-  <p class="sub">Each station compared with the typical split of athletes at your running pace, on the same weights.</p>
+  <p class="sub">
+    "Athletes who run like you" are typical finishers in race results with your lap pace. Each bar is how far your
+    inputs move you from them on that station. <strong>Tap a station to see why.</strong>
+  </p>
+  @if (i.explanation.overall.length) {
+    <div class="why-all">
+      <span class="label">Main reasons overall</span>
+      <ul>
+        @for (r of i.explanation.overall.slice(0, 5); track r.id) {
+          <li><span>{{ r.label }}</span><b class="mono" [class.slow]="r.sec > 0" [class.fast]="r.sec < 0">{{ signed(r.sec) }}</b></li>
+        }
+      </ul>
+    </div>
+  }
   <div class="bars" role="list">
     @for (b of bars(); track b.id) {
-      <div class="bar-row" role="listitem" [attr.aria-label]="b.name + ' ' + signed(b.gap) + ' versus typical'">
-        <span class="bn">{{ b.name }}</span>
-        <span class="track">
-          <span class="mid"></span>
-          <span class="fill" [class.slow]="b.gap > 0" [class.fast]="b.gap < 0"
-            [style.width.%]="b.pct" [style.left.%]="b.gap < 0 ? 50 - b.pct : 50"></span>
-        </span>
-        <span class="bv mono" [class.slow]="b.gap > 5" [class.fast]="b.gap < -5">{{ signed(b.gap) }}</span>
+      @let reasons = i.explanation.byArea[b.id];
+      <div role="listitem" class="bar-item" [class.open]="open().has(b.id)">
+        <button type="button" class="bar-row" [attr.aria-expanded]="open().has(b.id)" [disabled]="!reasons.length"
+          [attr.aria-label]="b.name + ' ' + signed(b.gap) + ' versus typical' + (reasons.length ? ', show why' : '')"
+          (click)="toggle(b.id)">
+          <span class="bn">{{ b.name }}</span>
+          <span class="track">
+            <span class="mid"></span>
+            <span class="fill" [class.slow]="b.gap > 0" [class.fast]="b.gap < 0"
+              [style.width.%]="b.pct" [style.left.%]="b.gap < 0 ? 50 - b.pct : 50"></span>
+          </span>
+          <span class="bv mono" [class.slow]="b.gap > 5" [class.fast]="b.gap < -5">{{ signed(b.gap) }}</span>
+        </button>
+        @if (open().has(b.id)) {
+          <ul class="why">
+            @for (r of reasons; track r.id) {
+              <li><span>{{ r.label }}</span><b class="mono" [class.slow]="r.sec > 0" [class.fast]="r.sec < 0">{{ signed(r.sec) }}</b></li>
+            }
+            @if (abs(i.explanation.unexplained[b.id]) >= 5) {
+              <li class="dim"><span>Combined effects of several inputs</span><b class="mono">{{ signed(i.explanation.unexplained[b.id]) }}</b></li>
+            }
+          </ul>
+        }
       </div>
     }
   </div>

@@ -148,3 +148,19 @@ test.describe('training volume inputs', () => {
     await expect(page.getByText('Gym, HYROX classes, erg or sled work')).toBeVisible();
   });
 });
+
+test.describe('insights: why each station differs', () => {
+  test('tap a station to see the reasons; overall reasons are summarised', async ({ page }) => {
+    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('Bodyweight (kg)').fill('73.5');
+    await page.getByLabel('Max unbroken wall balls').fill('20');
+    const panel = page.locator('app-insights-panel');
+    await expect(panel.locator('.why-all')).toContainText('Wall-ball capacity (20 unbroken');
+    const sled = panel.getByRole('button', { name: /Sled Push .* show why/ });
+    await sled.click();
+    await expect(sled).toHaveAttribute('aria-expanded', 'true');
+    await expect(panel.locator('.bar-item.open .why')).toContainText('Lighter bodyweight');
+    await sled.click();
+    await expect(panel.locator('.bar-item.open')).toHaveCount(0);
+  });
+});

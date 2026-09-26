@@ -14,7 +14,21 @@ h3 { font-size: 1rem; font-weight: 700; margin: 18px 0 4px; color: var(--text); 
 }
 
 .bars { display: flex; flex-direction: column; gap: 6px; }
-.bar-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 64px; gap: 8px; align-items: center; }
+.bar-row {
+  display: grid; grid-template-columns: 120px minmax(0, 1fr) 64px; gap: 8px; align-items: center;
+  width: 100%; min-height: 32px; padding: 2px 0; background: transparent; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  &:disabled { cursor: default; }
+  &:not(:disabled) .bn::after { content: ' ›'; color: var(--text-faint); }
+}
+.bar-item.open .bn::after { content: ' ⌄' !important; }
+.why, .why-all ul { list-style: none; margin: 4px 0 8px; padding: 6px 10px; background: var(--bg); border-left: 2px solid var(--line-strong); }
+.why li, .why-all li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; color: var(--text-dim); padding: 2px 0; }
+.why li b, .why-all li b { white-space: nowrap; color: var(--text-dim); }
+.why .slow, .why-all .slow { color: var(--warn); }
+.why .fast, .why-all .fast { color: var(--good); }
+.why .dim { color: var(--text-faint); }
+.why-all { margin: 4px 0 12px; }
+.why-all ul { border-left-color: var(--accent); margin-top: 6px; }
 .bn { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track { position: relative; height: 12px; background: var(--bg); border-radius: 2px; }
 .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line-strong); }
@@ -43,7 +57,7 @@ h3 { font-size: 1rem; font-weight: 700; margin: 18px 0 4px; color: var(--text); 
 
 @media (max-width: 480px) {
   .insights { padding: 14px; }
-  .bar-row { grid-template-columns: 96px minmax(0, 1fr) 56px; }
+  .bar-row { grid-template-columns: 104px minmax(0, 1fr) 56px; }
 }
 
 .hint { margin: 10px 0 0; padding: 8px 10px; border-left: 3px solid var(--run); background: var(--bg); font-size: 0.8rem; color: var(--text-dim); }

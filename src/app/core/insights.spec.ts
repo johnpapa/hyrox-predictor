@@ -146,3 +146,43 @@ describe('realistic, honest suggestions (user feedback)', () => {
     expect(i.tips.map((t) => t.area)).toContain('run');
   });
 });
+
+describe('why each station differs (user question: "why am I worse than athletes who run like me?")', () => {
+  const masters = () =>
+    ath('male', {
+      fiveKSec: 21 * 60 + 8, marathonSec: 3 * 3600 + 24 * 60, bodyweightKg: 73.5, age: 54, heightCm: 170, experience: 'first',
+      runningKmPerWeek: 64, otherTrainingHours: 5.5, wallBallsUnbroken: 20, lv: { transitions: 4 },
+    });
+
+  it('explains each gap by the inputs that cause it, and the reasons add up', () => {
+    const input: PredictInput = { divisionId: 'men-open', athletes: [masters()] };
+    const p = predict(input);
+    const i = computeInsights(input, p);
+    const s = p.solos[0];
+    for (const id of ['sledPush', 'sledPull', 'wallBalls', 'sandbagLunges', 'skierg'] as const) {
+      const gap = s.stations[id] - s.typical[id];
+      const sum = i.explanation.byArea[id].reduce((a, r) => a + r.sec, 0);
+      expect(Math.abs(gap - sum)).toBeLessThan(8);
+    }
+    expect(i.explanation.byArea.wallBalls[0].label).toContain('20 unbroken');
+    expect(i.explanation.byArea.sledPush[0].label).toMatch(/Lighter bodyweight/);
+    expect(i.explanation.overall[0].id).toBe('wallBalls');
+  });
+
+  it('REGRESSION: a Roxzone rating is attributed only to the Roxzone, not to the stations', () => {
+    const input: PredictInput = { divisionId: 'men-open', athletes: [masters()] };
+    const i = computeInsights(input, predict(input));
+    for (const id of ['sledPush', 'sledPull', 'sandbagLunges'] as const) {
+      expect(i.explanation.byArea[id].some((r) => r.id === 'transitions')).toBe(false);
+    }
+    const rox = i.explanation.byArea.roxzone.find((r) => r.id === 'transitions')!;
+    expect(rox.sec).toBeLessThan(0); // Strong ⇒ faster
+    expect(Math.abs(i.explanation.unexplained.roxzone)).toBeLessThan(5);
+  });
+
+  it('a typical athlete has nothing to explain', () => {
+    const input: PredictInput = { divisionId: 'men-open', athletes: [ath('male')] };
+    const i = computeInsights(input, predict(input));
+    expect(i.explanation.overall).toEqual([]);
+  });
+});
