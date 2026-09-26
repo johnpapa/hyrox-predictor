@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { PredictorStore } from '../core/predictor.store';
+import { FoldState } from '../core/fold';
+import { FoldToggle } from './fold-toggle';
 import { suggestDoublesShares } from '../core/predictor';
 import { STATIONS, StationId } from '../core/stations';
 import { formatTime } from '../core/time';
@@ -7,11 +9,13 @@ import { formatTime } from '../core/time';
 @Component({
   selector: 'app-team-tactics',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FoldToggle],
   templateUrl: './team-tactics.html',
   styleUrl: './team-tactics.scss',
 })
 export class TeamTactics {
   protected readonly store = inject(PredictorStore);
+  protected readonly fold = inject(FoldState);
   protected readonly fmt = formatTime;
   protected readonly stations = STATIONS;
   protected readonly format = computed(() => this.store.division().format);

@@ -1,3 +1,6 @@
+/* The hidden attribute always wins, even over display: grid/flex (collapsible sections rely on it). */
+[hidden] { display: none !important; }
+
 /* Global theme: dark "race simulator" look inspired by HYROX results pages */
 :root {
   --bg: #0a0a0a;
