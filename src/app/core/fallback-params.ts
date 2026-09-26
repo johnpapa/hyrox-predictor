@@ -13,6 +13,16 @@ export const FALLBACK = {
 
   /** Station-time multiplier from a self-level. Solid = typical for your running level. */
   levelMult: [1.16, 1.07, 1.0, 0.94, 0.88] as ByLevel,
+  /**
+   * How far each self-rating moves its station, relative to `levelMult`. From the split tables:
+   * fastest-to-slowest-band ratio of each station's median, as ln(ratio) ÷ the station average.
+   * Ergs barely separate athletes (×1.25 across bands), burpee broad jumps, lunges, wall balls
+   * and the Roxzone separate them most (×2.0–2.6). See RESEARCH.md "Input weighting review".
+   */
+  levelSpread: {
+    run: 1, legs: 1, hinge: 1, erg: 0.5, sled: 1.0, grip: 1.0,
+    burpees: 1.5, lunges: 1.35, wallBalls: 1.35, transitions: 1.35,
+  } as Record<'run' | 'legs' | 'hinge' | 'erg' | 'sled' | 'grip' | 'burpees' | 'lunges' | 'wallBalls' | 'transitions', number>,
 
   refBodyweightKg: { male: 82, female: 65 } as BySex<number>,
 
@@ -38,6 +48,12 @@ export const FALLBACK = {
   uth: { factor: 15.3, hrMaxBase: 208, hrMaxPerYear: 0.7, defaultAge: 35 },
   /** Wearable VO₂max estimates run high vs race-derived VDOT; subtract this many points. */
   watchVo2Offset: 4,
+  /**
+   * With race times, VO₂max still gets a small say (races can be old or not all-out), in log-time
+   * space against the races' combined weight of 1, and the shift is capped. Watch estimates are
+   * largely derived from your running already, so they count less than a lab test.
+   */
+  vo2WithRaces: { weight: { lab: 0.2, watch: 0.08 }, maxShift: { lab: 0.04, watch: 0.015 } },
   /** Plausible input ranges (seconds unless noted); values outside are ignored with a warning. */
   ranges: {
     fiveK: [12 * 60, 90 * 60], tenK: [26 * 60, 3 * 3600], half: [58 * 60, 4 * 3600],
@@ -100,7 +116,6 @@ export const FALLBACK = {
 
   // ── Conditioning ────────────────────────────────────────────────────────────────────
   burpees1MinByLevel: { male: [15, 20, 25, 30, 35], female: [12, 17, 22, 27, 32] } as BySex<ByLevel>,
-  wallBallsUnbrokenByLevel: { male: [15, 30, 50, 75, 100], female: [15, 30, 50, 75, 100] } as BySex<ByLevel>,
   /** 100 wall balls ≈ 0.62 × "Karen" (150 reps) time. */
   wallBalls100FromKaren: 0.62,
 

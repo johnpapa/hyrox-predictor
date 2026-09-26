@@ -53,6 +53,12 @@ export class AthleteForm {
   protected readonly unit = computed(() => this.store.units());
   protected readonly ranges = FALLBACK.ranges;
 
+  /** VO₂max and resting HR only estimate running when there's no race time. */
+  protected readonly hasRace = computed(() => {
+    const a = this.a();
+    return [a.fiveKSec, a.tenKSec, a.halfMarathonSec, a.marathonSec].some((x) => x != null);
+  });
+
   /** Body fat only matters while strength is estimated; say what it is doing right now. */
   protected readonly bodyFatHint = computed(() => {
     const q = this.r().quality;
@@ -63,6 +69,13 @@ export class AthleteForm {
     const ref = FALLBACK.typicalBodyFatPct[this.a().sex];
     return `Estimated strength ${pct >= 0 ? '+' : '−'}${Math.abs(pct)}% vs a typical ${ref}% athlete of your weight`;
   });
+
+  protected readonly compromisedOptions = [
+    { id: '', label: 'Not sure' },
+    { id: 'never', label: 'Rarely or never' },
+    { id: 'sometimes', label: 'Sometimes (1–3× a month)' },
+    { id: 'weekly', label: 'Weekly or more' },
+  ];
 
   protected readonly experiences: { id: Experience; label: string }[] = [
     { id: 'unknown', label: 'Not sure' },
@@ -77,7 +90,7 @@ export class AthleteForm {
     const a = this.a();
     const bw = this.r().bodyweightKg;
     const out = {} as Record<AbilityId, string[]>;
-    for (const id of Object.keys(ABILITY_NAMES) as AbilityId[]) out[id] = levelAnchors(id, a.sex, bw, this.unit());
+    for (const id of Object.keys(ABILITY_NAMES) as AbilityId[]) out[id] = levelAnchors(id, a.sex, bw, this.unit(), this.solo().typicalWallBallsUnbroken);
     return out;
   });
 

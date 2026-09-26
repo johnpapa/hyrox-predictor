@@ -522,9 +522,24 @@ describe('age groups, body fat and VO₂max (user question)', () => {
     expect(st(run('men-open', masters({ bodyFatPct: 12, lifts })), 'sledPush')).toBeCloseTo(st(run('men-open', masters({ bodyFatPct: 28, lifts })), 'sledPush'), 5);
   });
 
-  it('VO₂max is cross-checked against race times but the races are used', () => {
+  it('REGRESSION: with race times, VO₂max still has a small, capped say; resting HR has none', () => {
+    // User: "Is it really true that VO2 max and resting heart rate have no effect if you include race times?"
     const p = run('men-open', masters());
-    expect(p.solos[0].resolved.sources.run).toContain('VO₂max 53 consistent with your races');
-    expect(run('men-open', masters({ vo2max: 70 })).total).toBeCloseTo(p.total, 5);
+    expect(p.solos[0].resolved.sources.run).toContain('watch VO₂max 53 consistent with your races');
+    const none = run('men-open', masters({ vo2max: null })).total;
+    const high = run('men-open', masters({ vo2max: 70 })).total;
+    const low = run('men-open', masters({ vo2max: 35 })).total;
+    expect(high).toBeLessThan(none);
+    expect(low).toBeGreaterThan(none);
+    // Races still dominate: ±1.5% on running for a watch (±4% lab); pace also sets station baselines,
+    // so the finish moves up to ~2% each way for a watch estimate.
+    expect((high - none) / none).toBeGreaterThan(-0.02);
+    expect((low - none) / none).toBeLessThan(0.02);
+    const labHigh = run('men-open', masters({ vo2max: 70, vo2maxSource: 'lab' })).total;
+    expect(labHigh).toBeLessThan(high);
+    expect((none - labHigh) / none).toBeLessThan(0.05);
+    // Resting HR: too rough next to a race, so no effect.
+    expect(run('men-open', masters({ restingHr: 40 })).total).toBeCloseTo(p.total, 5);
+    expect(run('men-open', masters({ restingHr: 80 })).total).toBeCloseTo(p.total, 5);
   });
 });

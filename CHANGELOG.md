@@ -7,6 +7,19 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Doubles hand-over tips** in Insights: how often to switch on each station and each partner's share of the work.
+- **Runs straight after stations** (compromised-running practice): a new input that adjusts lap pace and shrinks the
+  first-race penalty.
+- **VO₂max keeps a small, capped weight** even with race times (±1.5% watch, ±4% lab). Resting HR is still unused next
+  to a race (too rough), and the field says so.
+
+### Changed
+- **Input weighting review:** self-ratings now move each station by how much it varies in real results (ergs less,
+  wall balls, lunges, burpees and transitions more). Wall-ball level descriptions are relative to your running level,
+  so they match the model. Experience bonuses for 3+ races and competitive athletes were reduced to race craft only.
+  Details and a sensitivity table are in RESEARCH.md.
+
+### Added
 - **Working-set lifts:** enter your usual set (weight × reps) and **How hard was the set?** (to failure, 1–2, 3–4 or 5+
   reps left). Reps in reserve are added before the Epley 1RM estimate (capped at 15 reps to failure). Realistic
   strength gains are shown as working sets too.
