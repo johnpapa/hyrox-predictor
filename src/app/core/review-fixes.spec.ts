@@ -81,6 +81,17 @@ describe('input robustness', () => {
     expect(resolveAthlete(now).sources.hinge).toContain('100 kg / 220 lb × 5 (3–4 left)');
   });
 
+  it('REGRESSION: out-of-range entries without their own check are ignored, matching the inline message', () => {
+    const base = ath('male');
+    const t = (p: Partial<typeof base>) => predict({ divisionId: 'men-open', athletes: [{ ...base, ...p }] }).total;
+    expect(t({ age: 150 })).toBe(t({ age: null }));
+    expect(t({ wallBallsUnbroken: 900 })).toBe(t({ wallBallsUnbroken: null }));
+    expect(t({ deadHangSec: 5000 })).toBe(t({ deadHangSec: null }));
+    expect(t({ burpees1Min: 200 })).toBe(t({ burpees1Min: null }));
+    expect(t({ lifts: { ...base.lifts, deadlift: { kg: 900, reps: 1, rir: 0 } } })).toBe(t({}));
+    expect(t({ age: 54 })).not.toBe(t({ age: null }));
+  });
+
   it('a sled self-rating only adjusts technique, not strength', () => {
     const r = resolveAthlete(ath('male', { levels: { ...defaultAthlete('male').levels, sled: 5 } }));
     expect(r.squat.quality).toBe('assumed');

@@ -76,6 +76,9 @@ npm run docs:screenshots   # regenerates docs/tutorial/*.png (Playwright "tutori
 - **Insights compare with "athletes like you"** (`peerProfile`): same build, age, experience, race times and training
   volume, typical on trainable abilities. New fixed traits belong in `peerProfile` and `PROFILE_FACTORS`; new trainable
   inputs belong in `FACTORS` (`core/explain.ts`) and must be cleared by `peerProfile`.
+- **Inputs:** numbers use `app-number-input`, times use `app-time-input`. Both have −/+ steppers, arrow keys and inline
+  range checks. Give every new field a `range` (from `FALLBACK.ranges`), a `step` and a `start`. Any range the UI
+  shows must also be enforced in the model (`resolve.ts` `ok()` or `sanitizeRanges()`).
 - **Every model number is sourced** in `RESEARCH.md`. Estimates are labelled as estimates.
 - **The in-app "How the prediction works" section** (`components/methodology.html`) is user-facing documentation of the
   model. Update it in the same change whenever model behaviour changes.

@@ -1,4 +1,5 @@
 import { Sex } from './divisions';
+import { FALLBACK } from './fallback-params';
 
 /** Self-assessed level: 1 Weak · 2 Fair · 3 Solid · 4 Strong · 5 Elite. `null` = not sure. */
 export type Level = 1 | 2 | 3 | 4 | 5;
@@ -6,9 +7,6 @@ export type Level = 1 | 2 | 3 | 4 | 5;
 export type Rating = Level;
 
 export const LEVEL_LABELS = ['Weak', 'Fair', 'Solid', 'Strong', 'Elite'] as const;
-
-/** How often the athlete runs straight after station work (bricks, HYROX classes). */
-export type CompromisedRuns = 'never' | 'sometimes' | 'weekly';
 
 /** 'unknown' behaves like 'some' but widens the confidence range. */
 export type Experience = 'unknown' | 'first' | 'some' | 'experienced' | 'competitive';
@@ -65,8 +63,6 @@ export interface AthleteProfile {
   runningKmPerWeek: number | null;
   /** Other training per week in hours (gym, HYROX classes, erg/sled work); null = unknown. */
   otherTrainingHours: number | null;
-  /** Compromised-running practice: runs straight after station work; null = not sure. */
-  compromisedRuns: CompromisedRuns | null;
 
   // ── Running (seconds) — first available wins: 5K › 10K › mile › half › VO₂max › level ──
   fiveKSec: number | null;
@@ -78,8 +74,6 @@ export interface AthleteProfile {
   vo2max: number | null;
   /** Lab tests are trusted as-is; watch estimates are discounted. */
   vo2maxSource: 'watch' | 'lab';
-  /** Resting heart rate (bpm) — with age, gives a rough VO₂max estimate. */
-  restingHr: number | null;
 
   // ── Ergs (seconds) ──────────────────────────────────────────────────────────────────
   skiErg1kSec: number | null;
@@ -154,14 +148,12 @@ export function defaultAthlete(sex: Sex, index = 0): AthleteProfile {
     experience: 'unknown',
     runningKmPerWeek: null,
     otherTrainingHours: null,
-    compromisedRuns: null,
     fiveKSec: null,
     tenKSec: null,
     halfMarathonSec: null,
     marathonSec: null,
     vo2max: null,
     vo2maxSource: 'watch',
-    restingHr: null,
     skiErg1kSec: null,
     skiErg500Sec: null,
     skiErg2kSec: null,
@@ -204,10 +196,9 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   if (typeof r['name'] === 'string') out.name = r['name'].slice(0, 24);
   if (EXPERIENCES.includes(r['experience'])) out.experience = r['experience'];
   if (r['vo2maxSource'] === 'lab') out.vo2maxSource = 'lab';
-  if (['never', 'sometimes', 'weekly'].includes(r['compromisedRuns'])) out.compromisedRuns = r['compromisedRuns'];
   const numeric: (keyof AthleteProfile)[] = [
     'age', 'bodyweightKg', 'runningKmPerWeek', 'otherTrainingHours', 'fiveKSec', 'tenKSec', 'halfMarathonSec', 'marathonSec', 'vo2max',
-    'heightCm', 'bodyFatPct', 'restingHr', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
+    'heightCm', 'bodyFatPct', 'skiErg1kSec', 'skiErg500Sec', 'skiErg2kSec', 'row1kSec', 'row500Sec', 'row2kSec',
     'row5kSec', 'deadHangSec', 'pullUps', 'burpees1Min', 'sledPushTestSec', 'sledPullTestSec', 'bbjTestSec',
     'farmersTestSec', 'lungesTestSec', 'wallBalls100Sec', 'wallBallsUnbroken', 'karenSec', 'previousHyroxSec',
   ];
@@ -249,6 +240,29 @@ export function migrateAthlete(raw: unknown, index: number): AthleteProfile {
   return out;
 }
 
+/**
+ * Out-of-range entries are ignored (set to "not sure") for fields the resolver has no range check
+ * of its own for, so the inline "isn't realistic, so it's ignored" messages are true everywhere.
+ */
+export function sanitizeRanges(a: AthleteProfile): AthleteProfile {
+  const R = FALLBACK.ranges;
+  const inR = (v: number | null, [lo, hi]: readonly number[]) => (v != null && v >= lo && v <= hi ? v : null);
+  const lifts = { ...a.lifts };
+  for (const id of LIFT_IDS) {
+    const l = lifts[id];
+    if (l.kg != null && inR(l.kg, R.liftKg) == null) lifts[id] = { ...l, kg: null };
+  }
+  return {
+    ...a,
+    age: inR(a.age, R.age),
+    deadHangSec: inR(a.deadHangSec, R.deadHang),
+    pullUps: inR(a.pullUps, R.pullUps),
+    burpees1Min: inR(a.burpees1Min, R.burpees1Min),
+    wallBallsUnbroken: inR(a.wallBallsUnbroken, R.wallBallsUnbroken),
+    lifts,
+  };
+}
+
 /** HYROX age groups (singles): 16–24, 25–29, 30–34 … 65–69, 70+. */
 export function hyroxAgeGroup(age: number | null): string | null {
   if (age == null || !isFinite(age) || age < 16) return null;
@@ -276,14 +290,12 @@ export function peerProfile(a: AthleteProfile): AthleteProfile {
     experience: a.experience,
     runningKmPerWeek: a.runningKmPerWeek,
     otherTrainingHours: a.otherTrainingHours,
-    compromisedRuns: a.compromisedRuns,
     fiveKSec: a.fiveKSec,
     tenKSec: a.tenKSec,
     halfMarathonSec: a.halfMarathonSec,
     marathonSec: a.marathonSec,
     vo2max: a.vo2max,
     vo2maxSource: a.vo2maxSource,
-    restingHr: a.restingHr,
     levels: { ...blank.levels, run: a.levels.run },
   };
 }

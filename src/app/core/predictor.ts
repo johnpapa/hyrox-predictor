@@ -1,4 +1,4 @@
-import { AbilityId, AthleteProfile, CompromisedRuns, hyroxAgeGroup, peerProfile } from './athlete';
+import { AbilityId, AthleteProfile, hyroxAgeGroup, peerProfile, sanitizeRanges } from './athlete';
 import { FALLBACK } from './fallback-params';
 import { ResolvedAthlete, resolveAthlete } from './resolve';
 import { DivisionInfo, STANDARDS, Sex, WeightClass, findDivision, nativeOpenDivision, weightForAthlete } from './divisions';
@@ -118,15 +118,12 @@ export function runShapeFor(runFactor: number, runningKm: number | null = null):
  * First-race lap penalty: a fixed pacing allowance plus an "unfamiliar with compromised running"
  * part that fitness indicators shrink (running volume, durable race times, other training).
  */
-export function firstRaceRunPenalty(
-  runningKm: number | null, enduranceK: number | null, otherHours: number | null, compromised: CompromisedRuns | null = null,
-): number {
+export function firstRaceRunPenalty(runningKm: number | null, enduranceK: number | null, otherHours: number | null): number {
   const F = PARAMS.runFactor.firstRace;
   const extraKm = runningKm == null ? 0 : Math.max(0, runningKm - PARAMS.runFactor.runningVolume.refKm);
   let offset = F.volumeOffsetMax * Math.min(1, extraKm / F.volumeFullAtExtraKm);
   if (enduranceK != null && enduranceK <= PARAMS.runFactor.endurance.refExponent) offset += F.enduranceOffset;
   if (otherHours != null && otherHours >= F.otherTrainingHours) offset += F.otherTrainingOffset;
-  if (compromised) offset += PARAMS.runFactor.compromised.firstRaceOffset[compromised];
   return F.pacing + F.unfamiliar * (1 - Math.min(F.maxOffset, offset));
 }
 
@@ -170,7 +167,8 @@ function strengthClamp(x: number): number {
 // Solo model
 // ─────────────────────────────────────────────────────────────────────────────────────
 
-export function predictSolo(a: AthleteProfile, division: DivisionInfo, withPeer = true): SoloPrediction {
+export function predictSolo(raw: AthleteProfile, division: DivisionInfo, withPeer = true): SoloPrediction {
+  const a = sanitizeRanges(raw);
   // A previous result is a singles time on the athlete's own weights: calibrate against that race.
   const calibration = previousResultCalibration(a);
   const sex = a.sex;
@@ -193,8 +191,7 @@ export function predictSolo(a: AthleteProfile, division: DivisionInfo, withPeer 
     rf.base +
       (rf.per5kMinSlower * (fiveK - rf.ref5kSec[sex])) / 60 +
       rf.experience[a.experience] +
-      (a.experience === 'first' ? firstRaceRunPenalty(r.runningKmPerWeek, k0, r.otherTrainingHours, a.compromisedRuns) : 0) +
-      (a.compromisedRuns ? rf.compromised.adj[a.compromisedRuns] : 0) +
+      (a.experience === 'first' ? firstRaceRunPenalty(r.runningKmPerWeek, k0, r.otherTrainingHours) : 0) +
       (heavy ? rf.pro : 0) +
       runningVolumeAdj(r.runningKmPerWeek, k0 != null),
     rf.min,
@@ -411,10 +408,12 @@ export function doublesStationTime(id: StationId, ta: number, tb: number, p: num
   return p * ta * (a + (1 - a) * p) + q * tb * (a + (1 - a) * q) + swap;
 }
 
+/** Fastest practical share for athlete A (30–70%, 5% steps). */
 export function optimalDoublesShare(id: StationId, ta: number, tb: number, pairRunFactor = 1.2): number {
+  const [lo, hi] = PARAMS.doubles.suggestRange;
   let best = 0.5;
-  let bestT = Infinity;
-  for (let i = 0; i <= 20; i++) {
+  let bestT = doublesStationTime(id, ta, tb, 0.5, pairRunFactor);
+  for (let i = Math.round(lo * 20); i <= Math.round(hi * 20); i++) {
     const p = i / 20;
     const t = doublesStationTime(id, ta, tb, p, pairRunFactor);
     if (t < bestT - 1e-9) {
@@ -423,6 +422,14 @@ export function optimalDoublesShare(id: StationId, ta: number, tb: number, pairR
     }
   }
   return best;
+}
+
+/** A practical suggested split for every station (athlete 0's share), from the two solos. */
+export function suggestDoublesShares(input: PredictInput): StationTimes {
+  const division = findDivision(input.divisionId);
+  const [sa, sb] = input.athletes.slice(0, 2).map((a) => predictSolo(a, division));
+  const pairRf = (sa.runFactor + sb.runFactor) / 2;
+  return Object.fromEntries(STATION_IDS.map((id) => [id, optimalDoublesShare(id, sa.stations[id], sb.stations[id], pairRf)])) as StationTimes;
 }
 
 function doublesRun(solo: SoloPrediction): number[] {
@@ -504,7 +511,7 @@ export function topPercent(divisionId: string, totalSec: number, medianFactor = 
 /** Position within the athlete's HYROX 5-year age group (singles; null if age unknown). */
 export function ageGroupPosition(division: DivisionInfo, athlete: AthleteProfile | undefined, totalSec: number): { label: string; topPercent: number } | null {
   if (division.format !== 'single' || !athlete) return null;
-  const group = hyroxAgeGroup(athlete.age);
+  const group = hyroxAgeGroup(sanitizeRanges(athlete).age);
   if (!group) return null;
   const factor = AGE_GROUP_FACTOR[athlete.sex][group];
   const top = topPercent(division.id, totalSec, factor);
@@ -553,8 +560,10 @@ export function predict(input: PredictInput): Prediction {
     for (const id of STATION_IDS) {
       const ta = sa.stations[id];
       const tb = sb.stations[id];
+      // Default is an even split; partners adjust it (or ask for a suggestion) in Team tactics.
       const given = input.doublesShares?.[id];
-      const p = given != null && isFinite(given) ? clamp(given, 0, 1) : optimalDoublesShare(id, ta, tb, pairRf);
+      const [lo, hi] = PARAMS.doubles.shareRange;
+      const p = given != null && isFinite(given) ? clamp(given, lo, hi) : 0.5;
       doublesShares[id] = p;
       const a = doublesFloor(id, pairRf);
       const total = doublesStationTime(id, ta, tb, p, pairRf);
@@ -568,7 +577,10 @@ export function predict(input: PredictInput): Prediction {
         { athlete: 1, share: 1 - p, sec: workB + swap * (1 - p) },
       ];
     }
-    roxzone = Math.max(sa.roxzone, sb.roxzone) * PARAMS.doubles.roxzoneFactor;
+    const D = PARAMS.doubles;
+    roxzone =
+      (D.roxzoneSlowerWeight * Math.max(sa.roxzone, sb.roxzone) + (1 - D.roxzoneSlowerWeight) * Math.min(sa.roxzone, sb.roxzone)) *
+      D.roxzoneFactor;
   } else {
     const valid =
       input.relayOrder && input.relayOrder.length === 4 && new Set(input.relayOrder).size === 4 &&

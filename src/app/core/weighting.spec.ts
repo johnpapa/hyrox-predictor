@@ -47,22 +47,13 @@ describe('experience is race craft, not fitness', () => {
   });
 });
 
-describe('compromised-running practice (new input)', () => {
-  it('weekly practice is faster than never, and shrinks the first-race penalty', () => {
-    expect(total({ compromisedRuns: 'weekly' })).toBeLessThan(total({ compromisedRuns: 'never' }));
-    const pen = (c: AthleteProfile['compromisedRuns']) => total({ experience: 'first', compromisedRuns: c }) - total({ compromisedRuns: c });
-    expect(pen('weekly')).toBeLessThan(pen(null));
-    // Small: at most ~2.5% between never and weekly for a regular racer.
-    expect((total({ compromisedRuns: 'never' }) - total({ compromisedRuns: 'weekly' })) / total({})).toBeLessThan(0.025);
-    expect(total({ compromisedRuns: null })).toBe(total({}));
-  });
-
-  it('is saved, sanitised and listed under build and background', () => {
-    expect(migrateAthlete({ sex: 'male', compromisedRuns: 'weekly' }, 0).compromisedRuns).toBe('weekly');
-    expect(migrateAthlete({ sex: 'male', compromisedRuns: 'daily' }, 0).compromisedRuns).toBeNull();
-    const input = { divisionId: 'men-open', athletes: [{ ...base, compromisedRuns: 'weekly' as const }] };
-    const i = computeInsights(input, predict(input));
-    expect(i.profile.find((r) => r.id === 'compromisedRuns')!.sec).toBeLessThan(0);
+describe('inputs that were not worth entering are gone', () => {
+  it('REGRESSION: resting HR and "runs straight after stations" were removed; old saves drop them', () => {
+    // User: "Let's not make people enter information that is not valuable." / "nobody's gonna know that".
+    const m = migrateAthlete({ sex: 'male', restingHr: 50, compromisedRuns: 'weekly', fiveKSec: 1500 }, 0) as unknown as Record<string, unknown>;
+    expect('restingHr' in m).toBe(false);
+    expect('compromisedRuns' in m).toBe(false);
+    expect('restingHr' in defaultAthlete('male')).toBe(false);
   });
 });
 

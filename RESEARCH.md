@@ -58,7 +58,7 @@ the confidence range. "Not sure" equals the model's typical athlete, so it never
 
 | Ability | Cascade | Key conversion |
 |---|---|---|
-| Running | blend of 5K / 10K / half / marathon › VO₂max › resting HR + age › level | Riegel T₂ = T₁(D₂/D₁)^1.06 (1.07 for mile/half); Daniels VDOT; Cooper VO₂ = (m − 504.9)/44.73; watch VO₂max − 4 |
+| Running | blend of 5K / 10K / half / marathon › VO₂max › level | Riegel T₂ = T₁(D₂/D₁)^1.06 (1.07 for mile/half); Daniels VDOT; Cooper VO₂ = (m − 504.9)/44.73; watch VO₂max − 4 |
 | Ergs | 1k › 2k › 500 m › 5k › other erg › level | Paul's law +5 s/500 m per doubling; SkiErg ≈ row + 20 s/1k (men), +15 s (women) |
 | Leg strength | back squat › front squat › deadlift › trap bar › RDL › leg press › bench › level | Epley 1RM = w(1 + r/30), ≤12 reps; front = 0.85 × back; squat = 0.8 × DL; leg press × 0.6 (rough) |
 | Pulling strength | deadlift › trap bar › RDL › squat › front squat › leg press › bench › level | trap bar = 1.08 × DL (JSCR 2011); RDL = 0.75 × DL; DL = 1.6 × bench (men), 2.0 × (women) |
@@ -264,7 +264,7 @@ in a real race? Sweep for a typical man (23:00 5K, 82 kg, 35, 1–2 races; ≈ 8
 | Weekly running 10 vs 60 km | 2:41 | OK. |
 | Wall balls 15 vs 50 unbroken | 2:37 | The most variable station. OK. |
 | Deadlift Fair vs Strong | 2:12 | OK. |
-| Compromised runs never vs weekly | 2:00 | **New input.** |
+| Compromised runs never vs weekly | 2:00 | Added, then removed (see "Inputs removed" below). |
 | Body fat 28 vs 12% (strength unknown) | 1:51 | Only while strength is estimated. OK. |
 | Other training 1 vs 7 h | 1:37 | OK. |
 | Age 60 vs 35 (same race times) | 1:20 | Race times already carry age; this is only recovery. OK. |
@@ -275,7 +275,7 @@ in a real race? Sweep for a typical man (23:00 5K, 82 kg, 35, 1–2 races; ≈ 8
 | Lunges Fair vs Strong | 0:55 (was 0:41) | Increased. |
 | Erg Fair vs Strong | 0:36 (was 1:12) | Reduced. |
 | Grip Fair vs Strong | 0:37 | Grip rarely limits Open athletes. OK. |
-| VO₂max, resting HR (with a race time) | 0 | By design: races measure the engine directly. The fields now say so. |
+| VO₂max, resting HR (with a race time) | 0 | VO₂max later got a small weight; resting HR was removed. |
 
 **Rating spread per station.** Every self-rating used the same multiplier (Weak +16% … Elite −12%). The split tables
 show stations separate athletes very differently. The ratio of the slowest to the fastest band's median is: ergs
@@ -294,7 +294,7 @@ already capture. At the same fitness, race craft is worth less. First race vs 1�
 high-volume runner). 3+ races is now about −1.5% (was −3.6%) and competitive about −4% (was −6%).
 
 **Missing inputs considered.**
-- **Added:** compromised-running practice (how often you run straight after station work). It is the specific skill
+- **Added, later removed:** compromised-running practice (how often you run straight after station work). It is the specific skill
   behind the gap between 5K pace and HYROX laps. Weekly practice gives −1.2% on the run factor and offsets 40% of the
   first-race "unfamiliar" penalty. "Rarely or never" gives +1%. These are estimates: brick-training studies in
   triathlon show the run-after-bike decrement shrinks with practice, and HYROX coaching treats it as the key specific
@@ -325,3 +325,19 @@ switch pattern per station and each partner's share from the doubles optimiser:
 
 These come from common HYROX doubles coaching guidance (roxlyfe, official HYROX training content). They are rules of
 thumb, not measured optima.
+
+## Inputs removed and doubles defaults (Sept 2026)
+
+- **Resting HR removed.** It only estimated running when there was no race time and no VO₂max. Its Uth-formula VO₂max
+  estimate is about ±10%, so it rarely helped, and asking for it cost every user time.
+- **"Runs straight after stations" removed** (added in the input weighting review). A user pointed out that most
+  athletes can't answer it reliably, and a guessed answer adds noise, not information. The experience setting and
+  running volume already cover the first-race compromise.
+- **Doubles default to 50/50.** The optimiser could choose 0% or 100% for a station, which no pair does. Shares now
+  default to 0.5, manual shares are kept within 20–80%, and "Suggest a split" searches 30–70% in 5% steps.
+- **Doubles Roxzone.** It used to be the slower partner's full singles Roxzone (including their first-race and
+  slow-runner allowances), which could make doubles slower than the faster partner's singles race. Partners move
+  together, so the slower one still dominates: 0.6 × slower + 0.4 × faster. Each rests while the other works: × 0.95.
+- **Running pace in doubles** is still the slower partner's (both run every kilometre together), with 80% of the solo
+  compromise. With a much slower-running partner, the time saved on stations is largely spent on the runs. The app now
+  says so in Team tactics.

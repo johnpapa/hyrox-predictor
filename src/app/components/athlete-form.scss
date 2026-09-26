@@ -137,3 +137,9 @@ legend {
   margin: 8px 0 0; font-size: 0.7rem; color: var(--text-faint); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center;
   i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: -6px; background: var(--c); }
 }
+/* A lift (weight, reps and effort) needs more room than a single field. */
+.cards .grid app-lift-input { grid-column: span 2; }
+@media (max-width: 480px) { .cards .grid app-lift-input { grid-column: 1 / -1; } }
+
+.field .uses { font-size: 0.74rem; color: var(--text-faint); }
+.field .uses b { color: var(--accent); font-weight: 600; }

@@ -102,6 +102,8 @@ test.describe('iPhone', () => {
 
   test('iPhone walkthrough', async ({ page }) => {
     await page.getByLabel('5K', { exact: true }).fill('24:10');
+    await page.getByLabel('5K', { exact: true }).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await page.waitForTimeout(300);
     await page.screenshot({ path: out('15-iphone-form') });
     await page.getByRole('button', { name: 'View splits' }).click();
     await page.waitForTimeout(800);

@@ -169,13 +169,10 @@ describe('age, VO2max, resting HR & unknowns', () => {
     expect((p.high - p.low) / p.total).toBeGreaterThan(0.25);
   });
 
-  it('uses VO2max, then resting HR + age, when no run time is known', () => {
+  it('uses VO2max when no run time is known (resting HR was removed: too rough to be worth entering)', () => {
     const vo2 = resolveAthlete(man({ fiveKSec: null, vo2max: 50 })).fiveK;
     expect(vo2.value / 60).toBeGreaterThan(20); // VDOT 46 ≈ 21:20
     expect(vo2.value / 60).toBeLessThan(22.5);
-    const hr = resolveAthlete(man({ fiveKSec: null, restingHr: 50, age: 40 })).fiveK;
-    expect(hr.quality).toBe('rated');
-    expect(hr.source).toContain('resting HR');
     // a race time always wins
     expect(resolveAthlete(man({ vo2max: 70 })).fiveK.quality).toBe('measured');
   });
