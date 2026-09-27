@@ -11,6 +11,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     <details class="panel disc" id="disclaimer" [open]="open()">
       <summary>
         <span class="label">Disclaimer &amp; privacy</span>
+        <span class="act" aria-hidden="true"><span class="when-open">Collapse</span><span class="when-closed">Expand</span></span>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" /></svg>
       </summary>
       <div class="body">
@@ -44,6 +45,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       svg { width: 18px; height: 18px; color: var(--accent); transition: transform 0.2s; }
     }
     details[open] summary svg { transform: rotate(180deg); }
+    .act { margin-left: auto; margin-right: 10px; font-size: 0.75rem; color: var(--accent); text-decoration: underline; }
+    .when-open { display: none; }
+    details[open] .when-open { display: inline; }
+    details[open] .when-closed { display: none; }
     .body { padding: 0 18px 16px; color: var(--text-dim); font-size: 0.85rem; line-height: 1.5;
       p { margin: 0 0 10px; } b { color: var(--text); font-weight: 600; } }
   `,

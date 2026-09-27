@@ -4,7 +4,7 @@
 
 **Live app: https://johnpapa.github.io/hyrox-predictor/**
 
-A responsive Angular web app that predicts your HYROX finish time split by split: all 8 runs, all 8 stations, and Roxzone
+A web app that predicts your HYROX finish time split by split: all 8 runs, all 8 stations, and Roxzone
 time. It covers every division: Open, Pro, Elite 15, Adaptive, Doubles (Men/Women/Mixed and Pro), and Relay
 (Men/Women/Mixed/Corporate). The look follows the dark, results-page style of HYROX timing, with a race-simulator timeline
 you can play back.
@@ -48,13 +48,7 @@ you can play back.
 - **Simulator page** (`#simulator`): drag a slider for every run, station and the Roxzone and watch the finish time
   and field position change. It shows which finish band each split is typical of.
 - **Race simulator:** plays the race back along a run/station/Roxzone timeline.
-- Supports kg and lb. Mobile-first, with a sticky summary dock on phones.
-
-## AI analysis?
-
-Should the app add Claude-powered coaching? See the research and recommendation in [docs/AI-ANALYSIS.md](docs/AI-ANALYSIS.md).
-In short: keep the prediction deterministic (the rule-based Insights panel is now built), and if AI is ever added, make
-it opt-in with bring-your-own-key. There are no plans to add it for now.
+- Supports kg and lb. Works on phones, with your finish time pinned at the top of the screen.
 
 ## Privacy
 
@@ -71,40 +65,24 @@ The app is hosted on GitHub Pages. `.github/workflows/deploy.yml` runs the tests
 `main`. The build uses a relative `<base href="./">`, so the same output also works on Netlify, Cloudflare Pages, Azure
 Static Web Apps, or any static file host.
 
-## Run it
+## Run it locally (optional)
+
+The app is live at https://johnpapa.github.io/hyrox-predictor/, so you only need this to work on the code
+(Node 20.19+):
 
 ```bash
 npm install
-npm start                  # http://localhost:4200
-npm test                   # unit tests (Vitest): model, conversions, realism personas, fuzzing
-npm run e2e                # Playwright end-to-end tests on desktop + iPhone (production build)
-npm run docs:screenshots   # regenerate the tutorial screenshots in docs/tutorial
-npm run build              # production build in dist/
+npm start      # http://localhost:4200
+npm test       # unit and realism tests
+npm run e2e    # end-to-end tests (desktop + iPhone)
 ```
-
-**Realism tests** (`src/app/core/realism.spec.ts`) check the predictions themselves, not just the code:
-- **Personas:** a high-VO₂max runner never gets slow laps; a runner with no strength is slow on sleds and lunges; a
-  strong lifter who can't run gets slow laps but fast sleds; beginners land in the 2–3 hour band; elites stay just
-  above world records.
-- **Benchmark effects:** each benchmark moves only the stations it should (e.g. dead hang → farmers carry and pull,
-  not runs).
-- **Monotonic cause and effect:** a faster 5K always means faster runs; more strength always means faster sleds.
-- **Fuzzing:** 500 random athletes across all divisions, each checked against human limits for every split.
-
-The end-to-end suite runs every user path against the production build (strict CSP, served under `/hyrox-predictor/`
-like GitHub Pages) on desktop and iPhone viewports. It covers all 16 divisions, every input and fallback, key-by-key
-typing, doubles and relay tactics, locked splits, the simulator, opt-in saving, reset, privacy (no cookies or
-third-party requests) and responsive layout.
-
-Requires Node 20.19+ / 22.12+ / 24+. Built with Angular 21: standalone components, signals, zoneless change detection
-and the new control flow.
 
 ## How the model works
 
 See [RESEARCH.md](RESEARCH.md) for the data and sources. In short:
 
 1. **5K → HYROX run pace.** HYROX kilometres are about 20% slower than 5K pace for mid-pack athletes, about 12–15% for
-   strong hybrid athletes and up to 30% for first-timers. Experience, training hours and Pro loads adjust this.
+   strong hybrid athletes and more for first-timers. Experience, weekly running, other training and Pro loads adjust this.
 2. **Run pace → baseline station splits.** Medians from about 15k real results, interpolated by average run split.
 3. **Personal adjustments** per station from erg times, strength ratios, bodyweight, wall-ball capacity and ratings.
 4. **Doubles / relay combination models**, calibrated to the observed doubles/singles and relay ratios.
