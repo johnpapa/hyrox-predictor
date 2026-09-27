@@ -134,3 +134,18 @@ src/app/
 ```
 
 _Unofficial fan-made tool. Not affiliated with or endorsed by HYROX._
+
+## Disclaimer & privacy
+
+- **Unofficial.** An independent, fan-made tool. It is not affiliated with, endorsed by, sponsored by or approved by
+  HYROX or its organisers. HYROX is a trademark of its owner and is used only to describe what the tool is for.
+- **Estimates only, no guarantees.** Predictions are estimates for general information and entertainment. They are not
+  guaranteed to be accurate, and your real result may be very different.
+- **Not medical or training advice.** Check with a doctor or qualified coach before starting or changing training.
+  You train and race at your own risk.
+- **Provided "as is"**, without warranty of any kind, under the [MIT License](LICENSE). The author accepts no liability
+  for any loss, damage or injury arising from its use.
+- **Privacy.** No accounts, server, database, cookies, analytics, ads or tracking. Everything runs in your browser and
+  nothing you enter is sent anywhere. The optional "Save my inputs on this device" keeps inputs only in this browser's
+  local storage. GitHub Pages, the host, may keep basic technical logs (such as IP addresses) under GitHub's privacy
+  statement; the app itself collects nothing.

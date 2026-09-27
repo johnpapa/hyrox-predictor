@@ -98,7 +98,7 @@ test.describe('live total & units', () => {
   test('the finish time stays visible while editing (top bar on phone, floating pill on desktop)', async ({ page, isMobile }) => {
     const dock = page.getByRole('region', { name: 'Predicted finish summary' });
     if (isMobile) {
-      await page.getByText('Save my inputs on this device').scrollIntoViewIfNeeded();
+      await page.locator('.privacy').getByText('Save my inputs on this device').scrollIntoViewIfNeeded();
       await expect(page.getByRole('region', { name: 'Predicted finish', exact: true })).toBeInViewport();
     } else {
       await expect(dock).toBeHidden(); // board clock is on screen

@@ -14,11 +14,6 @@
   padding: 10px 20px;
 }
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand-mark {
-  width: 38px; height: 38px; display: grid; place-items: center;
-  background: var(--accent); color: var(--accent-ink); border-radius: 2px;
-  svg { width: 22px; height: 22px; }
-}
 .brand-text { display: flex; flex-direction: column; line-height: 1; }
 .brand-name {
   font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; letter-spacing: 0.06em; text-transform: uppercase;
@@ -106,7 +101,8 @@
 }
 
 @media (max-width: 600px) {
-  .brand-text { display: none; }
+  .brand-sub { display: none; }
+  .brand-name { font-size: 1rem; line-height: 1.05; em { display: block; } }
   .views a { padding: 0 10px; font-size: 0.8rem; }
 }
 
@@ -124,3 +120,8 @@
   strong { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.06em; }
   small { color: var(--text-faint); font-size: 0.8rem; }
 }
+
+.notice { margin: 10px 0 0; font-size: 0.78rem; color: var(--text-faint); }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
+.foot p { max-width: 900px; margin: 0 auto 12px; }
+.foot app-disclaimer { display: block; max-width: 900px; margin: 0 auto; }

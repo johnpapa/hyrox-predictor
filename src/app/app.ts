@@ -3,6 +3,7 @@ import { AthleteForm } from './components/athlete-form';
 import { ChangeChip } from './components/change-chip';
 import { DivisionPicker } from './components/division-picker';
 import { InsightsPanel } from './components/insights-panel';
+import { Disclaimer } from './components/disclaimer';
 import { SimulatorPage } from './components/simulator-page';
 import { Methodology } from './components/methodology';
 import { ResultsBoard } from './components/results-board';
@@ -13,7 +14,7 @@ import { formatTime } from './core/time';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ChangeChip, DivisionPicker, AthleteForm, TeamTactics, ResultsBoard, InsightsPanel, Methodology, SimulatorPage],
+  imports: [ChangeChip, DivisionPicker, AthleteForm, TeamTactics, ResultsBoard, InsightsPanel, Methodology, SimulatorPage, Disclaimer],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -64,6 +65,14 @@ export class App {
 
   protected scrollToResults(): void {
     this.results()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** Open the Disclaimer & privacy section in the footer and bring it into view. */
+  protected showDisclaimer(): void {
+    const el = document.getElementById('disclaimer') as HTMLDetailsElement | null;
+    if (!el) return;
+    el.open = true;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   protected reset(): void {
