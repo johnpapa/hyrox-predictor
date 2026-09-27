@@ -36,43 +36,20 @@
         profile or your prediction; it's a scratchpad for race plans and "what ifs".
       </p>
       <ol>
-        <li><b>Change one split:</b> drag its slider or type a time, e.g. see what a 30 s faster sled push is worth.</li>
-        <li><b>Shift everything:</b> move <i>All runs</i> or <i>All stations</i> by a percentage (negative = faster).</li>
-        <li><b>Work back from a goal:</b> type a target finish and tap <i>Hit target</i> to see the splits you'd need.</li>
+        <li><b>Change a split:</b> drag its slider or type a time, e.g. see what a 30 s faster sled push is worth.</li>
+        <li><b>Change as many as you like:</b> the clock, the difference from your prediction and your field position
+          update as you go, so you can build a realistic race plan one split at a time.</li>
       </ol>
       <p class="dim">↺ resets one split; <i>Reset to prediction</i> resets everything. @if (showBands()) { The small tag
         on each split shows which finish band it's typical of, e.g. "80–90" means typical of 80–90 minute finishers. }</p>
     </div>
   </section>
 
-  <section class="panel controls" aria-label="Simulator controls">
-    <h2 class="ctl-title">Quick changes</h2>
-    <label class="scale">
-      <span class="label">All runs <b class="mono">{{ runScale() > 0 ? '+' : '' }}{{ runScale() }}%</b></span>
-      <span class="hint">Slide left to run every km faster</span>
-      <input type="range" min="-30" max="30" step="1" [value]="runScale()" aria-label="Scale all runs, percent"
-        (input)="runScale.set(+$any($event.target).value)" />
-    </label>
-    <label class="scale">
-      <span class="label">All stations <b class="mono">{{ stationScale() > 0 ? '+' : '' }}{{ stationScale() }}%</b></span>
-      <span class="hint">Slide left to do every station faster</span>
-      <input type="range" min="-30" max="30" step="1" [value]="stationScale()" aria-label="Scale all stations, percent"
-        (input)="stationScale.set(+$any($event.target).value)" />
-    </label>
-    <div class="target">
-      <label class="field">
-        <span class="label">Target finish</span>
-        <input type="text" placeholder="h:mm:ss" [value]="targetText()" (input)="targetText.set($any($event.target).value)"
-          (keydown.enter)="hitTarget()" aria-label="Target finish time" />
-      </label>
-      <button type="button" class="btn" (click)="hitTarget()">Hit target</button>
-      <span class="hint t-hint">Scales every split evenly to reach your goal time.</span>
+  <section class="panel rows" aria-labelledby="sim-splits-title">
+    <div class="rows-head">
+      <h2 id="sim-splits-title" class="rows-title">Your splits, in race order</h2>
       <button type="button" class="btn ghost" [disabled]="!changed()" (click)="resetAll()">Reset to prediction</button>
     </div>
-  </section>
-
-  <section class="panel rows" aria-labelledby="sim-splits-title">
-    <h2 id="sim-splits-title" class="rows-title">Your splits, in race order</h2>
     @for (r of rows(); track r.key; let i = $index) {
       @let v = values()[i];
       <div class="row" [attr.data-kind]="r.kind" [class.edited]="edits()[r.key] != null">

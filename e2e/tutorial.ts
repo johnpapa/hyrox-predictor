@@ -90,7 +90,6 @@ test('desktop walkthrough', async ({ app, page }) => {
   await app.division("Men's Open").click();
   await page.getByRole('link', { name: 'Simulator' }).click();
   await page.getByLabel('Wall Balls slider').fill('300');
-  await page.getByLabel('Scale all runs, percent').fill('-5');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: out('17-simulator') });
 });

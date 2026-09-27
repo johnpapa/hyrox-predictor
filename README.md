@@ -46,8 +46,7 @@ you can play back.
 
   Deterministic, with no AI.
 - **Simulator page** (`#simulator`): drag a slider for every run, station and the Roxzone and watch the finish time
-  and field position change. It shows which finish band each split is typical of, scales all runs or stations at
-  once, and can solve for a target time.
+  and field position change. It shows which finish band each split is typical of.
 - **Race simulator:** plays the race back along a run/station/Roxzone timeline.
 - Supports kg and lb. Mobile-first, with a sticky summary dock on phones.
 
