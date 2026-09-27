@@ -42,7 +42,7 @@ test('desktop walkthrough', async ({ app, page }) => {
 
   // 5. Station inputs
   await page.getByLabel('Max dead hang (sec)').fill('70');
-  await page.getByLabel('Max unbroken wall balls').fill('35');
+  await page.getByLabel('Usual set size for 100 reps').fill('20');
   await app.card('Wall balls').screenshot({ path: out('07-wall-balls') });
 
   // 6. Confidence

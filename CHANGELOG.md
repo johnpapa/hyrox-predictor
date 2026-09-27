@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Wall balls: "Usual set size for 100 reps"** (e.g. sets of 20) is now the main wall-ball input in Quick and Detailed.
+  Most people know it, and it's closer to race behaviour than a max-unbroken test. It's converted at sets ≈ 60% of max
+  unbroken; max unbroken and 100-for-time stay as alternatives. Gains and reasons are phrased in sets.
+- **Reset asks "Are you sure?"** and says it also clears the saved copy when saving is on. Cancelling keeps everything
+  (regression test).
 - **Collapsible sections:** click a section's title (or its arrow) to collapse it:
   - Profile, Physiology and Calibrate;
   - every ability card (a collapsed card still shows what it's using and any warnings);
@@ -34,11 +39,14 @@ All notable changes to this project are documented here. The format follows
   100%. Team tactics shows which partner sets the running pace, and flags it if that pace is only assumed.
 
 ### Removed
+- **"Karen"** (a CrossFit benchmark): the app sticks to things an average athlete knows. Old saves drop it.
 - **Resting heart rate:** too rough to be worth entering (its VO₂max estimate is about ±10%, and it only mattered with
   no race time and no VO₂max).
 - **"Runs straight after stations":** most people can't answer it reliably.
 
 ### Fixed
+- **Sex was asked even when the division decides it** (Men's / Women's / Mixed). The question now appears only for
+  Adaptive and Corporate Relay. Regression test added.
 - **Doubles field positions were too harsh.** They're recalibrated from a real S9 (2026) Washington DC mixed doubles result:
   1:19:14 placed 670th of 2,814 (top 24%), where the app said top 34%. With plausible inputs, that pair's prediction
   is within 7 s of their time; both are now regression tests.

@@ -42,7 +42,9 @@
         <input type="text" [value]="ath.name" maxlength="24" (input)="patch({ name: $any($event.target).value })" />
       </label>
 
-}      <div class="field">
+}      <!-- Only asked where the division doesn't decide it (Adaptive, Corporate Relay). -->
+      @if (!store.sexLocked()) {
+      <div class="field">
         <span class="label">Sex</span>
         <div class="seg" role="group" aria-label="Sex">
           <button type="button" [attr.aria-pressed]="ath.sex === 'male'" [class.on]="ath.sex === 'male'"
@@ -51,6 +53,7 @@
             [disabled]="store.sexLocked()" (click)="patch({ sex: 'female' })">Female</button>
         </div>
       </div>
+      }
       <app-number-input [label]="'Bodyweight (' + unit() + ')'" [value]="ath.bodyweightKg" [factor]="weightFactor()"
         [decimals]="unit() === 'kg' ? 1 : 0" [units]="unit()" (unitsChange)="store.units.set($event)"
         uses="Sleds · Lunges · Burpee broad jumps · Ergs" [range]="ranges.bodyweightKg" [step]="unit() === 'kg' ? 0.5 : 1" [start]="starts().bodyweight" (valueChange)="patch({ bodyweightKg: $event })" />
@@ -125,7 +128,7 @@
 
   @if (quick()) {
     <p class="intro">
-      <strong>Quick view:</strong> the {{ quickCount }} inputs that move your prediction most. Leave anything on "Not sure";
+      <strong>Quick view:</strong> the {{ quickCount() }} inputs that move your prediction most. Leave anything on "Not sure";
       switch to <button type="button" class="linkish" (click)="store.mode.set('detailed')">Detailed</button> for lifts,
       ergs, station tests and more to narrow the range.
     </p>
@@ -298,18 +301,18 @@
 }
     <!-- Wall balls -->
     <app-ability-card heading="Wall balls" uses="Wall Balls" [source]="res.sources.wallBalls" [warnings]="res.warnings.wallBalls ?? []" [quality]="res.quality.wallBalls"
-      [anchors]="an.wallBalls" [level]="ath.levels.wallBalls" [altOpen]="any(ath.wallBalls100Sec, ath.karenSec)"
+      [anchors]="an.wallBalls" [level]="ath.levels.wallBalls" [altOpen]="any(ath.wallBallsUnbroken, ath.wallBalls100Sec)"
       [showLevels]="!quick()" [hasAlternatives]="!quick()" (levelChange)="level('wallBalls', $event)">
       <div primary class="grid">
-        <app-number-input label="Max unbroken wall balls" placeholder="e.g. 35" [value]="ath.wallBallsUnbroken" [integer]="true" [range]="ranges.wallBallsUnbroken" [step]="5" [start]="30"
-          hint="Race ball & target" (valueChange)="patch({ wallBallsUnbroken: $event })" />
+        <app-number-input label="Usual set size for 100 reps" placeholder="e.g. 20" [value]="ath.wallBallsSetSize" [integer]="true" [range]="ranges.wallBallsSetSize" [step]="1" [start]="20"
+          hint="How many at a time, with short breaks, race ball & target" (valueChange)="patch({ wallBallsSetSize: $event })" />
       </div>
       @if (!quick()) {
       <div alternatives class="grid">
+        <app-number-input label="Max unbroken wall balls" placeholder="e.g. 35" [value]="ath.wallBallsUnbroken" [integer]="true" [range]="ranges.wallBallsUnbroken" [step]="5" [start]="30"
+          hint="Race ball & target" (valueChange)="patch({ wallBallsUnbroken: $event })" />
         <app-time-input label="100 wall balls for time" [range]="ranges.wallBalls100" [step]="5" [start]="360" [seconds]="ath.wallBalls100Sec" placeholder="e.g. 6:10"
           (secondsChange)="patch({ wallBalls100Sec: $event })" />
-        <app-time-input label='"Karen" (150 reps)' [range]="ranges.karen" [step]="10" [start]="600" [seconds]="ath.karenSec" placeholder="e.g. 10:30"
-          (secondsChange)="patch({ karenSec: $event })" />
       </div>
       }
     </app-ability-card>

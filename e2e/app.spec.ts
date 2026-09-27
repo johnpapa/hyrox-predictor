@@ -63,17 +63,22 @@ test.describe('divisions', () => {
     expect(await app.total()).toBeGreaterThan(open);
   });
 
-  test('sex is fixed by the division rules and only choosable where teams pick their own mix', async ({ app, page }) => {
-    const female = page.getByRole('group', { name: 'Sex' }).getByRole('button', { name: 'Female' });
-    await expect(female).toBeDisabled();
-    // Mixed doubles fixes the team as 1 man + 1 woman
+  test('REGRESSION: sex is only asked where the division does not decide it', async ({ app, page }) => {
+    // User: "I selected men's doubles and men's singles, and it still asked me for male or female."
+    const sex = page.getByRole('group', { name: 'Sex' });
+    await expect(sex).toHaveCount(0); // Men's Open
+    await app.division("Men's Doubles").click();
+    await expect(sex).toHaveCount(0);
+    // Mixed doubles fixes the team as 1 man + 1 woman: the tabs show it, no question asked.
     await app.division('Mixed Doubles').click();
+    await expect(app.tab(1)).toContainText('W');
     await app.tab(1).click();
-    await expect(female).toHaveAttribute('aria-pressed', 'true');
-    await expect(female).toBeDisabled();
-    // Corporate relay lets the team choose
+    await expect(sex).toHaveCount(0);
+    // Adaptive and corporate relay let athletes choose.
     await app.division('Corporate Relay').click();
-    await expect(female).toBeEnabled();
+    await expect(sex.getByRole('button', { name: 'Female' })).toBeEnabled();
+    await app.division('Adaptive').click();
+    await expect(sex).toBeVisible();
   });
 
   test('division notes explain special rules', async ({ app, page }) => {
@@ -87,7 +92,7 @@ test.describe('athlete inputs & fallbacks', () => {
     const pct = async () => Number((await page.locator('app-results-board .range-label').textContent())!.replace(/\D/g, ''));
     const before = await pct();
     await page.getByLabel('5K', { exact: true }).fill('21:08');
-    await page.getByLabel('Max unbroken wall balls').fill('40');
+    await page.getByLabel('Usual set size for 100 reps').fill('25');
     expect(await pct()).toBeLessThan(before);
   });
 
@@ -251,8 +256,9 @@ test.describe('athlete inputs & fallbacks', () => {
     await page.getByLabel('Max burpees in 1 minute').fill('28');
     await expect(app.card('Burpee broad jumps').locator('.src')).toContainText('28 burpees');
     await app.openAlternatives('Wall balls');
-    await app.card('Wall balls').getByLabel('"Karen" (150 reps)').fill('10:00');
-    await expect(app.card('Wall balls').locator('.src')).toContainText('from Karen');
+    await app.card('Wall balls').getByLabel('100 wall balls for time').fill('6:10');
+    await expect(app.card('Wall balls').locator('.src')).toContainText('100 wall balls 6:10');
+    await expect(app.card('Wall balls')).not.toContainText('Karen');
     await page.getByLabel('50m sled push test').fill('2:00');
     await expect(app.splitRow('Sled Push')).toContainText('02:18');
   });
@@ -292,9 +298,10 @@ test.describe('team tactics', () => {
     await app.tab(1).click();
     await app.card('Leg strength').getByRole('button', { name: 'Elite', exact: true }).click();
     await tactics.getByRole('button', { name: 'Suggest a split' }).click();
-    const push = Number(await tactics.getByLabel('Sled Push share for Athlete 1').inputValue());
-    expect(push).toBeGreaterThanOrEqual(30);
-    expect(push).toBeLessThan(50);
+    // Read with retries: the slider updates after the click re-renders (slow under parallel load).
+    const push = () => tactics.getByLabel('Sled Push share for Athlete 1').inputValue().then(Number);
+    await expect.poll(push).toBeLessThan(50);
+    expect(await push()).toBeGreaterThanOrEqual(30);
     // Runs are paced by the slower partner; an assumed pace says so.
     await expect(tactics.locator('.run-note')).toContainText('Runs are paced by');
   });
@@ -347,7 +354,7 @@ test.describe('results board', () => {
     // Keep the in-app methodology in sync with the model (see CLAUDE.md rule 5).
     const body = page.locator('app-methodology .body');
     for (const phrase of ['5K, 10K, half marathon, marathon', 'Weekly running distance', 'mostly fitness, not inexperience',
-      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed', 'hand-over tips', 'Suggest a split', 'Quick']) {
+      'Other training hours', 'Insights', 'Simulator', 'athletes like you', 'No max test needed', 'hand-over tips', 'Suggest a split', 'Quick', 'usual set size']) {
       await expect(body).toContainText(phrase);
     }
   });
@@ -371,8 +378,21 @@ test.describe('saving & reset', () => {
   test('reset clears inputs after confirmation', async ({ page }) => {
     await page.getByLabel('5K', { exact: true }).fill('21:45');
     page.once('dialog', (d) => d.accept());
-    await page.getByRole('button', { name: 'Reset' }).click();
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await expect(page.getByLabel('5K', { exact: true })).toHaveValue('');
+  });
+
+  test('REGRESSION: reset asks "Are you sure?" and cancelling keeps everything', async ({ page }) => {
+    // User: "make sure the reset button has an 'are you sure' option so nobody accidentally resets".
+    await page.getByLabel('5K', { exact: true }).fill('21:45');
+    let message = '';
+    page.once('dialog', (d) => {
+      message = d.message();
+      void d.dismiss();
+    });
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
+    expect(message).toContain('Are you sure?');
+    await expect(page.getByLabel('5K', { exact: true })).toHaveValue('21:45');
   });
 });
 
@@ -394,7 +414,7 @@ test.describe('responsive layout', () => {
     // User: "the ever-present HYROX time gets hidden by the iPhone's keyboard… put it at the top."
     test.skip(!isMobile, 'phone only');
     await expect(page.getByRole('region', { name: 'Predicted finish summary' })).toBeHidden(); // no bottom bar
-    const field = page.getByLabel('Max unbroken wall balls');
+    const field = page.getByLabel('Usual set size for 100 reps');
     await field.scrollIntoViewIfNeeded();
     await field.focus();
     await field.fill('30');
@@ -456,15 +476,15 @@ test.describe('steppers and validation (user: "freeform text boxes… plus or mi
   });
 
   test('press and hold repeats', async ({ page }) => {
-    const plus = field(page, 'Max unbroken wall balls').getByRole('button', { name: 'Increase' });
+    const plus = field(page, 'Usual set size for 100 reps').getByRole('button', { name: 'Increase' });
     await plus.scrollIntoViewIfNeeded();
     const box = (await plus.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.waitForTimeout(1000);
     await page.mouse.up();
-    const v = Number(await page.getByLabel('Max unbroken wall balls').inputValue());
-    expect(v).toBeGreaterThanOrEqual(30 + 5 * 3); // starts at 30, then repeats every 70 ms after 450 ms
+    const v = Number(await page.getByLabel('Usual set size for 100 reps').inputValue());
+    expect(v).toBeGreaterThanOrEqual(20 + 3); // starts at 20, then repeats every 70 ms after 450 ms
   });
 
   test('out-of-range numbers are flagged on the field and ignored', async ({ app, page }) => {
@@ -472,8 +492,8 @@ test.describe('steppers and validation (user: "freeform text boxes… plus or mi
     const before = await app.total();
     await page.getByLabel('Age', { exact: true }).fill('150');
     await expect(page.getByRole('alert').filter({ hasText: "150 isn't realistic, so it's ignored (expected 16–95)" })).toBeVisible();
-    await page.getByLabel('Max unbroken wall balls').fill('900');
-    await expect(page.getByRole('alert').filter({ hasText: '900 isn' })).toBeVisible();
+    await page.getByLabel('Usual set size for 100 reps').fill('900');
+    await expect(page.getByRole('alert').filter({ hasText: "900 isn't realistic, so it's ignored (expected 3–100)" })).toBeVisible();
     expect(await app.total()).toBe(before);
   });
 });

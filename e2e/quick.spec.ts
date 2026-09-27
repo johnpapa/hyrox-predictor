@@ -12,11 +12,11 @@ test.describe('quick view', () => {
     await expect(page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Quick' })).toHaveAttribute('aria-pressed', 'true');
     const fields = await panel.locator('input:not([type=range]):visible, select:visible').count();
     const groups = await panel.locator('[role=group][aria-label="Sex"]:visible, [role=group][aria-label$="self-assessment"]:visible').count();
-    expect(fields + groups).toBeLessThanOrEqual(10);
-    for (const label of ['Bodyweight (kg)', 'Age', 'Weekly running (km)', '5K', 'Max unbroken wall balls']) {
+    expect(fields + groups).toBeLessThanOrEqual(10); // 9 here: Men's Open decides the sex
+    for (const label of ['Bodyweight (kg)', 'Age', 'Weekly running (km)', '5K', 'Usual set size for 100 reps']) {
       await expect(page.getByLabel(label, { exact: true })).toBeVisible();
     }
-    for (const label of ['Name', 'Height (cm)', 'VO₂max (ml/kg/min)', 'Body fat (%)', '10K', 'Row 1000m best', 'Other training (hrs / week)']) {
+    for (const label of ['Name', 'Height (cm)', 'VO₂max (ml/kg/min)', 'Body fat (%)', '10K', 'Row 1000m best', 'Other training (hrs / week)', 'Max unbroken wall balls']) {
       await expect(page.getByLabel(label, { exact: true })).toHaveCount(0);
     }
     await expect(panel.getByRole('group', { name: 'Leg strength self-assessment' })).toBeVisible();
@@ -53,7 +53,7 @@ test.describe('quick view', () => {
     await expect(page.locator('.conf-tip')).not.toContainText('Switch to Detailed');
     await page.locator('app-ability-card').filter({ hasText: 'Leg strength' }).getByRole('button', { name: 'Solid', exact: true }).click();
     await page.locator('app-ability-card').filter({ hasText: 'Pulling strength' }).getByRole('button', { name: 'Solid', exact: true }).click();
-    await page.getByLabel('Max unbroken wall balls').fill('30');
+    await page.getByLabel('Usual set size for 100 reps').fill('20');
     await expect(page.locator('.conf-tip')).toContainText(/Switch to Detailed|well covered/);
   });
 
