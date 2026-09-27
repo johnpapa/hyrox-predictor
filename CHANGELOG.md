@@ -7,6 +7,13 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Runs in "Vs. athletes like you":** a Runs row compares your 8 km with athletes like you, explained by your
+  fitness (5K-equivalent vs typical for your profile).
+
+### Changed
+- **"Athletes like you" no longer share your race times** (which made them "runners like you"). They share your sex,
+  age, height, weight, body fat, experience and other training, with typical fitness, so running is compared too.
+  Fitness is attributed first, then each strength and station input at your fitness level, so the reasons add up.
 - **Disclaimer & privacy:**
   - a notice under the headline (unofficial, estimates only, nothing leaves your device);
   - a full "Disclaimer & privacy" section in the footer on every page, covering: unofficial and not affiliated,

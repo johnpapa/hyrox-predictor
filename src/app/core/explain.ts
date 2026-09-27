@@ -1,4 +1,5 @@
 import { AthleteProfile, emptyLifts, peerProfile } from './athlete';
+import { formatTime } from './time';
 import { resolveAthlete } from './resolve';
 import { cmFtIn, kgLb } from './units';
 import { DivisionInfo } from './divisions';
@@ -6,17 +7,16 @@ import { predictSolo, SoloPrediction } from './predictor';
 import { STATION_IDS, StationId } from './stations';
 
 /**
- * Explains the "vs. athletes like you" gaps. The comparison athlete already shares your build,
- * age, experience, race times and training volume (see `peerProfile`), so only trainable
- * abilities can create a gap: for each one you entered, reset just that input to "typical" and
- * measure how much each station's gap changes (leave-one-out attribution).
+ * Explains the "vs. athletes like you" gaps. The comparison athlete shares your build, age, experience and other
+ * training (see `peerProfile`), so gaps come from your fitness and abilities: race times, strength, wall balls and so
+ * on. For each one you entered, reset just that input to "not sure" and measure how much each gap changes
+ * (leave-one-out attribution).
  *
- * `profileEffects` separately shows what your build and background do to your finish time
- * versus an average athlete with your race times. Deterministic and local, like the rest of
- * the model.
+ * `profileEffects` separately shows what your build and background do to your finish time versus an average
+ * athlete with your race times. Deterministic and local, like the rest of the model.
  */
 
-export type GapArea = StationId | 'roxzone';
+export type GapArea = StationId | 'roxzone' | 'runs';
 
 export interface Reason {
   id: string;
@@ -41,6 +41,11 @@ interface Factor {
   neutral: (a: AthleteProfile) => AthleteProfile;
   /** Limit attribution to these areas (when the neutral profile also touches other things). */
   areas?: GapArea[];
+  /**
+   * Measure this factor directly: the gaps of this profile (athletes like you plus only this factor's inputs).
+   * Used for fitness, which shifts every baseline, so the other inputs are then measured at your fitness level.
+   */
+  alone?: (a: AthleteProfile) => AthleteProfile;
 }
 
 const lbText = kgLb;
@@ -61,6 +66,27 @@ const REF_BW = { male: 82, female: 65 } as const;
 const REF_H = { male: 178, female: 165 } as const;
 
 const FACTORS: Factor[] = [
+  {
+    // Race times set your running and, through the results data, the baseline for every station:
+    // fitter runners are faster on the stations too.
+    id: 'running',
+    applies: (a) =>
+      [a.fiveKSec, a.tenKSec, a.halfMarathonSec, a.marathonSec, a.vo2max, a.runningKmPerWeek, a.levels.run].some((x) => x != null),
+    label: (a, slower) => {
+      const yours = formatTime(resolveAthlete(a).fiveK.value);
+      const typical = formatTime(resolveAthlete(peerProfile(a)).fiveK.value);
+      return `Fitness from your race times (${slower ? 'below' : 'above'} typical: 5K-equivalent ${yours} vs ≈ ${typical} for athletes like you)`;
+    },
+    neutral: (a) => ({
+      ...a, fiveKSec: null, tenKSec: null, halfMarathonSec: null, marathonSec: null, vo2max: null,
+      runningKmPerWeek: null, levels: { ...a.levels, run: null },
+    }),
+    alone: (a) => ({
+      ...peerProfile(a), fiveKSec: a.fiveKSec, tenKSec: a.tenKSec, halfMarathonSec: a.halfMarathonSec, marathonSec: a.marathonSec,
+      vo2max: a.vo2max, vo2maxSource: a.vo2maxSource, runningKmPerWeek: a.runningKmPerWeek,
+      levels: { ...peerProfile(a).levels, run: a.levels.run },
+    }),
+  },
   {
     id: 'legs',
     applies: (a) => a.levels.legs != null || !!(a.lifts.backSquat.kg || a.lifts.frontSquat.kg || a.lifts.legPress.kg),
@@ -208,20 +234,21 @@ function gaps(s: SoloPrediction): Record<GapArea, number> {
   const g = {} as Record<GapArea, number>;
   for (const id of STATION_IDS) g[id] = s.stations[id] - s.typical[id];
   g.roxzone = s.roxzone - s.typicalRoxzone;
+  g.runs = s.runs.reduce((x, y) => x + y, 0) - s.typicalRunTotal;
   return g;
 }
 
 export function explainGaps(a: AthleteProfile, division: DivisionInfo): GapExplanation {
   const base = gaps(predictSolo(a, division));
-  const byArea = Object.fromEntries([...STATION_IDS, 'roxzone'].map((k) => [k, [] as Reason[]])) as Record<GapArea, Reason[]>;
+  const byArea = Object.fromEntries([...STATION_IDS, 'roxzone', 'runs'].map((k) => [k, [] as Reason[]])) as Record<GapArea, Reason[]>;
   const totals = new Map<string, Reason>();
   for (const f of FACTORS) {
     if (!f.applies(a)) continue;
-    const g = gaps(predictSolo(f.neutral(a), division));
+    const g = gaps(predictSolo(f.alone ? f.alone(a) : f.neutral(a), division));
     let sum = 0;
     for (const area of Object.keys(base) as GapArea[]) {
       if (f.areas && !f.areas.includes(area)) continue;
-      const sec = base[area] - g[area];
+      const sec = f.alone ? g[area] : base[area] - g[area];
       if (Math.abs(sec) >= 1) {
         byArea[area].push({ id: f.id, label: f.label(a, sec > 0), sec });
         sum += sec;

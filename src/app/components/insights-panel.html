@@ -28,9 +28,10 @@
   <h3><app-fold key="ins-peers" controls="fold-ins-peers">Vs. athletes like you</app-fold></h3>
   <div id="fold-ins-peers" [hidden]="!fold.isOpen('ins-peers')">
   <p class="sub">
-    "Athletes like you" share your sex, age, height, weight, body fat, experience, race times and weekly training.
-    They are typical only on trainable things: strength, grip, wall balls, burpees, sleds, lunges, ergs and
-    transitions. Each bar shows how your strength and station inputs move you from them. <strong>Tap a station to see why.</strong>
+    "Athletes like you" have your sex, age, height, weight, body fat, HYROX experience and other training, with
+    typical fitness for that profile. They <b>don't</b> share your race times: your running, strength and station
+    abilities are what's being compared. Fitter runners are usually faster on the stations too, so your race times
+    count there as well. <strong>Tap a row to see why.</strong>
   </p>
   @if (i.explanation.overall.length) {
     <div class="why-all">

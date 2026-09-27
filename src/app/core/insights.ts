@@ -14,13 +14,13 @@ export type { DoublesTip, Tip } from './tips';
 
 /**
  * Deterministic "Insights": where an athlete gains or loses time versus athletes like them
- * (same build, age, experience, race times and training volume; see `peerProfile`), what their
+ * (same build, age, experience and other training, typical fitness; see `peerProfile`), what their
  * build and background do to their time, and which single improvements would save the most
  * time (by re-running the model). No AI, no network — everything comes from the model.
  */
 
 export interface StationGap {
-  id: StationId | 'roxzone';
+  id: StationId | 'roxzone' | 'runs';
   name: string;
   yours: number;
   typical: number;
@@ -64,6 +64,8 @@ const LEVELS: readonly string[] = FALLBACK.levelNames;
 const NAMES: Record<StationId, string> = Object.fromEntries(STATIONS.map((s) => [s.id, s.name])) as Record<StationId, string>;
 
 export function stationGaps(solo: SoloPrediction): StationGap[] {
+  const runTotal = solo.runs.reduce((x, y) => x + y, 0);
+  const runs: StationGap = { id: 'runs', name: 'Runs (8 × 1 km)', yours: runTotal, typical: solo.typicalRunTotal, gap: runTotal - solo.typicalRunTotal };
   const gaps: StationGap[] = STATION_IDS.map((id) => ({
     id,
     name: NAMES[id],
@@ -72,7 +74,7 @@ export function stationGaps(solo: SoloPrediction): StationGap[] {
     gap: solo.stations[id] - solo.typical[id],
   }));
   gaps.push({ id: 'roxzone', name: 'Roxzone', yours: solo.roxzone, typical: solo.typicalRoxzone, gap: solo.roxzone - solo.typicalRoxzone });
-  return gaps;
+  return [runs, ...gaps];
 }
 
 type Candidate = { id: string; label: string; detail: string; apply: (x: AthleteProfile) => AthleteProfile };
@@ -277,6 +279,7 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   const sorted = [...gaps].sort((x, y) => y.gap - x.gap);
   const limiters = sorted.filter((g) => g.gap > 5).slice(0, 3);
   const strengths = sorted.filter((g) => g.gap < -5).reverse().slice(0, 3);
+  const stationLimiter = sorted.find((g) => g.gap > 5 && g.id !== 'runs' && g.id !== 'roxzone');
 
   // What-ifs: re-run the whole prediction (so doubles/relay tactics re-optimise too).
   const whatIfs: WhatIf[] = realisticGains(a)
@@ -329,23 +332,24 @@ export function computeInsights(input: PredictInput, prediction: Prediction, ath
   const pacing = [
     `Run 1: hold back to about ${formatTime(runs[0])} per km, no faster than ${formatTime(avg * 0.93)}. Going out hard costs more later.`,
     `Aim for ${formatTime(avg)} per km on average; expect Run 3 (after the sled push) and Run 8 to be your slowest.`,
-    limiters[0]
-      ? `Your biggest station risk is ${limiters[0].name}: plan your sets/breaks before race day.`
+    stationLimiter
+      ? `Your biggest station risk is ${stationLimiter.name}: plan your sets/breaks before race day.`
       : 'No station stands out as a weakness. Keep your pacing even.',
   ];
 
   const name = a.name?.trim() || `Athlete ${idx + 1}`;
   const who = prediction.solos.length > 1 ? `${name}: ` : '';
   const headline = limiters[0]
-    ? `${who}Biggest opportunity is ${limiters[0].name} (${formatTime(limiters[0].gap)} slower than athletes like you).`
-    : `${who}Well balanced. No station is slower than athletes like you.`;
+    ? `${who}Biggest opportunity is ${limiters[0].id === 'runs' ? 'your running' : limiters[0].name} (${formatTime(limiters[0].gap)} slower than athletes like you).`
+    : `${who}Well balanced. Nothing is slower than athletes like you.`;
 
   running.comparison = comparison;
   if (a.experience === 'first' && !a.levels.transitions) {
     running.note += ' Your Roxzone includes a first-race allowance (+15%); rate your transitions to replace it.';
   }
   const unknowns = unknownsWorthMeasuring(input, idx, prediction.total);
-  const tips = tipsFor(limiters.map((l) => l.id), a.experience === 'first' || a.experience === 'unknown');
+  // Runs map to the running tip; stations and the Roxzone to their own.
+  const tips = tipsFor(limiters.map((l) => (l.id === 'runs' ? 'run' : l.id)), a.experience === 'first' || a.experience === 'unknown');
   const explanation = explainGaps(a, prediction.division);
   const profile = profileEffects(a, prediction.division);
   const teamNames = input.athletes.slice(0, 2).map((x, i) => x.name?.trim() || `Athlete ${i + 1}`) as [string, string];

@@ -405,3 +405,16 @@ race or gym number (5K to marathon, row or SkiErg times, squat and deadlift vari
 burpees per minute, watch VO₂max, body fat) or a plain-language HYROX test people do in training (100 wall balls or
 sets of wall balls, 50 m sled push or pull, 80 m burpee broad jumps, 200 m farmers carry, 100 m lunges, a previous
 HYROX time). New inputs should pass the same test.
+
+## "Athletes like you" without race times (Sept 2026)
+
+A user pointed out that a comparison athlete with the same race times is really a "runner like you", and asked for
+runs in the comparison. The comparison athlete (`peerProfile`) now shares sex, age, height, bodyweight, body fat,
+experience and other training, and has typical fitness for that profile: race times, VO₂max, weekly running, lifts,
+ergs, station tests and self-ratings are all "not sure". Runs, stations and the Roxzone are compared.
+
+Because the split tables tie station baselines to run pace (fitter runners are faster on the stations too), race
+times now contribute to station gaps. Attribution measures fitness directly (you with only your race times vs
+athletes like you), then each other input by leave-one-out on the full profile. That puts each input at your own
+fitness level, and the reasons add up to each gap (interactions such as "20 unbroken wall balls is weak for a fast
+runner" are captured).

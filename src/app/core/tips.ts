@@ -61,7 +61,7 @@ export const TIPS: Record<Tip['area'], Tip> = {
 };
 
 /** Tips for the athlete's top limiters, plus the race-craft tips that help everyone. */
-export function tipsFor(limiterIds: (StationId | 'roxzone')[], firstRace: boolean): Tip[] {
+export function tipsFor(limiterIds: Tip['area'][], firstRace: boolean): Tip[] {
   const picked: Tip[] = [];
   for (const id of limiterIds) if (TIPS[id] && !picked.includes(TIPS[id])) picked.push(TIPS[id]);
   for (const general of [TIPS.run, TIPS.roxzone, ...(firstRace ? [TIPS.race] : [])]) {
