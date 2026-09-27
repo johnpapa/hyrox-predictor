@@ -57,13 +57,16 @@ test.describe('quick view', () => {
     await expect(page.locator('.conf-tip')).toContainText(/Switch to Detailed|well covered/);
   });
 
-  test('saved data that uses detailed fields opens in Detailed', async ({ page }) => {
+  test('REGRESSION: the form always opens in Quick, even with saved detailed data (which still counts)', async ({ page }) => {
     await page.addInitScript(() => {
       const a = { sex: 'male', heightCm: 180, fiveKSec: 1400 };
-      localStorage.setItem('hyrox-predictor:saved', JSON.stringify({ v: 1, divisionId: 'men-open', athletes: [a], units: 'kg', doublesShares: {}, relayOrder: null, overrides: {} }));
+      const saved = { v: 1, divisionId: 'men-open', athletes: [a], units: 'kg', doublesShares: {}, relayOrder: null, overrides: {}, mode: 'detailed' };
+      localStorage.setItem('hyrox-predictor:saved', JSON.stringify(saved));
     });
     await page.reload();
-    await expect(page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Detailed' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Quick' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.quick-foot')).toContainText('Also using from Detailed: height');
+    await page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Detailed' }).click();
     await expect(page.getByLabel('Height (cm)')).toHaveValue('180');
   });
 });
