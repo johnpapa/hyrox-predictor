@@ -75,8 +75,11 @@ export class AthleteForm {
   protected readonly r = computed(() => this.solo().resolved);
   protected readonly unit = computed(() => this.store.units());
   protected readonly quick = computed(() => this.store.mode() === 'quick');
-  /** Inputs in the Quick view: sex, age, bodyweight, experience, weekly running, 5K, running / leg / pulling ratings, wall-ball set size. */
-  protected readonly quickCount = 10;
+  /**
+   * Inputs in the Quick view: age, bodyweight, experience, weekly running, 5K, running / leg / pulling ratings,
+   * wall-ball set size, plus sex where the division doesn't decide it.
+   */
+  protected readonly quickCount = computed(() => (this.store.sexLocked() ? 9 : 10));
   /** Values entered in Detailed that Quick hides but still uses. */
   protected readonly hiddenUsed = computed(() => detailOnlyInputs(this.a()));
   protected readonly ranges = FALLBACK.ranges;

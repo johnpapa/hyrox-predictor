@@ -42,7 +42,9 @@
         <input type="text" [value]="ath.name" maxlength="24" (input)="patch({ name: $any($event.target).value })" />
       </label>
 
-}      <div class="field">
+}      <!-- Only asked where the division doesn't decide it (Adaptive, Corporate Relay). -->
+      @if (!store.sexLocked()) {
+      <div class="field">
         <span class="label">Sex</span>
         <div class="seg" role="group" aria-label="Sex">
           <button type="button" [attr.aria-pressed]="ath.sex === 'male'" [class.on]="ath.sex === 'male'"
@@ -51,6 +53,7 @@
             [disabled]="store.sexLocked()" (click)="patch({ sex: 'female' })">Female</button>
         </div>
       </div>
+      }
       <app-number-input [label]="'Bodyweight (' + unit() + ')'" [value]="ath.bodyweightKg" [factor]="weightFactor()"
         [decimals]="unit() === 'kg' ? 1 : 0" [units]="unit()" (unitsChange)="store.units.set($event)"
         uses="Sleds · Lunges · Burpee broad jumps · Ergs" [range]="ranges.bodyweightKg" [step]="unit() === 'kg' ? 0.5 : 1" [start]="starts().bodyweight" (valueChange)="patch({ bodyweightKg: $event })" />
@@ -125,7 +128,7 @@
 
   @if (quick()) {
     <p class="intro">
-      <strong>Quick view:</strong> the {{ quickCount }} inputs that move your prediction most. Leave anything on "Not sure";
+      <strong>Quick view:</strong> the {{ quickCount() }} inputs that move your prediction most. Leave anything on "Not sure";
       switch to <button type="button" class="linkish" (click)="store.mode.set('detailed')">Detailed</button> for lifts,
       ergs, station tests and more to narrow the range.
     </p>

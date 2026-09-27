@@ -63,17 +63,22 @@ test.describe('divisions', () => {
     expect(await app.total()).toBeGreaterThan(open);
   });
 
-  test('sex is fixed by the division rules and only choosable where teams pick their own mix', async ({ app, page }) => {
-    const female = page.getByRole('group', { name: 'Sex' }).getByRole('button', { name: 'Female' });
-    await expect(female).toBeDisabled();
-    // Mixed doubles fixes the team as 1 man + 1 woman
+  test('REGRESSION: sex is only asked where the division does not decide it', async ({ app, page }) => {
+    // User: "I selected men's doubles and men's singles, and it still asked me for male or female."
+    const sex = page.getByRole('group', { name: 'Sex' });
+    await expect(sex).toHaveCount(0); // Men's Open
+    await app.division("Men's Doubles").click();
+    await expect(sex).toHaveCount(0);
+    // Mixed doubles fixes the team as 1 man + 1 woman: the tabs show it, no question asked.
     await app.division('Mixed Doubles').click();
+    await expect(app.tab(1)).toContainText('W');
     await app.tab(1).click();
-    await expect(female).toHaveAttribute('aria-pressed', 'true');
-    await expect(female).toBeDisabled();
-    // Corporate relay lets the team choose
+    await expect(sex).toHaveCount(0);
+    // Adaptive and corporate relay let athletes choose.
     await app.division('Corporate Relay').click();
-    await expect(female).toBeEnabled();
+    await expect(sex.getByRole('button', { name: 'Female' })).toBeEnabled();
+    await app.division('Adaptive').click();
+    await expect(sex).toBeVisible();
   });
 
   test('division notes explain special rules', async ({ app, page }) => {
@@ -293,9 +298,10 @@ test.describe('team tactics', () => {
     await app.tab(1).click();
     await app.card('Leg strength').getByRole('button', { name: 'Elite', exact: true }).click();
     await tactics.getByRole('button', { name: 'Suggest a split' }).click();
-    const push = Number(await tactics.getByLabel('Sled Push share for Athlete 1').inputValue());
-    expect(push).toBeGreaterThanOrEqual(30);
-    expect(push).toBeLessThan(50);
+    // Read with retries: the slider updates after the click re-renders (slow under parallel load).
+    const push = () => tactics.getByLabel('Sled Push share for Athlete 1').inputValue().then(Number);
+    await expect.poll(push).toBeLessThan(50);
+    expect(await push()).toBeGreaterThanOrEqual(30);
     // Runs are paced by the slower partner; an assumed pace says so.
     await expect(tactics.locator('.run-note')).toContainText('Runs are paced by');
   });

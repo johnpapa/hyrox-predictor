@@ -12,7 +12,7 @@ test.describe('quick view', () => {
     await expect(page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Quick' })).toHaveAttribute('aria-pressed', 'true');
     const fields = await panel.locator('input:not([type=range]):visible, select:visible').count();
     const groups = await panel.locator('[role=group][aria-label="Sex"]:visible, [role=group][aria-label$="self-assessment"]:visible').count();
-    expect(fields + groups).toBeLessThanOrEqual(10);
+    expect(fields + groups).toBeLessThanOrEqual(10); // 9 here: Men's Open decides the sex
     for (const label of ['Bodyweight (kg)', 'Age', 'Weekly running (km)', '5K', 'Usual set size for 100 reps']) {
       await expect(page.getByLabel(label, { exact: true })).toBeVisible();
     }
