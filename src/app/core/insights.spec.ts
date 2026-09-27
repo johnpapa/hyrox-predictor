@@ -101,9 +101,9 @@ describe('running vs stations comparison', () => {
   });
 });
 
-describe('realistic, honest suggestions (user feedback)', () => {
+describe('realistic, honest suggestions', () => {
   it('REGRESSION: unknown strength never produces kg numbers; it is listed as worth measuring', () => {
-    const i = run({ divisionId: 'men-open', athletes: [ath('male', { fiveKSec: 21 * 60 + 8 })] });
+    const i = run({ divisionId: 'men-open', athletes: [ath('male', { fiveKSec: 21 * 60 + 30 })] });
     expect(i.whatIfs.find((w) => w.id === 'legs' || w.id === 'hinge')).toBeUndefined();
     expect(i.whatIfs.every((w) => !/kg/.test(w.detail))).toBe(true);
     const ids = i.unknowns.map((u) => u.id);
@@ -113,17 +113,17 @@ describe('realistic, honest suggestions (user feedback)', () => {
   });
 
   it('REGRESSION: the running suggestion quotes the 5K actually entered, not a blended equivalent', () => {
-    const i = run({ divisionId: 'men-open', athletes: [ath('male', { fiveKSec: 21 * 60 + 8, marathonSec: 3 * 3600 + 24 * 60, age: 54 })] });
-    expect(i.whatIfs.find((x) => x.id === 'run')!.detail).toMatch(/^5K 21:08 → /);
+    const i = run({ divisionId: 'men-open', athletes: [ath('male', { fiveKSec: 21 * 60 + 30, marathonSec: 3 * 3600 + 28 * 60, age: 53 })] });
+    expect(i.whatIfs.find((x) => x.id === 'run')!.detail).toMatch(/^5K 21:30 → /);
   });
 
-  it('REGRESSION: a 21:08 runner aged 54 gets a realistic running gain, not "1 minute faster"', () => {
-    const i = run({ divisionId: 'men-open', athletes: [ath('male', { fiveKSec: 21 * 60 + 8, age: 54 })] });
+  it('REGRESSION: a 21:30 runner aged 53 gets a realistic running gain, not "1 minute faster"', () => {
+    const i = run({ divisionId: 'men-open', athletes: [ath('male', { fiveKSec: 21 * 60 + 30, age: 53 })] });
     const w = i.whatIfs.find((x) => x.id === 'run')!;
     const m = w.detail.match(/→ (\d+):(\d+)/)!;
     const newFive = Number(m[1]) * 60 + Number(m[2]);
-    expect(21 * 60 + 8 - newFive).toBeGreaterThan(5);
-    expect(21 * 60 + 8 - newFive).toBeLessThan(30); // ≤ ~2% for a well-trained masters runner
+    expect(21 * 60 + 30 - newFive).toBeGreaterThan(5);
+    expect(21 * 60 + 30 - newFive).toBeLessThan(30); // ≤ ~2% for a well-trained masters runner
   });
 
   it('beginners are offered bigger gains than well-trained athletes', () => {
@@ -147,15 +147,15 @@ describe('realistic, honest suggestions (user feedback)', () => {
   });
 });
 
-describe('why each station differs (user question: "why am I worse than athletes who run like me?")', () => {
-  const john = () =>
+describe('why each station differs', () => {
+  const masters = () =>
     ath('male', {
-      fiveKSec: 21 * 60 + 8, marathonSec: 3 * 3600 + 24 * 60, bodyweightKg: 73.5, age: 54, heightCm: 170, experience: 'first',
-      runningKmPerWeek: 64, otherTrainingHours: 5.5, wallBallsUnbroken: 20, lv: { transitions: 4 },
+      fiveKSec: 21 * 60 + 30, marathonSec: 3 * 3600 + 28 * 60, bodyweightKg: 76, age: 53, heightCm: 173, experience: 'first',
+      runningKmPerWeek: 60, otherTrainingHours: 5, wallBallsUnbroken: 20, lv: { transitions: 4 },
     });
 
   it('explains each gap by the inputs that cause it, and the reasons add up', () => {
-    const input: PredictInput = { divisionId: 'men-open', athletes: [john()] };
+    const input: PredictInput = { divisionId: 'men-open', athletes: [masters()] };
     const p = predict(input);
     const i = computeInsights(input, p);
     const s = p.solos[0];
@@ -169,7 +169,7 @@ describe('why each station differs (user question: "why am I worse than athletes
   });
 
   it('REGRESSION: a Roxzone rating is attributed only to the Roxzone, not to the stations', () => {
-    const input: PredictInput = { divisionId: 'men-open', athletes: [john()] };
+    const input: PredictInput = { divisionId: 'men-open', athletes: [masters()] };
     const i = computeInsights(input, predict(input));
     for (const id of ['sledPush', 'sledPull', 'sandbagLunges'] as const) {
       expect(i.explanation.byArea[id].some((r) => r.id === 'transitions')).toBe(false);
@@ -180,10 +180,9 @@ describe('why each station differs (user question: "why am I worse than athletes
   });
 
   it('REGRESSION: compares against athletes like you, so build and age do not show up as station gaps', () => {
-    // User: "It should be versus athletes like you taking into account my height, my weight,
-    // my running times, my age, everything overall." With no lifts entered, John's sleds and
-    // lunges match athletes like him; before, they showed as slower because of his lighter bodyweight.
-    const input: PredictInput = { divisionId: 'men-open', athletes: [john()] };
+    // The comparison athlete shares build, age, race times and training. With no lifts entered, this runner's
+    // sleds and lunges match athletes like them; before, they showed as slower because of a lighter bodyweight.
+    const input: PredictInput = { divisionId: 'men-open', athletes: [masters()] };
     const p = predict(input);
     const s = p.solos[0];
     for (const id of ['sledPush', 'sledPull', 'farmersCarry', 'sandbagLunges', 'burpeeBroadJump', 'skierg', 'row'] as const) {
@@ -196,8 +195,8 @@ describe('why each station differs (user question: "why am I worse than athletes
     const ids = i.profile.map((r) => r.id);
     for (const id of ['bodyweight', 'age', 'experience', 'runningVolume']) expect(ids).toContain(id);
     expect(i.profile.find((r) => r.id === 'bodyweight')!.label).toMatch(/Lighter bodyweight/);
-    expect(i.profile.find((r) => r.id === 'age')!.sec).toBeGreaterThan(0); // 54: masters allowance
-    expect(i.profile.find((r) => r.id === 'runningVolume')!.sec).toBeLessThan(0); // 64 km/week helps
+    expect(i.profile.find((r) => r.id === 'age')!.sec).toBeGreaterThan(0); // 53: masters allowance
+    expect(i.profile.find((r) => r.id === 'runningVolume')!.sec).toBeLessThan(0); // 60 km/week helps
   });
 
   it('entering only build and background never creates a station gap', () => {
@@ -210,7 +209,7 @@ describe('why each station differs (user question: "why am I worse than athletes
   });
 
   it('strength reasons compare your estimated 1RM with athletes like you', () => {
-    const a = { ...john(), lifts: { ...emptyLifts(), deadlift: { kg: 60, reps: 10, rir: 1.5 } } };
+    const a = { ...masters(), lifts: { ...emptyLifts(), deadlift: { kg: 60, reps: 10, rir: 1.5 } } };
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
     const i = computeInsights(input, predict(input));
     const r = i.explanation.byArea.sledPull.find((x) => x.id === 'hinge')!;
@@ -221,7 +220,7 @@ describe('why each station differs (user question: "why am I worse than athletes
     // Clearing the squat used to make the model estimate it from the deadlift instead, which
     // flipped the sign: "Leg strength (above typical: squat 85 kg vs 116 kg)" with −70 s.
     const set = { kg: 61.2, reps: 10, rir: 1.5 };
-    const a = { ...john(), lifts: { ...emptyLifts(), backSquat: set, deadlift: set } };
+    const a = { ...masters(), lifts: { ...emptyLifts(), backSquat: set, deadlift: set } };
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
     const i = computeInsights(input, predict(input));
     const legs = i.explanation.overall.find((r) => r.id === 'legs')!;
@@ -232,7 +231,7 @@ describe('why each station differs (user question: "why am I worse than athletes
   });
 
   it('wall-ball set size: gains and reasons talk in sets, not max unbroken', () => {
-    const a = { ...john(), wallBallsUnbroken: null, wallBallsSetSize: 12 };
+    const a = { ...masters(), wallBallsUnbroken: null, wallBallsSetSize: 12 };
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
     const i = computeInsights(input, predict(input));
     expect(i.whatIfs.find((w) => w.id === 'wallBalls')!.detail).toMatch(/^Sets of 12 → \d+ for 100 reps$/);
@@ -240,7 +239,7 @@ describe('why each station differs (user question: "why am I worse than athletes
   });
 
   it('realistic gains for a working set are phrased as a working set (same reps, more weight)', () => {
-    const a = { ...john(), lifts: { ...emptyLifts(), backSquat: { kg: 60, reps: 10, rir: 1.5 } } };
+    const a = { ...masters(), lifts: { ...emptyLifts(), backSquat: { kg: 60, reps: 10, rir: 1.5 } } };
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
     const w = run(input).whatIfs.find((x) => x.id === 'legs')!;
     expect(w.detail).toMatch(/^Working set 60 kg \/ 132 lb × 10 → \d+ kg \/ \d+ lb × 10/);

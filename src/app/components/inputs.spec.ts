@@ -39,10 +39,10 @@ describe('inputs never rewrite what the user is typing', () => {
     f.componentRef.setInput('decimals', 0);
     await f.whenStable();
     const el: HTMLInputElement = f.nativeElement.querySelector('input');
-    type(el, '16');
-    type(el, '162');
-    f.componentRef.setInput('value', 16 / 2.20462); // echo of "16" arrives late
+    type(el, '17');
+    type(el, '175');
+    f.componentRef.setInput('value', 17 / 2.20462); // echo of "17" arrives late
     await f.whenStable();
-    expect(el.value).toBe('162');
+    expect(el.value).toBe('175');
   });
 });

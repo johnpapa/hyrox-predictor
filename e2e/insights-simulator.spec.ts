@@ -73,9 +73,9 @@ test.describe('live total & units', () => {
   test('bodyweight and lifts have an inline kg/lb switch', async ({ app, page }) => {
     const bw = page.locator('app-number-input').filter({ hasText: 'Bodyweight' });
     await bw.getByRole('button', { name: 'Pounds' }).click();
-    await page.getByLabel('Bodyweight (lb)').fill('162');
+    await page.getByLabel('Bodyweight (lb)').fill('170');
     await bw.getByRole('button', { name: 'Kilograms' }).click();
-    await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('73.5');
+    await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('77.1');
     await expect(app.card('Leg strength').getByLabel('Back squat (kg)')).toBeVisible();
     await app.card('Leg strength').getByRole('button', { name: 'Pounds' }).click();
     await expect(app.card('Leg strength').getByLabel('Back squat (lb)')).toBeVisible();
@@ -98,23 +98,23 @@ test.describe('live total & units', () => {
       await expect(dock).toBeHidden(); // board clock is on screen
       await page.locator('aside.results').evaluate((el) => el.scrollTo(0, 5000));
       await expect(dock).toBeVisible();
-      await page.getByLabel('5K', { exact: true }).fill('21:08');
+      await page.getByLabel('5K', { exact: true }).fill('21:30');
       await expect(dock.locator('.dock-time')).toHaveText(/\d{2}:\d{2}:\d{2}/);
       await expect(dock.locator('app-change-chip .chip')).toBeVisible();
     }
   });
 
   test('marathon time is accepted and shapes the running estimate', async ({ app, page }) => {
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
-    await app.card('Running').getByLabel('Marathon', { exact: true }).fill('3:24:00');
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
+    await app.card('Running').getByLabel('Marathon', { exact: true }).fill('3:28:00');
     await expect(app.card('Running')).toContainText('Endurance: typical');
-    await expect(app.card('Running').locator('.src')).toContainText('5K 21:08 + marathon 3:24:00');
+    await expect(app.card('Running').locator('.src')).toContainText('5K 21:30 + marathon 3:28:00');
   });
 });
 
-test.describe('honest suggestions & height (user feedback)', () => {
+test.describe('honest suggestions & height', () => {
   test('REGRESSION: "Not sure" strength shows as worth measuring, never as a made-up kg target', async ({ page }) => {
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
     const panel = page.locator('app-insights-panel');
     await expect(panel.locator('.unknowns')).toContainText('Enter a deadlift working set');
     await expect(panel.locator('.unknowns')).toContainText('Enter a squat working set');
@@ -122,10 +122,10 @@ test.describe('honest suggestions & height (user feedback)', () => {
   });
 
   test('height can be entered in cm or inches', async ({ app, page }) => {
-    await page.getByLabel('Height (cm)').fill('170');
+    await page.getByLabel('Height (cm)').fill('180');
     await page.getByRole('button', { name: 'LB', exact: true }).click();
-    await expect(page.getByLabel('Height (in)')).toHaveValue('67');
-    await expect(page.locator('app-number-input').filter({ hasText: 'Height' })).toContainText('5′7″');
+    await expect(page.getByLabel('Height (in)')).toHaveValue('71');
+    await expect(page.locator('app-number-input').filter({ hasText: 'Height' })).toContainText('5′11″');
     expect(app).toBeTruthy();
   });
 
@@ -151,8 +151,8 @@ test.describe('training volume inputs', () => {
 
 test.describe('insights: why each station differs', () => {
   test('tap a station to see the reasons; overall reasons are summarised', async ({ app, page }) => {
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
-    await page.getByLabel('Bodyweight (kg)').fill('73.5');
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
+    await page.getByLabel('Bodyweight (kg)').fill('76');
     await app.openAlternatives('Wall balls');
     await page.getByLabel('Max unbroken wall balls').fill('20');
     const panel = page.locator('app-insights-panel');
@@ -166,18 +166,17 @@ test.describe('insights: why each station differs', () => {
   });
 
   test('REGRESSION: compares with athletes like you; build and background are shown separately', async ({ app, page }) => {
-    // User: "It should be versus athletes like you taking into account my height, my weight,
-    // my running times, my age, everything overall."
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
-    await page.getByLabel('Bodyweight (kg)').fill('73.5');
-    await page.getByLabel('Age', { exact: true }).fill('54');
+    // The comparison athlete shares height, weight, race times, age and training; only trainable abilities differ.
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
+    await page.getByLabel('Bodyweight (kg)').fill('76');
+    await page.getByLabel('Age', { exact: true }).fill('53');
     const panel = page.locator('app-insights-panel');
     await expect(panel.getByRole('heading', { name: 'Vs. athletes like you' })).toBeVisible();
     await expect(panel).toContainText('share your sex, age, height, weight');
     // Bodyweight no longer makes the sled look slower; it is listed under build instead.
     await expect(panel.getByRole('button', { name: /Sled Push ±0:00/ })).toBeDisabled();
     await expect(panel.locator('.profile')).toContainText('Lighter bodyweight');
-    await expect(panel.locator('.profile')).toContainText('Age 54');
+    await expect(panel.locator('.profile')).toContainText('Age 53');
     // A deadlift working set shows up with a strength comparison.
     await app.card('Pulling strength').getByLabel('Deadlift (kg)', { exact: true }).fill('60');
     await app.card('Pulling strength').getByLabel('Deadlift reps', { exact: true }).fill('10');
@@ -189,15 +188,15 @@ test.describe('insights: why each station differs', () => {
 
 test.describe('age group & body fat', () => {
   test('REGRESSION: shows position within the 5-year age group next to overall', async ({ page }) => {
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
-    await page.getByLabel('Age', { exact: true }).fill('54');
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
+    await page.getByLabel('Age', { exact: true }).fill('53');
     await expect(page.locator('app-results-board .field-pos')).toContainText('of Men 50–54');
     await page.getByRole('link', { name: 'Simulator' }).click();
     await expect(page.locator('app-simulator-page .pos')).toContainText('Men 50–54');
   });
 
   test('body fat is used for estimated strength and explained', async ({ app, page }) => {
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
     await page.getByLabel('Body fat (%)').fill('14');
     await expect(app.card('Leg strength').locator('.src')).toContainText('lean mass at 14% body fat');
     await expect(page.locator('app-insights-panel .profile')).toContainText('Body fat 14%');

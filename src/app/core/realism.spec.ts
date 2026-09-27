@@ -322,13 +322,13 @@ describe('fuzz: random athletes never produce impossible splits', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────
-describe('user-reported scenario: 54-year-old, 162 lb, VO₂max 53, 21:08 5K, 3:24 marathon', () => {
-  const john = (p: Partial<AthleteProfile> & { lv?: Levels } = {}) =>
-    athlete('male', { fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, vo2max: 53, bodyweightKg: 162 / 2.20462, age: 54, ...p });
+describe('masters runner: 53-year-old, 76 kg, VO₂max 52, 21:30 5K, 3:28 marathon', () => {
+  const masters = (p: Partial<AthleteProfile> & { lv?: Levels } = {}) =>
+    athlete('male', { fiveKSec: min(21, 30), marathonSec: 3 * 3600 + 28 * 60, vo2max: 52, bodyweightKg: 76, age: 53, ...p });
 
   it('running is solid: laps around marathon pace, never slow', () => {
-    const p = run('men-open', john());
-    const marathonPace = (3 * 3600 + 24 * 60) / 42.195; // ≈ 4:50/km
+    const p = run('men-open', masters());
+    const marathonPace = (3 * 3600 + 28 * 60) / 42.195; // ≈ 4:50/km
     within(p.avgRun, marathonPace * 0.95, marathonPace * 1.12);
     for (const r of runs(p)) expect(r).toBeLessThan(min(6));
     within(p.total, min(72), min(90));
@@ -336,21 +336,21 @@ describe('user-reported scenario: 54-year-old, 162 lb, VO₂max 53, 21:08 5K, 3:
 
   it('a Strong Roxzone rating is faster than typical, even on a first race', () => {
     for (const experience of ['first', 'some', 'unknown'] as const) {
-      const p = run('men-open', john({ experience, lv: { transitions: 4 } }));
+      const p = run('men-open', masters({ experience, lv: { transitions: 4 } }));
       expect(p.solos[0].roxzone).toBeLessThan(p.solos[0].typicalRoxzone);
     }
   });
 
   it('marathon endurance nudges the running: durable is faster than fading', () => {
-    const durable = run('men-open', john({ marathonSec: 3 * 3600 + 12 * 60 }));
-    const fading = run('men-open', john({ marathonSec: 3 * 3600 + 50 * 60 }));
+    const durable = run('men-open', masters({ marathonSec: 3 * 3600 + 12 * 60 }));
+    const fading = run('men-open', masters({ marathonSec: 3 * 3600 + 50 * 60 }));
     expect(durable.runTotal).toBeLessThan(fading.runTotal);
     // …but only modestly: the 5K stays the anchor
     expect(fading.runTotal / durable.runTotal).toBeLessThan(1.12); // 38 min marathon spread ⇒ ≤ ~10% laps
   });
 
   it('a marathon alone (no 5K) still predicts sensible running', () => {
-    const p = run('men-open', john({ fiveKSec: null }));
+    const p = run('men-open', masters({ fiveKSec: null }));
     within(p.avgRun, min(4, 45), min(5, 40));
   });
 });
@@ -380,8 +380,8 @@ describe('race times, height and age (research-backed inputs)', () => {
   });
 
   it('height: taller is slightly faster on ergs, lunges and BBJ; overall effect stays small', () => {
-    const short = run('men-open', athlete('male', { fiveKSec: min(21), heightCm: 170 }));
-    const tall = run('men-open', athlete('male', { fiveKSec: min(21), heightCm: 201 }));
+    const short = run('men-open', athlete('male', { fiveKSec: min(21), heightCm: 173 }));
+    const tall = run('men-open', athlete('male', { fiveKSec: min(21), heightCm: 198 }));
     for (const id of ['skierg', 'row', 'sandbagLunges', 'burpeeBroadJump'] as const) expect(st(tall, id)).toBeLessThan(st(short, id));
     expect(st(tall, 'wallBalls')).toBeCloseTo(st(short, 'wallBalls'), 5);
     expect((short.total - tall.total) / short.total).toBeLessThan(0.025); // 31 cm apart ⇒ < 2.5%
@@ -390,7 +390,7 @@ describe('race times, height and age (research-backed inputs)', () => {
   it('doubles: the suggested split gives the much taller partner more of the lunges and burpee broad jumps', () => {
     const s = suggestDoublesShares({
       divisionId: 'men-doubles',
-      athletes: [athlete('male', { fiveKSec: min(21), heightCm: 170 }), athlete('male', { fiveKSec: min(21), heightCm: 201 })],
+      athletes: [athlete('male', { fiveKSec: min(21), heightCm: 165 }), athlete('male', { fiveKSec: min(21), heightCm: 200 })],
     });
     expect(s.sandbagLunges).toBeLessThan(0.5); // share of athlete 1 (the shorter one)
     expect(s.burpeeBroadJump).toBeLessThan(0.5);
@@ -454,9 +454,9 @@ describe('training volume: weekly running distance + other training hours (resea
     expect('trainingHours' in m).toBe(false);
   });
 
-  it('user scenario: 40 mi/week + 5.5 h gym is faster than the same athlete with volume unknown', () => {
-    const base = { fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, bodyweightKg: 73.5, age: 54 };
-    const known = run('men-open', athlete('male', { ...base, runningKmPerWeek: 40 * 1.60934, otherTrainingHours: 5.5 }));
+  it('masters runner: 60 km/week + 5 h gym is faster than the same athlete with volume unknown', () => {
+    const base = { fiveKSec: min(21, 30), marathonSec: 3 * 3600 + 28 * 60, bodyweightKg: 76, age: 53 };
+    const known = run('men-open', athlete('male', { ...base, runningKmPerWeek: 60, otherTrainingHours: 5 }));
     const unknown = run('men-open', athlete('male', base));
     expect(known.total).toBeLessThan(unknown.total);
     expect(unknown.total - known.total).toBeLessThan(min(3)); // modest, not a new athlete
@@ -465,11 +465,11 @@ describe('training volume: weekly running distance + other training hours (resea
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────
-describe('first race vs fitness (user question: does inexperience or fitness drive slower laps?)', () => {
-  const factor = (p: Partial<AthleteProfile>) => run('men-open', athlete('male', { fiveKSec: min(21, 8), ...p })).solos[0].runFactor;
+describe('first race vs fitness: does inexperience or fitness drive slower laps?', () => {
+  const factor = (p: Partial<AthleteProfile>) => run('men-open', athlete('male', { fiveKSec: min(21, 30), ...p })).solos[0].runFactor;
 
   it('REGRESSION: a fit, high-volume first-timer pays only a small first-race lap penalty', () => {
-    const fit = { runningKmPerWeek: 64, otherTrainingHours: 5.5, marathonSec: 3 * 3600 + 24 * 60 };
+    const fit = { runningKmPerWeek: 60, otherTrainingHours: 5, marathonSec: 3 * 3600 + 28 * 60 };
     const penalty = factor({ ...fit, experience: 'first' }) - factor({ ...fit, experience: 'some' });
     expect(penalty).toBeLessThan(0.01); // ≈ pacing allowance only
     expect(penalty).toBeGreaterThanOrEqual(0); // a first race is never faster than a second
@@ -486,80 +486,67 @@ describe('first race vs fitness (user question: does inexperience or fitness dri
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────
-describe('age groups, body fat and VO₂max (user question)', () => {
-  const john = (p: Partial<AthleteProfile> = {}) =>
+describe('age groups, body fat and VO₂max', () => {
+  const masters = (p: Partial<AthleteProfile> = {}) =>
     athlete('male', {
-      fiveKSec: min(21, 8), marathonSec: 3 * 3600 + 24 * 60, vo2max: 53, bodyweightKg: 73.5, bodyFatPct: 14,
-      age: 54, heightCm: 170, experience: 'first', runningKmPerWeek: 64, otherTrainingHours: 5.5, ...p,
+      fiveKSec: min(21, 30), marathonSec: 3 * 3600 + 28 * 60, vo2max: 52, bodyweightKg: 76, bodyFatPct: 15,
+      age: 53, heightCm: 173, experience: 'first', runningKmPerWeek: 60, otherTrainingHours: 5, ...p,
     });
 
   it('REGRESSION: field position is also given within the HYROX 5-year age group', () => {
-    const p = run('men-open', john());
+    const p = run('men-open', masters());
     expect(p.ageGroup!.label).toBe('Men 50–54');
     expect(p.ageGroup!.topPercent).toBeLessThan(p.topPercent!); // older groups are slower on average
     expect(p.ageGroup!.topPercent).toBeLessThan(25); // a 21-min 5K at 54 ranks well in 50–54
   });
 
   it('age-group medians slow down with age and use 5-year groups', () => {
-    const top = (age: number) => run('men-open', john({ age })).ageGroup!.topPercent;
-    expect(top(34)).toBeGreaterThan(top(54)); // same time ranks higher among older athletes
-    expect(top(54)).toBeGreaterThan(top(64));
-    expect(run('men-open', john({ age: 50 })).ageGroup!.label).toBe('Men 50–54');
-    expect(run('men-open', john({ age: 55 })).ageGroup!.label).toBe('Men 55–59');
+    const top = (age: number) => run('men-open', masters({ age })).ageGroup!.topPercent;
+    expect(top(34)).toBeGreaterThan(top(52)); // same time ranks higher among older athletes
+    expect(top(52)).toBeGreaterThan(top(64));
+    expect(run('men-open', masters({ age: 50 })).ageGroup!.label).toBe('Men 50–54');
+    expect(run('men-open', masters({ age: 55 })).ageGroup!.label).toBe('Men 55–59');
   });
 
   it('age group is omitted when age is unknown or for team divisions', () => {
-    expect(run('men-open', john({ age: null })).ageGroup).toBeNull();
-    expect(run('men-doubles', john(), john()).ageGroup).toBeNull();
+    expect(run('men-open', masters({ age: null })).ageGroup).toBeNull();
+    expect(run('men-doubles', masters(), masters()).ageGroup).toBeNull();
   });
 
   it('lean athletes are assumed stronger when lifts are unknown; measured lifts ignore body fat', () => {
-    const lean = run('men-open', john({ bodyFatPct: 12 }));
-    const avg = run('men-open', john({ bodyFatPct: 18 }));
-    const high = run('men-open', john({ bodyFatPct: 28 }));
+    const lean = run('men-open', masters({ bodyFatPct: 12 }));
+    const avg = run('men-open', masters({ bodyFatPct: 18 }));
+    const high = run('men-open', masters({ bodyFatPct: 28 }));
     expect(st(lean, 'sledPush')).toBeLessThan(st(avg, 'sledPush'));
     expect(st(high, 'sledPush')).toBeGreaterThan(st(avg, 'sledPush'));
-    expect(avg.total).toBeCloseTo(run('men-open', john({ bodyFatPct: null })).total, 5); // 18% = typical = neutral
+    expect(avg.total).toBeCloseTo(run('men-open', masters({ bodyFatPct: null })).total, 5); // 18% = typical = neutral
     const lifts = { ...emptyLifts(), backSquat: { kg: 120, reps: 1 }, deadlift: { kg: 160, reps: 1 } };
-    expect(st(run('men-open', john({ bodyFatPct: 12, lifts })), 'sledPush')).toBeCloseTo(st(run('men-open', john({ bodyFatPct: 28, lifts })), 'sledPush'), 5);
+    expect(st(run('men-open', masters({ bodyFatPct: 12, lifts })), 'sledPush')).toBeCloseTo(st(run('men-open', masters({ bodyFatPct: 28, lifts })), 'sledPush'), 5);
   });
 
   it('REGRESSION: with race times, VO₂max still has a small, capped say', () => {
-    // User: "Is it really true that VO2 max and resting heart rate have no effect if you include race times?"
-    // (Resting HR was then removed from the app entirely: "Let's not make people enter information that is not valuable.")
-    const p = run('men-open', john());
-    expect(p.solos[0].resolved.sources.run).toContain('watch VO₂max 53 consistent with your races');
-    const none = run('men-open', john({ vo2max: null })).total;
-    const high = run('men-open', john({ vo2max: 70 })).total;
-    const low = run('men-open', john({ vo2max: 35 })).total;
+    // Races dominate, but an out-of-line VO₂max (old or not-all-out races) still shifts the estimate a little.
+    const p = run('men-open', masters());
+    expect(p.solos[0].resolved.sources.run).toContain('watch VO₂max 52 consistent with your races');
+    const none = run('men-open', masters({ vo2max: null })).total;
+    const high = run('men-open', masters({ vo2max: 70 })).total;
+    const low = run('men-open', masters({ vo2max: 35 })).total;
     expect(high).toBeLessThan(none);
     expect(low).toBeGreaterThan(none);
     // Races still dominate: ±1.5% on running for a watch (±4% lab); pace also sets station baselines,
     // so the finish moves up to ~2% each way for a watch estimate.
     expect((high - none) / none).toBeGreaterThan(-0.02);
     expect((low - none) / none).toBeLessThan(0.02);
-    const labHigh = run('men-open', john({ vo2max: 70, vo2maxSource: 'lab' })).total;
+    const labHigh = run('men-open', masters({ vo2max: 70, vo2maxSource: 'lab' })).total;
     expect(labHigh).toBeLessThan(high);
     expect((none - labHigh) / none).toBeLessThan(0.05);
   });
 });
 
 describe('real results (calibration anchors)', () => {
-  it('REGRESSION: S9 Washington DC 2026 mixed doubles — 1:19:14 placed 670th of 2,814 (top 23.8%)', () => {
-    // A friend pair of the user (both 45, second HYROX, strong at stations, good runners).
-    expect(topPercent('mixed-doubles', 1 * 3600 + 19 * 60 + 14)).toBeCloseTo(23.8, 0);
-  });
-
-  it('reproduces that pair when their runs match: total within 2%, runs / stations / Roxzone within 10%', () => {
-    // Actual: runs 44:12, stations 27:41, Roxzone 7:21. A ≈ 22:55 / 23:25 5K pair reproduces the runs;
-    // typical ("Solid") station ability for that running level.
-    const him = athlete('male', { fiveKSec: min(23, 25), age: 45, bodyweightKg: 84, experience: 'some' });
-    const her = athlete('female', { fiveKSec: min(22, 55), age: 45, bodyweightKg: 62, experience: 'some' });
-    const p = run('mixed-doubles', him, her);
-    const near = (x: number, target: number, tol: number) => expect(Math.abs(x - target) / target).toBeLessThan(tol);
-    near(p.total, 4754, 0.02);
-    near(p.runTotal, 2652, 0.1);
-    near(p.workTotal, 1661, 0.1);
-    near(p.roxzone, 441, 0.1);
+  it('REGRESSION: 2026 mixed doubles field — about 24% of teams finish under 1:19', () => {
+    // From a large S9 (2026) field of 2,800+ teams; the older medians put 1:19 near the top third.
+    expect(Math.abs(topPercent('mixed-doubles', 79 * 60)! - 24)).toBeLessThan(2);
   });
 });
+

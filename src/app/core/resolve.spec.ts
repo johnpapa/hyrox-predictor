@@ -14,7 +14,7 @@ describe('formulas', () => {
     expect(oneRepMax(100, 5)).toBeCloseTo(116.7, 1);
     expect(oneRepMax(100, 30)).toBeCloseTo(150, 1); // capped at 15 reps to failure
   });
-  it('working sets: reps left in reserve count toward the 1RM estimate (user: "I never do my max")', () => {
+  it('working sets: reps left in reserve count toward the 1RM estimate (no max test needed)', () => {
     // 60 kg × 10 with 1–2 reps left ≈ 11.5 reps to failure.
     expect(oneRepMax(60, 10, 1.5)).toBeCloseTo(60 * (1 + 11.5 / 30), 5);
     expect(oneRepMax(60, 10, 1.5)).toBeGreaterThan(oneRepMax(60, 10, 0));
@@ -86,17 +86,17 @@ describe('strength fallbacks', () => {
   });
 });
 
-describe('strength standards (user: "147 kg deadlift is just Solid? That\'s heavy as hell")', () => {
+describe('strength standards', () => {
   it('REGRESSION: Solid means a recreational HYROX athlete, not a powerlifter', () => {
-    // 73.5 kg man: Solid deadlift ≈ 110 kg (243 lb), squat ≈ 92 kg (203 lb); 147 kg deadlift is Strong+.
+    // 76 kg man: Solid deadlift ≈ 114 kg (251 lb), squat ≈ 95 kg (209 lb); a 2× bodyweight deadlift (152 kg) is Strong+.
     const m = (lv: 'legs' | 'hinge', l: 1 | 2 | 3 | 4 | 5) =>
-      resolveAthlete(man({ bodyweightKg: 73.5, levels: { ...defaultAthlete('male').levels, [lv]: l } }));
-    expect(m('hinge', 3).deadlift.value).toBeCloseTo(110, 0);
-    expect(m('legs', 3).squat.value).toBeCloseTo(92, 0);
-    expect(m('hinge', 4).deadlift.value).toBeLessThan(147);
-    expect(m('hinge', 5).deadlift.value).toBeGreaterThan(147);
+      resolveAthlete(man({ bodyweightKg: 76, levels: { ...defaultAthlete('male').levels, [lv]: l } }));
+    expect(m('hinge', 3).deadlift.value).toBeCloseTo(114, 0);
+    expect(m('legs', 3).squat.value).toBeCloseTo(95, 0);
+    expect(m('hinge', 4).deadlift.value).toBeLessThan(152);
+    expect(m('hinge', 5).deadlift.value).toBeGreaterThan(152);
     // Typical ("Not sure") equals Solid, and women's squat stays below their deadlift.
-    expect(resolveAthlete(man({ bodyweightKg: 73.5 })).deadlift.value).toBeCloseTo(110, 0);
+    expect(resolveAthlete(man({ bodyweightKg: 76 })).deadlift.value).toBeCloseTo(114, 0);
     const w = resolveAthlete({ ...defaultAthlete('female'), bodyweightKg: 65 });
     expect(w.squat.value).toBeLessThan(w.deadlift.value);
     expect(w.deadlift.value).toBeLessThan(80);
@@ -104,7 +104,7 @@ describe('strength standards (user: "147 kg deadlift is just Solid? That\'s heav
 });
 
 describe('grip, burpees & wall balls', () => {
-  it('REGRESSION: a usual set size for 100 reps estimates max unbroken (user: "I did 100 in sets of 20")', () => {
+  it('REGRESSION: a usual set size for 100 reps estimates max unbroken ', () => {
     const r = resolveAthlete(man({ wallBallsSetSize: 20 }));
     expect(r.wallBallsUnbroken).toBe(33); // sets are ~60% of max unbroken
     expect(r.quality.wallBalls).toBe('converted');
@@ -125,7 +125,7 @@ describe('grip, burpees & wall balls', () => {
   });
 
   it('REGRESSION: no niche benchmarks — "Karen" was removed and old saves drop it', () => {
-    // User: "This app should help the average person… I never heard of a Karen, so don't add that or anything similar."
+    // The app sticks to inputs an average athlete knows; niche benchmarks were removed.
     const m = migrateAthlete({ sex: 'male', karenSec: 600 }, 0) as unknown as Record<string, unknown>;
     expect('karenSec' in m).toBe(false);
   });

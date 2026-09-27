@@ -1,8 +1,8 @@
 import { expect, test } from './fixtures';
 
 /**
- * Quick view (user: "only show the 10 or less fields that are the most important… the same fields,
- * in the same units, as the long form").
+ * Quick view: at most 10 inputs, the ones that drive the prediction most, as the same fields and units as the
+ * Detailed view.
  */
 test.describe('quick view', () => {
   test.use({ formMode: 'quick' });
@@ -27,18 +27,18 @@ test.describe('quick view', () => {
   test('Quick and Detailed edit the same fields in the same units', async ({ page }) => {
     await page.getByRole('button', { name: 'LB', exact: true }).click();
     await page.getByLabel('Weekly running (mi)').fill('40');
-    await page.getByLabel('Bodyweight (lb)').fill('162');
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('Bodyweight (lb)').fill('175');
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
     await page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Detailed' }).click();
     await expect(page.getByLabel('Weekly running (mi)')).toHaveValue('40');
-    await expect(page.getByLabel('Bodyweight (lb)')).toHaveValue('162');
-    await expect(page.getByLabel('5K', { exact: true })).toHaveValue('21:08');
+    await expect(page.getByLabel('Bodyweight (lb)')).toHaveValue('175');
+    await expect(page.getByLabel('5K', { exact: true })).toHaveValue('21:30');
   });
 
   test('details entered in Detailed stay in use and are listed in Quick', async ({ app, page }) => {
     await page.getByLabel('5K', { exact: true }).fill('23:00');
     await page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Detailed' }).click();
-    await page.getByLabel('Height (cm)').fill('201');
+    await page.getByLabel('Height (cm)').fill('198');
     const withHeight = await app.total();
     await page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Quick' }).click();
     await expect(page.locator('.quick-foot')).toContainText('Also using from Detailed: height');

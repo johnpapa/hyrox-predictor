@@ -8,7 +8,7 @@ test.describe('first visit', () => {
       await expect(page.locator('.totals')).toContainText(label);
     }
     expect(await app.confidencePct()).toBeGreaterThan(12);
-    // The low–high bar is labelled so its meaning is clear (user question), and matches the confidence panel.
+    // The low–high bar is labelled so its meaning is clear and matches the confidence panel.
     await expect(page.locator('app-results-board .range-label')).toHaveText(/Likely range ±\d+%/);
     await expect(app.card('Running').locator('.q')).toHaveText('Assumed');
     await expect(app.card('Running').locator('.src')).toContainText('enter a run time');
@@ -64,7 +64,7 @@ test.describe('divisions', () => {
   });
 
   test('REGRESSION: sex is only asked where the division does not decide it', async ({ app, page }) => {
-    // User: "I selected men's doubles and men's singles, and it still asked me for male or female."
+    // Men's, Women's and Mixed divisions decide each athlete's sex, so the question is only asked where it isn't.
     const sex = page.getByRole('group', { name: 'Sex' });
     await expect(sex).toHaveCount(0); // Men's Open
     await app.division("Men's Doubles").click();
@@ -91,7 +91,7 @@ test.describe('athlete inputs & fallbacks', () => {
   test('the likely range narrows as benchmarks are added', async ({ page }) => {
     const pct = async () => Number((await page.locator('app-results-board .range-label').textContent())!.replace(/\D/g, ''));
     const before = await pct();
-    await page.getByLabel('5K', { exact: true }).fill('21:08');
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
     await page.getByLabel('Usual set size for 100 reps').fill('25');
     expect(await pct()).toBeLessThan(before);
   });
@@ -201,7 +201,7 @@ test.describe('athlete inputs & fallbacks', () => {
   });
 
   test('REGRESSION: a usual working set (no max test) estimates the 1RM from reps left in reserve', async ({ app, page }) => {
-    // User: "I never do my max... three sets of about 8 to 12 reps."
+    // Most people never test a max: a usual working set plus reps in reserve should be enough.
     await page.getByRole('button', { name: 'LB', exact: true }).click();
     const pull = app.card('Pulling strength');
     await expect(pull).toContainText('Your usual working set is fine');
@@ -215,14 +215,14 @@ test.describe('athlete inputs & fallbacks', () => {
   });
 
   test('REGRESSION: impossible body fat is flagged, not silently ignored', async ({ app, page }) => {
-    // User: "I changed the body fat to 114 and then 144 and it didn't have any effect at all."
+    // An impossible body fat used to be ignored silently, which looked like the field did nothing.
     const bf = page.getByLabel('Body fat (%)');
     await bf.fill('114');
     const field = page.locator('app-number-input').filter({ hasText: 'Body fat' });
     await expect(field.getByRole('alert')).toContainText("114 isn't realistic, so it's ignored (expected 4–50)");
     await expect(bf).toHaveAttribute('aria-invalid', 'true');
     // A real value shows what it does; once lifts are entered it says it has no effect.
-    await page.getByLabel('Bodyweight (kg)').fill('73.5');
+    await page.getByLabel('Bodyweight (kg)').fill('76');
     await bf.fill('14');
     await expect(field).toContainText('Estimated strength +5% vs a typical 18% athlete');
     await app.card('Leg strength').getByLabel('Back squat (kg)').fill('100');
@@ -231,12 +231,12 @@ test.describe('athlete inputs & fallbacks', () => {
   });
 
   test('REGRESSION: weights show both kg and lb', async ({ app, page }) => {
-    // User: "any time something's listed as KG, should also be listed as pounds and vice versa."
+    // Every weight is shown in both kg and lb.
     await expect(app.splitRow('Farmers')).toContainText('2 × 24 kg / 53 lb');
     const pull = app.card('Pulling strength');
     await pull.getByRole('button', { name: 'Solid', exact: true }).click();
-    await page.getByLabel('Bodyweight (kg)').fill('73.5');
-    await expect(pull.locator('.src')).toContainText('110 kg / 243 lb');
+    await page.getByLabel('Bodyweight (kg)').fill('76');
+    await expect(pull.locator('.src')).toContainText('114 kg / 251 lb');
     await pull.getByLabel('Deadlift (kg)', { exact: true }).fill('60');
     await pull.getByLabel('Deadlift reps', { exact: true }).fill('10');
     await expect(pull).toContainText('Est. 1RM 83 kg / 183 lb');
@@ -279,7 +279,7 @@ test.describe('athlete inputs & fallbacks', () => {
 
 test.describe('team tactics', () => {
   test('REGRESSION: doubles start at 50/50, sliders stay within 20–80%, suggest and reset work', async ({ app, page }) => {
-    // User: "it set some splits to 0% or 100%… by default split everything 50/50 and let us adjust."
+    // The old optimiser could pick 0% or 100% for a station; nobody splits like that.
     await app.division("Men's Doubles").click();
     const tactics = page.locator('app-team-tactics');
     await expect(tactics.getByRole('heading', { name: 'Work split' })).toBeVisible();
@@ -383,7 +383,7 @@ test.describe('saving & reset', () => {
   });
 
   test('REGRESSION: reset asks "Are you sure?" and cancelling keeps everything', async ({ page }) => {
-    // User: "make sure the reset button has an 'are you sure' option so nobody accidentally resets".
+    // Reset must never clear inputs by accident.
     await page.getByLabel('5K', { exact: true }).fill('21:45');
     let message = '';
     page.once('dialog', (d) => {
@@ -411,7 +411,7 @@ test.describe('responsive layout', () => {
   });
 
   test('REGRESSION: on a phone the finish time sits at the top, where the keyboard cannot cover it', async ({ page, isMobile }) => {
-    // User: "the ever-present HYROX time gets hidden by the iPhone's keyboard… put it at the top."
+    // A bottom-docked finish time was covered by the on-screen keyboard; it now lives in the top bar.
     test.skip(!isMobile, 'phone only');
     await expect(page.getByRole('region', { name: 'Predicted finish summary' })).toBeHidden(); // no bottom bar
     const field = page.getByLabel('Usual set size for 100 reps');
@@ -435,7 +435,7 @@ test.describe('responsive layout', () => {
   });
 });
 
-test.describe('steppers and validation (user: "freeform text boxes… plus or minus, and validation")', () => {
+test.describe('steppers and validation', () => {
   const field = (page: import('@playwright/test').Page, label: string) =>
     page.locator('app-number-input, app-time-input').filter({ has: page.getByLabel(label, { exact: true }) });
 
@@ -452,12 +452,12 @@ test.describe('steppers and validation (user: "freeform text boxes… plus or mi
     await expect(age.getByRole('button', { name: 'Increase' })).toBeDisabled();
 
     const bw = field(page, 'Bodyweight (kg)');
-    await page.getByLabel('Bodyweight (kg)').fill('73.3');
+    await page.getByLabel('Bodyweight (kg)').fill('75.8');
     await bw.getByRole('button', { name: 'Increase' }).click();
-    await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('73.5'); // snaps to 0.5 kg
+    await expect(page.getByLabel('Bodyweight (kg)')).toHaveValue('76'); // snaps to 0.5 kg
     await page.getByRole('button', { name: 'LB', exact: true }).click();
     await field(page, 'Bodyweight (lb)').getByRole('button', { name: 'Increase' }).click();
-    await expect(page.getByLabel('Bodyweight (lb)')).toHaveValue('163'); // 1 lb steps
+    await expect(page.getByLabel('Bodyweight (lb)')).toHaveValue('168'); // 1 lb steps
   });
 
   test('arrow keys step (Shift × 10) and time fields step in seconds', async ({ app, page }) => {
