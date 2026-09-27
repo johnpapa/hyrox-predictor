@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
+import { checkNumber } from '../core/validate';
 import { RepeatPress } from './repeat-press';
 
 let nextId = 0;
 
 /**
- * Numeric field that never rewrites what the user is typing (so "7.", "22.5 lb" or "0" work).
+ * Numeric field that never rewrites what the user is typing (so "7." or "22." work mid-entry).
  * `factor` converts model units to display units (e.g. kg → lb); blank emits null.
+ * Errors (not a number, not whole, zero, out of range) show in red once you leave the field and
+ * clear as soon as the value is fixed ("reward early, punish late").
  */
 @Component({
   selector: 'app-number-input',
@@ -34,14 +37,14 @@ let nextId = 0;
         [attr.aria-valuemin]="range() ? displayNum(range()![0]) : null"
         [attr.aria-valuemax]="range() ? displayNum(range()![1]) : null"
         [attr.aria-label]="ariaLabel() || null"
-        [attr.aria-describedby]="hint() || rangeMsg() ? id + '-hint' : null"
+        [attr.aria-describedby]="hint() || message() ? id + '-hint' : null"
         type="text"
         [attr.inputmode]="integer() ? 'numeric' : 'decimal'"
         autocomplete="off"
         [placeholder]="placeholder()"
         [value]="text()"
-        [class.invalid]="invalid() || !!rangeMsg()"
-        [attr.aria-invalid]="invalid() || !!rangeMsg()"
+        [class.invalid]="!!message()"
+        [attr.aria-invalid]="!!message()"
         (input)="onInput($any($event.target).value)"
         (keydown)="onKey($event)"
         (blur)="onBlur()"
@@ -49,14 +52,12 @@ let nextId = 0;
       <button type="button" class="step" tabindex="-1" aria-label="Increase" [attr.aria-controls]="id"
         [disabled]="atMax()" appRepeatPress (repeatPress)="stepBy(1)">+</button>
       </div>
-      @if (rangeMsg(); as m) { <span class="hint warn" [id]="id + '-hint'" role="alert">{{ m }}</span> }
+      @if (message(); as m) { <span class="field-error" [id]="id + '-hint'" role="alert">{{ m }}</span> }
       @else if (hint()) { <span class="hint" [id]="id + '-hint'">{{ hint() }}</span> }
       @if (uses()) { <span class="uses">Used for: <b>{{ uses() }}</b></span> }
     </div>
   `,
   styles: `
-    .invalid { border-color: var(--warn) !important; }
-    .warn { color: var(--warn); }
     .uses { font-size: 0.74rem; color: var(--text-faint); }
     .uses b { color: var(--accent); font-weight: 600; }
     .stepper { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; }
@@ -108,14 +109,25 @@ export class NumberInput {
   /** Model value the first press starts from when the field is empty. */
   readonly start = input<number | null>(null);
 
-  protected readonly invalid = linkedSignal(() => false);
+  /** Why the typed text isn't a valid value ('' when it is). */
+  protected readonly error = computed(() => {
+    const c = this.check(this.text());
+    return c.ok ? '' : c.error;
+  });
+  /** Errors wait until the field is left, then track every keystroke until fixed. */
+  private readonly revealed = signal(true);
 
   protected readonly rangeMsg = computed(() => {
     const v = this.value();
     const r = this.range();
     if (v == null || !r || (v >= r[0] && v <= r[1])) return '';
-    return `${this.display(v)} isn't realistic, so it's ignored (expected ${this.display(r[0])}–${this.display(r[1])})`;
+    const units = this.units();
+    const u = units ? ` ${this.unitLabels()[units === 'kg' ? 0 : 1]}` : '';
+    return `Enter ${this.display(r[0])}–${this.display(r[1])}${u}. ${this.display(v)}${u} isn't realistic, so it's ignored`;
   });
+
+  /** The message under the field: format errors first, then the plausible range. */
+  protected readonly message = computed(() => (this.revealed() ? this.error() || this.rangeMsg() : ''));
 
   protected displayNum(v: number): number {
     const d = this.integer() ? 0 : Math.max(this.decimals(), 2);
@@ -154,7 +166,7 @@ export class NumberInput {
     const lo = this.allowZero() ? 0 : step;
     shown = Math.max(lo, Math.round(shown * 1000) / 1000);
     const v = shown / f;
-    this.invalid.set(false);
+    this.revealed.set(true);
     this.text.set(this.display(v));
     this.pending.push(v);
     this.valueChange.emit(v);
@@ -172,13 +184,14 @@ export class NumberInput {
     return String(Math.round(v * this.factor() * 10 ** d) / 10 ** d);
   }
 
+  private check(t: string) {
+    return checkNumber(t, { integer: this.integer(), allowZero: this.allowZero() });
+  }
+
+  /** Model value for the text, or undefined when it isn't valid. */
   private parse(t: string): number | null | undefined {
-    const trimmed = t.trim().replace(',', '.');
-    if (trimmed === '') return null;
-    if (!/^\d*\.?\d*$/.test(trimmed)) return undefined;
-    const n = parseFloat(trimmed);
-    if (!isFinite(n) || n < 0 || (n === 0 && !this.allowZero())) return undefined;
-    return (this.integer() ? Math.round(n) : n) / this.factor();
+    const c = this.check(t);
+    return !c.ok ? undefined : c.value == null ? null : c.value / this.factor();
   }
 
   /**
@@ -211,9 +224,10 @@ export class NumberInput {
   });
 
   protected onInput(t: string): void {
+    // Only live-validate while an error is already showing; otherwise wait for blur.
+    if (!this.message()) this.revealed.set(false);
     this.text.set(t);
     const v = this.parse(t);
-    this.invalid.set(v === undefined);
     if (v !== undefined) {
       this.pending.push(v);
       this.valueChange.emit(v);
@@ -222,6 +236,7 @@ export class NumberInput {
 
   protected onBlur(): void {
     this.pending = [];
-    if (!this.invalid()) this.text.set(this.display(this.value()));
+    this.revealed.set(true);
+    if (!this.error()) this.text.set(this.display(this.value()));
   }
 }

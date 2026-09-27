@@ -179,8 +179,9 @@
   width: 80px; text-align: right;
   background: var(--bg); border: 1px solid var(--accent); border-radius: 2px;
   padding: 6px; font-size: 16px;
-  &.invalid { border-color: var(--warn); }
 }
+.t:has(.field-error) { flex-wrap: wrap; }
+.t .field-error { flex-basis: 100%; justify-content: flex-end; text-align: right; font-family: var(--font-body); }
 
 .totals { border-top: 2px solid var(--line-strong); margin-top: 4px; }
 .tot {

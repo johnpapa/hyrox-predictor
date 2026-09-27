@@ -138,8 +138,9 @@ test.describe('athlete inputs & fallbacks', () => {
 
   test('implausible entries are ignored with a warning', async ({ app, page }) => {
     await page.getByLabel('5K', { exact: true }).fill('0:05');
+    await page.getByLabel('5K', { exact: true }).blur();
     // Flagged on the field itself and in the card summary.
-    await expect(page.getByRole('alert').filter({ hasText: "00:05 isn't realistic, so it's ignored (expected 12:00–01:30:00)" })).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: "Enter 12:00–01:30:00. 00:05 isn't realistic, so it's ignored" })).toBeVisible();
     await expect(app.card('Running').locator('.warn').last()).toContainText('ignored');
     await expect(app.clock).toHaveText(/\d{2}:\d{2}:\d{2}/);
   });
@@ -147,10 +148,15 @@ test.describe('athlete inputs & fallbacks', () => {
   test('invalid time input is flagged and does not break the prediction', async ({ app, page }) => {
     const input = page.getByLabel('5K', { exact: true });
     await input.fill('4:75');
+    await expect(input).not.toHaveClass(/invalid/); // not while still typing
+    await input.blur();
     await expect(input).toHaveClass(/invalid/);
+    await expect(input).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByRole('alert').filter({ hasText: 'Minutes and seconds must be 0–59' })).toBeVisible();
     await expect(app.clock).toHaveText(/\d{2}:\d{2}:\d{2}/);
     await input.fill('24:10');
     await expect(input).not.toHaveClass(/invalid/);
+    await expect(page.getByRole('alert').filter({ hasText: 'Minutes and seconds' })).toHaveCount(0);
   });
 
   test('running uses any race times entered, then a self-rating', async ({ app, page }) => {
@@ -218,8 +224,9 @@ test.describe('athlete inputs & fallbacks', () => {
     // An impossible body fat used to be ignored silently, which looked like the field did nothing.
     const bf = page.getByLabel('Body fat (%)');
     await bf.fill('114');
+    await bf.blur();
     const field = page.locator('app-number-input').filter({ hasText: 'Body fat' });
-    await expect(field.getByRole('alert')).toContainText("114 isn't realistic, so it's ignored (expected 4–50)");
+    await expect(field.getByRole('alert')).toContainText("Enter 4–50. 114 isn't realistic, so it's ignored");
     await expect(bf).toHaveAttribute('aria-invalid', 'true');
     // A real value shows what it does; once lifts are entered it says it has no effect.
     await page.getByLabel('Bodyweight (kg)').fill('76');
@@ -337,6 +344,20 @@ test.describe('results board', () => {
     await expect(row).toHaveClass(/locked/);
     await row.getByRole('button', { name: 'Reset to predicted time' }).click();
     await expect(row).not.toHaveClass(/locked/);
+  });
+
+  test('REGRESSION: a bad station time says what is wrong and keeps the editor open', async ({ app }) => {
+    const row = app.splitRow('Wall Balls');
+    await row.getByRole('button', { name: /Set your own/ }).click();
+    const input = row.locator('input.edit');
+    await input.fill('5:99');
+    await input.press('Enter');
+    await expect(row.getByRole('alert')).toHaveText('Minutes and seconds must be 0–59');
+    await expect(input).toHaveAttribute('aria-invalid', 'true');
+    await input.fill('5:30');
+    await expect(row.getByRole('alert')).toHaveCount(0);
+    await input.press('Enter');
+    await expect(row).toContainText('05:30');
   });
 
   test('race simulator plays and stops', async ({ page }) => {
@@ -491,9 +512,30 @@ test.describe('steppers and validation', () => {
     await page.getByLabel('5K', { exact: true }).fill('23:00');
     const before = await app.total();
     await page.getByLabel('Age', { exact: true }).fill('150');
-    await expect(page.getByRole('alert').filter({ hasText: "150 isn't realistic, so it's ignored (expected 16–95)" })).toBeVisible();
+    await page.getByLabel('Age', { exact: true }).blur();
+    await expect(page.getByRole('alert').filter({ hasText: "Enter 16–95. 150 isn't realistic, so it's ignored" })).toBeVisible();
     await page.getByLabel('Usual set size for 100 reps').fill('900');
-    await expect(page.getByRole('alert').filter({ hasText: "900 isn't realistic, so it's ignored (expected 3–100)" })).toBeVisible();
+    await page.getByLabel('Usual set size for 100 reps').blur();
+    await expect(page.getByRole('alert').filter({ hasText: "Enter 3–100. 900 isn't realistic, so it's ignored" })).toBeVisible();
     expect(await app.total()).toBe(before);
+  });
+
+  test('fields check their domain: whole numbers, positive values, weights in the chosen units', async ({ page }) => {
+    const age = page.getByLabel('Age', { exact: true });
+    await age.fill('34.5');
+    await age.blur();
+    await expect(page.getByRole('alert').filter({ hasText: 'Enter a whole number' })).toBeVisible();
+    await expect(age).toHaveAttribute('aria-invalid', 'true');
+    await age.fill('34');
+    await expect(page.getByRole('alert').filter({ hasText: 'Enter a whole number' })).toHaveCount(0);
+
+    const bw = page.getByLabel('Bodyweight (kg)');
+    await bw.fill('abc');
+    await bw.blur();
+    await expect(page.getByRole('alert').filter({ hasText: 'Enter a number' })).toBeVisible();
+    await bw.fill('-80');
+    await expect(page.getByRole('alert').filter({ hasText: "Can't be negative" })).toBeVisible();
+    await bw.fill('80');
+    await expect(bw).toHaveAttribute('aria-invalid', 'false');
   });
 });

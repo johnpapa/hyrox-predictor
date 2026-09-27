@@ -18,6 +18,9 @@
   --roxzone: #a78bfa;
   --good: #4ade80;
   --warn: #fb923c;
+  /* Validation errors: red, distinct from the orange "slower" colour. */
+  --error: #f87171;
+  --error-bg: rgba(248, 113, 113, 0.08);
   --radius: 4px;
   --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
   --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -103,6 +106,18 @@ button, input, select { font: inherit; color: inherit; }
   }
 
   .hint { font-size: 0.78rem; color: var(--text-faint); }
+}
+
+/* Invalid field: red border + tint, and a message with an icon (never colour alone). */
+input.invalid, input.invalid:focus { border-color: var(--error) !important; background-color: var(--error-bg); box-shadow: inset 0 0 0 1px var(--error); }
+.field-error {
+  display: flex; align-items: flex-start; gap: 5px;
+  font-size: 0.78rem; line-height: 1.3; color: var(--error); font-weight: 500;
+}
+.field-error::before {
+  content: '!'; flex: none; display: inline-grid; place-items: center;
+  width: 14px; height: 14px; margin-top: 1px; border-radius: 50%;
+  background: var(--error); color: var(--bg); font-size: 0.66rem; font-weight: 800; font-family: var(--font-body);
 }
 
 .btn {

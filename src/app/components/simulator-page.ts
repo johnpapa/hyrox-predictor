@@ -8,6 +8,7 @@ import { PredictorStore } from '../core/predictor.store';
 import { bandForSplit } from '../core/split-tables';
 import { StationId } from '../core/stations';
 import { formatTime, parseTime } from '../core/time';
+import { timeError } from '../core/validate';
 
 interface SimRow {
   key: string;
@@ -96,16 +97,44 @@ export class SimulatorPage {
     return bandForSplit(a.sex, row.stationId ?? 'run', sec, load);
   }
 
+  /** Why a typed split was rejected, per row (shown in red under it until fixed). */
+  protected readonly typeErrors = signal<Record<string, string>>({});
+
   protected set(row: SimRow, raw: string): void {
+    this.clearError(row);
     this.edits.update((e) => ({ ...e, [row.key]: Number(raw) }));
   }
 
-  protected typeTime(row: SimRow, text: string): void {
-    const sec = parseTime(text);
-    if (sec != null && sec > 0) this.set(row, String(sec));
+  /** Typed split: blank resets the row; anything else must be a time within the slider's range. */
+  protected typeTime(row: SimRow, el: HTMLInputElement): void {
+    const t = el.value.trim();
+    if (t === '') {
+      this.resetRow(row);
+      el.value = this.fmt(row.base);
+      return;
+    }
+    let err = timeError(t);
+    const sec = parseTime(t);
+    if (!err && (sec == null || sec < row.min || sec > row.max)) err = `Enter ${this.fmt(row.min)}–${this.fmt(row.max)}`;
+    if (err) this.typeErrors.update((e) => ({ ...e, [row.key]: err }));
+    else this.set(row, String(sec));
+  }
+
+  /** While an error is showing, re-check on every keystroke so it clears as soon as it's fixed. */
+  protected retypeTime(row: SimRow, el: HTMLInputElement): void {
+    if (this.typeErrors()[row.key] && el.value.trim() !== '') this.typeTime(row, el);
+  }
+
+  private clearError(row: SimRow): void {
+    if (!this.typeErrors()[row.key]) return;
+    this.typeErrors.update((e) => {
+      const { [row.key]: _, ...rest } = e;
+      return rest;
+    });
   }
 
   protected resetRow(row: SimRow): void {
+    this.clearError(row);
     this.edits.update((e) => {
       const { [row.key]: _, ...rest } = e;
       return rest;
@@ -113,6 +142,7 @@ export class SimulatorPage {
   }
 
   protected resetAll(): void {
+    this.typeErrors.set({});
     this.edits.set({});
   }
 

@@ -55,6 +55,22 @@ test.describe('race simulator page', () => {
     await expect(sim.locator('.delta')).toContainText('±0:00');
   });
 
+  test('REGRESSION: a mistyped split is explained in red instead of silently ignored', async ({ page }) => {
+    await page.goto('./#simulator');
+    const sim = page.locator('app-simulator-page');
+    const run1 = sim.locator('.row').filter({ hasText: 'Running 1' });
+    const box = run1.getByRole('textbox');
+    await box.fill('4:75');
+    await box.press('Enter');
+    await expect(run1.getByRole('alert')).toHaveText('Minutes and seconds must be 0–59');
+    await expect(box).toHaveAttribute('aria-invalid', 'true');
+    await box.fill('99:00');
+    await expect(run1.getByRole('alert')).toContainText('Enter ');
+    await box.fill('4:30');
+    await expect(run1.getByRole('alert')).toHaveCount(0);
+    await expect(box).toHaveAttribute('aria-invalid', 'false');
+  });
+
   test('REGRESSION: no percentage or uniform-scaling controls, only per-split sliders', async ({ page }) => {
     // Nobody plans a race in percentages or improves every split by the same amount.
     await page.goto('./#simulator');

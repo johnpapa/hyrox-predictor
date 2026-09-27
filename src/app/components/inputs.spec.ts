@@ -46,3 +46,85 @@ describe('inputs never rewrite what the user is typing', () => {
     expect(el.value).toBe('175');
   });
 });
+
+describe('input validation (red errors, shown on blur, cleared as soon as fixed)', () => {
+  const msg = (f: { nativeElement: HTMLElement }) => f.nativeElement.querySelector('.field-error')?.textContent?.trim() ?? '';
+
+  it('number: waits for blur, then explains and clears live once fixed', async () => {
+    const f = TestBed.createComponent(NumberInput);
+    f.componentRef.setInput('label', 'Reps');
+    f.componentRef.setInput('integer', true);
+    await f.whenStable();
+    const el: HTMLInputElement = f.nativeElement.querySelector('input');
+    type(el, '7.5');
+    await f.whenStable();
+    expect(msg(f)).toBe(''); // no scolding mid-typing
+    el.dispatchEvent(new Event('blur'));
+    await f.whenStable();
+    expect(msg(f)).toContain('whole number');
+    expect(el.getAttribute('aria-invalid')).toBe('true');
+    expect(el.classList).toContain('invalid');
+    expect(el.getAttribute('aria-describedby')).toBe(f.nativeElement.querySelector('.field-error').id);
+    type(el, '7');
+    await f.whenStable();
+    expect(msg(f)).toBe(''); // cleared on the keystroke that fixes it
+    expect(el.getAttribute('aria-invalid')).toBe('false');
+  });
+
+  it('REGRESSION: an integer field no longer silently rounds 7.5 to 8', async () => {
+    const f = TestBed.createComponent(NumberInput);
+    f.componentRef.setInput('label', 'Reps');
+    f.componentRef.setInput('integer', true);
+    const emitted: (number | null)[] = [];
+    f.componentInstance.valueChange.subscribe((v) => emitted.push(v));
+    await f.whenStable();
+    type(f.nativeElement.querySelector('input'), '7.5');
+    expect(emitted).toEqual([]);
+  });
+
+  it('number: range message uses display units once you leave the field', async () => {
+    const f = TestBed.createComponent(NumberInput);
+    f.componentRef.setInput('label', 'Deadlift (lb)');
+    f.componentRef.setInput('units', 'lb');
+    f.componentRef.setInput('factor', 2.20462);
+    f.componentRef.setInput('decimals', 0);
+    f.componentRef.setInput('range', [20, 400]);
+    await f.whenStable();
+    const el: HTMLInputElement = f.nativeElement.querySelector('input');
+    type(el, '9');
+    f.componentRef.setInput('value', 9 / 2.20462);
+    await f.whenStable();
+    expect(msg(f)).toBe('');
+    el.dispatchEvent(new Event('blur'));
+    await f.whenStable();
+    expect(msg(f)).toMatch(/^Enter 44–882 lb\. 9 lb isn't realistic/);
+  });
+
+  it('time: bad seconds are explained on blur and cleared once fixed', async () => {
+    const f = TestBed.createComponent(TimeInput);
+    f.componentRef.setInput('label', '5K');
+    const emitted: (number | null)[] = [];
+    f.componentInstance.secondsChange.subscribe((v) => emitted.push(v));
+    await f.whenStable();
+    const el: HTMLInputElement = f.nativeElement.querySelector('input');
+    type(el, '24:75');
+    await f.whenStable();
+    expect(msg(f)).toBe('');
+    el.dispatchEvent(new Event('blur'));
+    await f.whenStable();
+    expect(msg(f)).toBe('Minutes and seconds must be 0–59');
+    type(el, '24:50');
+    await f.whenStable();
+    expect(msg(f)).toBe('');
+    expect(emitted).toEqual([1490]);
+  });
+
+  it('time: a saved out-of-range value shows its message straight away', async () => {
+    const f = TestBed.createComponent(TimeInput);
+    f.componentRef.setInput('label', '5K');
+    f.componentRef.setInput('range', [720, 3600]);
+    f.componentRef.setInput('seconds', 300);
+    await f.whenStable();
+    expect(msg(f)).toBe("Enter 12:00–01:00:00. 05:00 isn't realistic, so it's ignored");
+  });
+});

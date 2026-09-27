@@ -7,10 +7,21 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Input checks with red errors on every field:** numbers must be numbers; reps, age and pull-ups must be whole
+  numbers; values can't be negative, or zero where zero makes no sense; times must be mm:ss or h:mm:ss with minutes and
+  seconds 0–59; weights are checked in the units you picked (kg or lb). Each message says how to fix it (e.g. "Enter
+  16–95"). Errors appear when you leave a field and clear on the keystroke that fixes them. They use a red border, an
+  icon, `aria-invalid` and a message linked with `aria-describedby`, so they aren't signalled by colour alone.
 - **Runs in "Vs. athletes like you":** a Runs row compares your 8 km with athletes like you, explained by your
   fitness (5K-equivalent vs typical for your profile).
 
+### Fixed
+- Reps and other whole-number fields no longer silently round a decimal (7.5 became 8). They now ask for a whole number.
+- Mistyped split times in the Simulator and station times on the results board are explained, not silently ignored.
+
 ### Changed
+- Out-of-range messages are red, lead with the valid range ("Enter 16–95. 150 isn't realistic, so it's ignored"), and
+  appear once you leave the field rather than while you type.
 - **"Athletes like you" no longer share your race times** (which made them "runners like you"). They share your sex,
   age, height, weight, body fat, experience and other training, with typical fitness, so running is compared too.
   Fitness is attributed first, then each strength and station input at your fitness level, so the reasons add up.
