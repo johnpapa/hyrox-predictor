@@ -1,9 +1,15 @@
 <div class="sim">
   <section class="panel scoreboard" aria-labelledby="sim-title">
+    <p class="simulating" role="status">
+      <span class="label">Simulating</span>
+      <strong>{{ formatLabel() }} · {{ store.division().name }}</strong>
+      @if (teamNames(); as t) { <span class="who">{{ t }} · team times</span> }
+      <a href="#" class="change">Change</a>
+    </p>
     <div class="sb-left">
-      <span class="label">Race simulator · {{ store.division().name }}</span>
-      <h1 id="sim-title">Drag your splits</h1>
-      <p class="sub">Starts from your prediction. Move any slider (or type a time) to see what it does to your finish.</p>
+      <h1 id="sim-title">Race simulator</h1>
+      <p class="sub">What if you ran faster, or lost less time on the sleds? Change any split and see your finish time and
+        field position update.</p>
     </div>
     <div class="sb-clock">
       <div class="clock mono" aria-live="polite">{{ fmt(total(), true) }}</div>
@@ -22,14 +28,34 @@
     </div>
   </section>
 
+  <section class="panel help" aria-labelledby="sim-help-title">
+    <h2 id="sim-help-title"><app-fold key="sim-help" controls="sim-help-body">How to use the simulator</app-fold></h2>
+    <div id="sim-help-body" [hidden]="!fold.isOpen('sim-help')">
+      <p>
+        It starts from your <b>predicted splits</b> for the division above{{ formatNote() }}. Nothing here changes your
+        profile or your prediction; it's a scratchpad for race plans and "what ifs".
+      </p>
+      <ol>
+        <li><b>Change one split:</b> drag its slider or type a time, e.g. see what a 30 s faster sled push is worth.</li>
+        <li><b>Shift everything:</b> move <i>All runs</i> or <i>All stations</i> by a percentage (negative = faster).</li>
+        <li><b>Work back from a goal:</b> type a target finish and tap <i>Hit target</i> to see the splits you'd need.</li>
+      </ol>
+      <p class="dim">↺ resets one split; <i>Reset to prediction</i> resets everything. @if (showBands()) { The small tag
+        on each split shows which finish band it's typical of, e.g. "80–90" means typical of 80–90 minute finishers. }</p>
+    </div>
+  </section>
+
   <section class="panel controls" aria-label="Simulator controls">
+    <h2 class="ctl-title">Quick changes</h2>
     <label class="scale">
       <span class="label">All runs <b class="mono">{{ runScale() > 0 ? '+' : '' }}{{ runScale() }}%</b></span>
+      <span class="hint">Slide left to run every km faster</span>
       <input type="range" min="-30" max="30" step="1" [value]="runScale()" aria-label="Scale all runs, percent"
         (input)="runScale.set(+$any($event.target).value)" />
     </label>
     <label class="scale">
       <span class="label">All stations <b class="mono">{{ stationScale() > 0 ? '+' : '' }}{{ stationScale() }}%</b></span>
+      <span class="hint">Slide left to do every station faster</span>
       <input type="range" min="-30" max="30" step="1" [value]="stationScale()" aria-label="Scale all stations, percent"
         (input)="stationScale.set(+$any($event.target).value)" />
     </label>
@@ -40,11 +66,13 @@
           (keydown.enter)="hitTarget()" aria-label="Target finish time" />
       </label>
       <button type="button" class="btn" (click)="hitTarget()">Hit target</button>
+      <span class="hint t-hint">Scales every split evenly to reach your goal time.</span>
       <button type="button" class="btn ghost" [disabled]="!changed()" (click)="resetAll()">Reset to prediction</button>
     </div>
   </section>
 
-  <section class="panel rows" aria-label="Splits">
+  <section class="panel rows" aria-labelledby="sim-splits-title">
+    <h2 id="sim-splits-title" class="rows-title">Your splits, in race order</h2>
     @for (r of rows(); track r.key; let i = $index) {
       @let v = values()[i];
       <div class="row" [attr.data-kind]="r.kind" [class.edited]="edits()[r.key] != null">
@@ -62,6 +90,5 @@
       </div>
     }
   </section>
-  <p class="foot">Band tags show which finish-time band a split is typical of (singles, from results data).
-    The simulator doesn't change your prediction inputs.</p>
+  <p class="foot">The simulator doesn't change your prediction inputs. Go back to the Predictor to change your profile.</p>
 </div>

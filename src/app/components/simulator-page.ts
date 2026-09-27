@@ -1,4 +1,6 @@
 import { DecimalPipe } from '@angular/common';
+import { FoldState } from '../core/fold';
+import { FoldToggle } from './fold-toggle';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { weightForAthlete } from '../core/divisions';
 import { ageGroupPosition, loadMultiplier, topPercent } from '../core/predictor';
@@ -24,12 +26,26 @@ interface SimRow {
 @Component({
   selector: 'app-simulator-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, FoldToggle],
   templateUrl: './simulator-page.html',
   styleUrl: './simulator-page.scss',
 })
 export class SimulatorPage {
   protected readonly store = inject(PredictorStore);
+  protected readonly fold = inject(FoldState);
+  protected readonly format = computed(() => this.store.division().format);
+  protected readonly formatNote = computed(() =>
+    this.format() === 'doubles' ? " (each station is the pair's time, with the work split you set)"
+      : this.format() === 'relay' ? " (each split is the leg athlete's time)" : '',
+  );
+  protected readonly formatLabel = computed(() => ({ single: 'Singles', doubles: 'Doubles', relay: 'Relay' })[this.format()]);
+  /** Team divisions: who the team is, so it's clear the splits are the team's. */
+  protected readonly teamNames = computed(() => {
+    const team = this.store.teamAthletes();
+    if (team.length < 2) return '';
+    const names = team.map((a, i) => a.name?.trim() || `Athlete ${i + 1}`);
+    return names.length === 2 ? names.join(' & ') : names.join(', ');
+  });
   protected readonly fmt = formatTime;
 
   /** Rows seeded from the current prediction. */

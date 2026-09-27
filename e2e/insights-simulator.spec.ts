@@ -231,3 +231,27 @@ test.describe('expert review: doubles tips and new inputs', () => {
     expect(await page.locator('app-ability-card .uses').count()).toBe(10);
   });
 });
+
+test.describe('simulator: what it simulates and how to use it', () => {
+  test('says which division and format it simulates, with team names for doubles', async ({ app, page }) => {
+    await page.getByRole('link', { name: 'Simulator' }).click();
+    const status = page.locator('app-simulator-page .simulating');
+    await expect(status).toContainText("Singles · Men's Open");
+    await page.getByRole('link', { name: 'Change' }).click();
+    await app.division('Mixed Doubles').click();
+    await page.getByRole('link', { name: 'Simulator' }).click();
+    await expect(status).toContainText('Doubles · Mixed Doubles');
+    await expect(status).toContainText('Athlete 1 & Athlete 2 · team times');
+    await expect(page.locator('app-simulator-page .help')).toContainText("each station is the pair's time");
+  });
+
+  test('explains how to use it, and the explanation can be collapsed', async ({ page }) => {
+    await page.getByRole('link', { name: 'Simulator' }).click();
+    const help = page.locator('app-simulator-page .help');
+    await expect(help).toContainText('Change one split');
+    await expect(help).toContainText('Work back from a goal');
+    const toggle = help.getByRole('button', { name: 'How to use the simulator' });
+    await toggle.click();
+    await expect(help.getByText('Change one split')).toBeHidden();
+  });
+});

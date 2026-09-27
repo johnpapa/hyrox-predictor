@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Simulator explains itself:**
+  - it says what it's simulating (e.g. "Singles · Men's Open" or "Doubles · Mixed Doubles · Sam & Alex · team times"),
+    with a Change link;
+  - a collapsible "How to use the simulator" box covers the three ways to use it (change one split, shift everything,
+    work back from a target);
+  - controls are labelled "Quick changes" and "Your splits, in race order", with hints.
 - **Wall balls: "Usual set size for 100 reps"** (e.g. sets of 20) is now the main wall-ball input in Quick and Detailed.
   Most people know it, and it's closer to race behaviour than a max-unbroken test. It's converted at sets ≈ 60% of max
   unbroken; max unbroken and 100-for-time stay as alternatives. Gains and reasons are phrased in sets.
