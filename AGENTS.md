@@ -79,6 +79,10 @@ npm run docs:screenshots   # regenerates docs/tutorial/*.png (Playwright "tutori
 - **Inputs:** numbers use `app-number-input`, times use `app-time-input`. Both have −/+ steppers, arrow keys and inline
   range checks. Give every new field a `range` (from `FALLBACK.ranges`), a `step` and a `start`. Any range the UI
   shows must also be enforced in the model (`resolve.ts` `ok()` or `sanitizeRanges()`).
+- **Validation UX:** format checks live in `core/validate.ts` (`checkNumber`, `timeError`). Set `integer` for counts
+  and `allowZero` only where 0 is meaningful. Errors use the global `.field-error` class and `input.invalid` (red
+  `--error` token, icon, `aria-invalid`, `aria-describedby`). They show on blur and clear as soon as the value is
+  fixed. Any other free-text field (e.g. Simulator splits) follows the same pattern.
 - **Quick vs Detailed:** Quick (`store.mode`) shows at most 10 inputs, the biggest drivers in RESEARCH.md "Quick view".
   They're the same components and units as Detailed. A new field goes in Detailed unless it outranks one of those;
   keep `QUICK_ABILITIES`, `detailOnlyInputs()` and `e2e/quick.spec.ts` in sync. E2E tests default to Detailed via the

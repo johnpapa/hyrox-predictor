@@ -35,8 +35,10 @@ Name, bodyweight (switch **KG / LB** right on the field), height, age, HYROX exp
 distance** (km or mi) and **other training hours** (gym, HYROX classes, erg or sled work). Sex is only asked in Adaptive and
 Corporate Relay; every other division decides it. Running and other training are separate because
 research shows running volume is what predicts HYROX times; gym hours help the stations a little.
-Type a value, or use the **− / +** buttons (hold to repeat) or the arrow keys. Anything unrealistic is flagged right
-on the field and ignored.
+Type a value, or use the **− / +** buttons (hold to repeat) or the arrow keys. When you leave a field, anything that
+doesn't fit is flagged in red right under it, with how to fix it: not a number, not a whole number (reps, age),
+negative, a time that isn't mm:ss or h:mm:ss, or a value outside the realistic range (which is ignored). The message
+disappears as soon as the value is fixed.
 Anything you don't know can stay on **Not sure**.
 Age shows your HYROX age group, and your field position is also estimated within it (e.g. **Top 17% of Men
 50–54**). Under **Physiology** you can add body fat % and VO₂max (lab or watch):

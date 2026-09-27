@@ -22,6 +22,8 @@ These come from the expert reviews recorded in `CHANGELOG.md` and `RESEARCH.md`,
   `linkedSignal` and keep the typed text. Bug example: "23:30" became 2:03:30.
 - **Validate everything that crosses a boundary:** saved `localStorage` data goes through `migrateAthlete()` and
   `sanitize()`, and implausible inputs are ignored with a visible warning (`FALLBACK.ranges`, `ok()` in `resolve.ts`).
+  Typed values are checked for their domain (`core/validate.ts`) and flagged in red with a fix-it message.
+  Never silently round or drop what someone typed.
 - **No double counting.** A self-rating that describes behaviour (e.g. transitions) replaces the related allowance
   (experience) instead of stacking with it. Sled ratings adjust technique only, not strength.
 - **"Not sure" is neutral.** Level 3 ("Solid") equals the typical athlete; assumed values never move the prediction and

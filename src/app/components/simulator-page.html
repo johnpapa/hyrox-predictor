@@ -56,12 +56,15 @@
         <div class="rh">
           <span class="rl">{{ r.label }}</span>
           @if (band(r, v); as b) { <span class="band" [title]="'Typical of ' + b + ' min finishers'">{{ b }}</span> }
+          @let err = typeErrors()[r.key];
           <input class="rt mono" type="text" [value]="fmt(v)" [attr.aria-label]="r.label + ' time'"
-            (change)="typeTime(r, $any($event.target).value)" />
+            [class.invalid]="!!err" [attr.aria-invalid]="!!err" [attr.aria-describedby]="err ? 'sim-err-' + r.key : null"
+            (change)="typeTime(r, $any($event.target))" (input)="retypeTime(r, $any($event.target))" />
           <span class="rd mono" [class.faster]="v - r.base < -0.5" [class.slower]="v - r.base > 0.5">{{ signed(v - r.base) }}</span>
           <button type="button" class="rr" [disabled]="edits()[r.key] == null" (click)="resetRow(r)"
             [attr.aria-label]="'Reset ' + r.label">↺</button>
         </div>
+        @if (typeErrors()[r.key]; as e) { <span class="field-error" [id]="'sim-err-' + r.key" role="alert">{{ e }}</span> }
         <input type="range" [min]="r.min" [max]="r.max" step="1" [value]="v" [attr.aria-label]="r.label + ' slider'"
           [attr.aria-valuetext]="fmt(v)" (input)="set(r, $any($event.target).value)" />
       </div>

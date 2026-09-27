@@ -1,12 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
 import { formatTime, parseTime } from '../core/time';
+import { timeError } from '../core/validate';
 import { RepeatPress } from './repeat-press';
 
 let nextId = 0;
 
 /**
  * Text input that accepts mm:ss / h:mm:ss (or plain minutes) and emits seconds, with −/+ steppers,
- * arrow keys (Shift × 10) and an inline check against the plausible range.
+ * arrow keys (Shift × 10) and an inline check against the plausible range. Errors show in red once
+ * you leave the field and clear as soon as the time is fixed ("reward early, punish late").
  * While typing, the text is never rewritten from the model — only when the model changes to
  * a value the text doesn't already represent (e.g. a reset), and on blur.
  */
@@ -38,7 +40,7 @@ let nextId = 0;
           [disabled]="atMax()" appRepeatPress (repeatPress)="stepBy(1)">+</button>
       </div>
       @if (message(); as m) {
-        <span class="hint warn" [id]="id + '-hint'" role="alert">{{ m }}</span>
+        <span class="field-error" [id]="id + '-hint'" role="alert">{{ m }}</span>
       } @else if (hint()) {
         <span class="hint" [id]="id + '-hint'">{{ hint() }}</span>
       }
@@ -46,8 +48,6 @@ let nextId = 0;
     </div>
   `,
   styles: `
-    .invalid { border-color: var(--warn) !important; }
-    .warn { color: var(--warn) !important; }
     .uses { font-size: 0.74rem; color: var(--text-faint); }
     .uses b { color: var(--accent); font-weight: 600; }
     .stepper { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; }
@@ -101,13 +101,17 @@ export class TimeInput {
       return s == null ? '' : formatTime(s);
     },
   });
-  protected readonly invalid = computed(() => this.text().trim() !== '' && parseTime(this.text()) == null);
+  /** Why the typed text isn't a valid time ('' when it is). */
+  protected readonly error = computed(() => timeError(this.text()) ?? '');
+  /** Errors wait until the field is left, then track every keystroke until fixed. */
+  private readonly revealed = signal(true);
 
   protected readonly message = computed(() => {
-    if (this.invalid()) return 'Use mm:ss or h:mm:ss';
+    if (!this.revealed()) return '';
+    if (this.error()) return this.error();
     const s = this.seconds(), r = this.range();
     if (s == null || !r || (s >= r[0] && s <= r[1])) return '';
-    return `${formatTime(s)} isn't realistic, so it's ignored (expected ${formatTime(r[0])}–${formatTime(r[1])})`;
+    return `Enter ${formatTime(r[0])}–${formatTime(r[1])}. ${formatTime(s)} isn't realistic, so it's ignored`;
   });
 
   protected readonly atMin = computed(() => {
@@ -120,9 +124,11 @@ export class TimeInput {
   });
 
   protected onInput(v: string): void {
+    // Only live-validate while an error is already showing; otherwise wait for blur.
+    if (!this.message()) this.revealed.set(false);
     this.text.set(v);
     if (v.trim() === '') this.emit(null);
-    else {
+    else if (!timeError(v)) {
       const parsed = parseTime(v);
       if (parsed != null) this.emit(parsed);
     }
@@ -138,6 +144,7 @@ export class TimeInput {
     const r = this.range();
     if (r) s = Math.min(r[1], Math.max(r[0], s));
     s = Math.max(step, s);
+    this.revealed.set(true);
     this.text.set(formatTime(s));
     this.emit(s);
   }
@@ -155,7 +162,8 @@ export class TimeInput {
 
   protected onBlur(): void {
     this.pending = [];
+    this.revealed.set(true);
     const s = this.seconds();
-    if (!this.invalid()) this.text.set(s == null ? '' : formatTime(s));
+    if (!this.error()) this.text.set(s == null ? '' : formatTime(s));
   }
 }

@@ -95,11 +95,14 @@
         <span class="r mono t">
           @if (s.kind === 'station' && editing() === s.stationId) {
             <input #editInput class="edit mono" type="text" autocomplete="off" [value]="fmt(s.sec)"
-              [class.invalid]="editInvalid()" [attr.aria-invalid]="editInvalid()"
+              [class.invalid]="!!editError()" [attr.aria-invalid]="!!editError()"
+              [attr.aria-describedby]="editError() ? 'edit-err' : null"
               aria-label="Set station time (mm:ss); leave empty to reset"
+              (input)="recheckEdit($any($event.target).value)"
               (keydown.enter)="commitEdit(s.stationId!, $any($event.target).value)"
               (keydown.escape)="cancelEdit(s.stationId!)"
               (blur)="commitEdit(s.stationId!, $any($event.target).value)" />
+            @if (editError(); as e) { <span class="field-error" id="edit-err" role="alert">{{ e }}</span> }
           } @else if (s.kind === 'station') {
             @if (s.overridden) {
               <button type="button" class="lock" aria-label="Reset to predicted time" title="Reset to predicted"

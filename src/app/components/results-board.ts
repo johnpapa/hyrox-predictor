@@ -4,6 +4,7 @@ import { ChangeChip } from './change-chip';
 import { Segment } from '../core/predictor';
 import { StationId } from '../core/stations';
 import { formatTime, parseTime } from '../core/time';
+import { timeError } from '../core/validate';
 
 interface TrackPiece {
   kind: 'run' | 'station' | 'roxzone';
@@ -26,7 +27,8 @@ export class ResultsBoard {
   protected readonly p = this.store.prediction;
   protected readonly fmt = formatTime;
   protected readonly editing = signal<StationId | null>(null);
-  protected readonly editInvalid = signal(false);
+  /** Why the typed station time was rejected ('' when fine); the editor stays open until fixed. */
+  protected readonly editError = signal('');
   private readonly editInput = viewChild<ElementRef<HTMLInputElement>>('editInput');
 
   protected readonly athleteNames = computed(() =>
@@ -130,7 +132,7 @@ export class ResultsBoard {
   // ── Overrides ────────────────────────────────────────────────────────────────────
   protected startEdit(id: StationId | undefined): void {
     if (!id) return;
-    this.editInvalid.set(false);
+    this.editError.set('');
     this.editing.set(id);
   }
 
@@ -138,13 +140,23 @@ export class ResultsBoard {
   protected commitEdit(id: StationId, value: string): void {
     if (this.editing() !== id) return; // already committed or cancelled
     const trimmed = value.trim();
-    const sec = parseTime(trimmed);
-    if (trimmed !== '' && (sec == null || sec <= 0)) {
-      this.editInvalid.set(true);
+    const err = this.timeProblem(trimmed);
+    if (err) {
+      this.editError.set(err);
       return;
     }
+    const sec = parseTime(trimmed);
     this.store.setOverride(id, trimmed === '' ? null : sec);
     this.finishEdit(id);
+  }
+
+  private timeProblem(t: string): string {
+    return timeError(t) ?? (t !== '' && !(parseTime(t)! > 0) ? 'Must be more than 0:00' : '');
+  }
+
+  /** While an error is showing, re-check each keystroke so it clears as soon as it's fixed. */
+  protected recheckEdit(value: string): void {
+    if (this.editError()) this.editError.set(this.timeProblem(value.trim()));
   }
 
   protected cancelEdit(id: StationId): void {
@@ -153,7 +165,7 @@ export class ResultsBoard {
 
   private finishEdit(id: StationId): void {
     this.editing.set(null);
-    this.editInvalid.set(false);
+    this.editError.set('');
     queueMicrotask(() => (document.querySelector(`[data-edit="${id}"]`) as HTMLElement | null)?.focus());
   }
 
