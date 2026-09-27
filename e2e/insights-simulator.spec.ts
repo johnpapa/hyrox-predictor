@@ -3,7 +3,7 @@ import { expect, test } from './fixtures';
 test.describe('insights panel', () => {
   test('shows limiters, time savings and pacing that react to inputs', async ({ page }) => {
     const panel = page.locator('app-insights-panel');
-    await expect(panel.locator('.bar-row')).toHaveCount(9);
+    await expect(panel.locator('.bar-row')).toHaveCount(10); // Runs + 8 stations + Roxzone
     await expect(panel.locator('.hint')).toBeVisible(); // nothing entered yet
     await page.getByLabel('5K', { exact: true }).fill('22:30');
     await page.getByLabel('Usual set size for 100 reps').fill('7');
@@ -171,24 +171,30 @@ test.describe('insights: why each station differs', () => {
     await expect(panel.locator('.bar-item.open')).toHaveCount(0);
   });
 
-  test('REGRESSION: compares with athletes like you; build and background are shown separately', async ({ app, page }) => {
-    // The comparison athlete shares height, weight, race times, age and training; only trainable abilities differ.
-    await page.getByLabel('5K', { exact: true }).fill('21:30');
+  test('REGRESSION: compares with athletes like you, runs included; build and background are shown separately', async ({ app, page }) => {
+    // "Athletes like you" share build, age, experience and training, not race times, so running is compared too.
+    const panel = page.locator('app-insights-panel');
     await page.getByLabel('Bodyweight (kg)').fill('76');
     await page.getByLabel('Age', { exact: true }).fill('53');
-    const panel = page.locator('app-insights-panel');
-    await expect(panel.getByRole('heading', { name: 'Vs. athletes like you' })).toBeVisible();
-    await expect(panel).toContainText('share your sex, age, height, weight');
-    // Bodyweight no longer makes the sled look slower; it is listed under build instead.
+    // Build and age alone never create a gap: they're shared with the comparison athletes.
+    await expect(panel.getByRole('button', { name: /Runs \(8 × 1 km\) ±0:00/ })).toBeDisabled();
     await expect(panel.getByRole('button', { name: /Sled Push ±0:00/ })).toBeDisabled();
     await expect(panel.locator('.profile')).toContainText('Lighter bodyweight');
     await expect(panel.locator('.profile')).toContainText('Age 53');
+    await expect(panel).toContainText("They don't share your race times");
+    // A fast 5K shows up as faster running, explained by fitness.
+    await page.getByLabel('5K', { exact: true }).fill('21:30');
+    const runs = panel.getByRole('button', { name: /Runs \(8 × 1 km\) −.* show why/ });
+    await runs.click();
+    await expect(panel.locator('.bar-item.open .why')).toContainText('Fitness from your race times');
+    await expect(panel.locator('.bar-item.open .why')).toContainText('for athletes like you');
     // A deadlift working set shows up with a strength comparison.
     await app.card('Pulling strength').getByLabel('Deadlift (kg)', { exact: true }).fill('60');
     await app.card('Pulling strength').getByLabel('Deadlift reps', { exact: true }).fill('10');
+    await runs.click();
     const pull = panel.getByRole('button', { name: /Sled Pull .* show why/ });
     await pull.click();
-    await expect(panel.locator('.bar-item.open .why')).toContainText('for athletes like you');
+    await expect(panel.locator('.bar-item.open .why')).toContainText('deadlift 1RM');
   });
 });
 

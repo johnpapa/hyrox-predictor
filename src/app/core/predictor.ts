@@ -28,11 +28,13 @@ export interface SoloPrediction {
   /** Where every input came from (measured / converted / rated / assumed). */
   resolved: ResolvedAthlete;
   /**
-   * What an athlete like you does on each station (same loads): same sex, age, height, weight,
-   * body fat, experience, race times and training volume, typical on every trainable ability.
+   * What an athlete like you does on each station (same loads): same sex, age, height, weight, body fat,
+   * experience and other training, with typical fitness for that profile (see peerProfile).
    */
   typical: StationTimes;
   typicalRoxzone: number;
+  /** Run total (8 km) of an athlete like you (see peerProfile). */
+  typicalRunTotal: number;
   /** Typical max unbroken wall balls for this level (race ball). */
   typicalWallBallsUnbroken: number;
   total: number;
@@ -342,6 +344,7 @@ export function predictSolo(raw: AthleteProfile, division: DivisionInfo, withPee
       ? (Object.fromEntries(STATION_IDS.map((id) => [id, peer.stations[id] * calibration])) as StationTimes)
       : { ...st },
     typicalRoxzone: peer ? peer.roxzone * calibration : roxzone,
+    typicalRunTotal: peer ? sum(peer.runs) * calibration : sum(runs),
     typicalWallBallsUnbroken: band.wbUnbroken / Math.pow(loadMult.wallBalls, PARAMS.wallBallsLoadUnbrokenExp),
     total: sum(runs) + sum(STATION_IDS.map((id) => st[id])) + roxzone,
   };

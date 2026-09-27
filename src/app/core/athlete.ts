@@ -309,10 +309,9 @@ export function hyroxAgeGroup(age: number | null): string | null {
 }
 
 /**
- * "An athlete like you": same sex, age, height, bodyweight, body fat, experience, race times,
- * physiology and training volume, but typical ("not sure") on every trainable HYROX ability:
- * lifts, ergs, station tests and self-ratings. Insights compare against this athlete, so the
- * gaps show only what training could change.
+ * "An athlete like you": same sex, age, height, bodyweight, body fat, HYROX experience and other training,
+ * with typical fitness and ability for that profile. Race times, VO₂max, weekly running, lifts, ergs, station
+ * tests and self-ratings are all left on "not sure": they are what the Insights comparison measures.
  */
 export function peerProfile(a: AthleteProfile): AthleteProfile {
   const blank = defaultAthlete(a.sex);
@@ -324,14 +323,6 @@ export function peerProfile(a: AthleteProfile): AthleteProfile {
     bodyFatPct: a.bodyFatPct,
     bodyweightKg: a.bodyweightKg,
     experience: a.experience,
-    runningKmPerWeek: a.runningKmPerWeek,
     otherTrainingHours: a.otherTrainingHours,
-    fiveKSec: a.fiveKSec,
-    tenKSec: a.tenKSec,
-    halfMarathonSec: a.halfMarathonSec,
-    marathonSec: a.marathonSec,
-    vo2max: a.vo2max,
-    vo2maxSource: a.vo2maxSource,
-    levels: { ...blank.levels, run: a.levels.run },
   };
 }

@@ -159,13 +159,16 @@ describe('why each station differs', () => {
     const p = predict(input);
     const i = computeInsights(input, p);
     const s = p.solos[0];
+    // Fitness interacts with other inputs (e.g. wall balls are judged against what's typical for your fitness), so
+    // the reasons cover most of each gap and the rest shows as "combined effects".
     for (const id of ['sledPush', 'sledPull', 'wallBalls', 'sandbagLunges', 'skierg'] as const) {
       const gap = s.stations[id] - s.typical[id];
       const sum = i.explanation.byArea[id].reduce((a, r) => a + r.sec, 0);
-      expect(Math.abs(gap - sum)).toBeLessThan(8);
+      expect(Math.abs(gap - sum - i.explanation.unexplained[id])).toBeLessThan(1);
+      expect(Math.abs(gap - sum)).toBeLessThan(Math.max(15, Math.abs(gap) * 0.6));
     }
-    expect(i.explanation.byArea.wallBalls[0].label).toContain('20 unbroken');
-    expect(i.explanation.overall[0].id).toBe('wallBalls');
+    expect(i.explanation.byArea.wallBalls.find((r) => r.id === 'wallBalls')!.label).toContain('20 unbroken');
+    expect(i.explanation.overall[0].id).toBe('running'); // a 21:30 5K is well above typical for this profile
   });
 
   it('REGRESSION: a Roxzone rating is attributed only to the Roxzone, not to the stations', () => {
@@ -176,21 +179,27 @@ describe('why each station differs', () => {
     }
     const rox = i.explanation.byArea.roxzone.find((r) => r.id === 'transitions')!;
     expect(rox.sec).toBeLessThan(0); // Strong ⇒ faster
-    expect(Math.abs(i.explanation.unexplained.roxzone)).toBeLessThan(5);
   });
 
-  it('REGRESSION: compares against athletes like you, so build and age do not show up as station gaps', () => {
-    // The comparison athlete shares build, age, race times and training. With no lifts entered, this runner's
-    // sleds and lunges match athletes like them; before, they showed as slower because of a lighter bodyweight.
+  it('REGRESSION: build and age are shared with athletes like you, so alone they never create a gap', () => {
+    // The comparison athlete shares build, age, experience and other training but not race times: with no race times
+    // or abilities entered, every row (runs included) matches athletes like you.
+    const noFitness = { ...masters(), fiveKSec: null, marathonSec: null, runningKmPerWeek: null, wallBallsUnbroken: null,
+      levels: { ...masters().levels, transitions: null } };
+    const input0: PredictInput = { divisionId: 'men-open', athletes: [noFitness] };
+    const p0 = predict(input0);
+    const s0 = p0.solos[0];
+    for (const id of ['sledPush', 'sledPull', 'farmersCarry', 'sandbagLunges', 'burpeeBroadJump', 'skierg', 'row'] as const) {
+      expect(Math.abs(s0.stations[id] - s0.typical[id])).toBeLessThan(1);
+    }
+    expect(Math.abs(p0.runTotal - s0.typicalRunTotal)).toBeLessThan(1);
+    // With race times, the runner is compared on running too (and fitter runners are faster on stations).
     const input: PredictInput = { divisionId: 'men-open', athletes: [masters()] };
     const p = predict(input);
-    const s = p.solos[0];
-    for (const id of ['sledPush', 'sledPull', 'farmersCarry', 'sandbagLunges', 'burpeeBroadJump', 'skierg', 'row'] as const) {
-      expect(Math.abs(s.stations[id] - s.typical[id])).toBeLessThan(1);
-    }
     const i = computeInsights(input, p);
     expect(i.headline).toContain('athletes like you');
-    expect(i.explanation.overall.map((r) => r.id).sort()).toEqual(['transitions', 'wallBalls']);
+    expect(i.strengths.map((g) => g.id)).toContain('runs');
+    expect(i.explanation.overall.map((r) => r.id).sort()).toEqual(['running', 'transitions', 'wallBalls']);
     // Build and background are reported separately, as effects on the finish time.
     const ids = i.profile.map((r) => r.id);
     for (const id of ['bodyweight', 'age', 'experience', 'runningVolume']) expect(ids).toContain(id);
@@ -199,8 +208,8 @@ describe('why each station differs', () => {
     expect(i.profile.find((r) => r.id === 'runningVolume')!.sec).toBeLessThan(0); // 60 km/week helps
   });
 
-  it('entering only build and background never creates a station gap', () => {
-    const a = ath('male', { bodyweightKg: 105, heightCm: 195, age: 62, bodyFatPct: 28, otherTrainingHours: 9, runningKmPerWeek: 10, experience: 'first' });
+  it('entering only build and background (no race times or abilities) never creates a gap', () => {
+    const a = ath('male', { fiveKSec: null, bodyweightKg: 105, heightCm: 195, age: 62, bodyFatPct: 28, otherTrainingHours: 9, experience: 'first' });
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
     const i = computeInsights(input, predict(input));
     expect(i.limiters).toEqual([]);
@@ -235,7 +244,7 @@ describe('why each station differs', () => {
     const input: PredictInput = { divisionId: 'men-open', athletes: [a] };
     const i = computeInsights(input, predict(input));
     expect(i.whatIfs.find((w) => w.id === 'wallBalls')!.detail).toMatch(/^Sets of 12 → \d+ for 100 reps$/);
-    expect(i.explanation.byArea.wallBalls[0].label).toContain('sets of 12');
+    expect(i.explanation.byArea.wallBalls.find((r) => r.id === 'wallBalls')!.label).toContain('sets of 12');
   });
 
   it('realistic gains for a working set are phrased as a working set (same reps, more weight)', () => {
@@ -247,7 +256,7 @@ describe('why each station differs', () => {
   });
 
   it('a typical athlete has nothing to explain', () => {
-    const input: PredictInput = { divisionId: 'men-open', athletes: [ath('male')] };
+    const input: PredictInput = { divisionId: 'men-open', athletes: [ath('male', { fiveKSec: null })] };
     const i = computeInsights(input, predict(input));
     expect(i.explanation.overall).toEqual([]);
   });

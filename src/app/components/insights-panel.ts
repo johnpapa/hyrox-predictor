@@ -27,12 +27,13 @@ export class InsightsPanel {
   protected readonly bars = computed(() => {
     const solo = this.store.prediction().solos[this.ins().athleteIndex];
     const gaps = stationGaps(solo);
-    const maxAbs = Math.max(30, ...gaps.map((g) => Math.abs(g.gap)));
-    return gaps.map((g) => ({ ...g, pct: (Math.abs(g.gap) / maxAbs) * 50 }));
+    // Scale to the stations and Roxzone; a big Runs gap is capped at the edge instead of shrinking every other bar.
+    const maxAbs = Math.max(30, ...gaps.filter((g) => g.id !== 'runs').map((g) => Math.abs(g.gap)));
+    return gaps.map((g) => ({ ...g, pct: Math.min(50, (Math.abs(g.gap) / maxAbs) * 50) }));
   });
 
   /** True when nothing entered makes the athlete differ from the typical athlete. */
-  protected readonly allTypical = computed(() => this.bars().every((b) => Math.abs(b.gap) < 1));
+  protected readonly allTypical = computed(() => this.bars().every((b) => b.id === 'runs' || Math.abs(b.gap) < 1));
 
   /** Which station rows are expanded to show their reasons. */
   protected readonly open = signal<Set<string>>(new Set());

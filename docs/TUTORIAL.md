@@ -106,9 +106,10 @@ Roxzone Time, Run Total, Work Total and Overall Time. At the top you get a likel
 Under the results, **Your build and background** shows what your bodyweight, body fat, height, age, first race, weekly
 running and other training do to your finish time (for example: high weekly running −1:40, age over 50 +0:30).
 
-**Vs. athletes like you** then compares each station with athletes who share all of that, plus your race times, but are
-typical on everything trainable. It shows your biggest limiters and strengths. **Tap a station to see why** it differs
-(for example: wall balls in sets of 12 +1:20; deadlift max ≈ 80 kg vs ≈ 115 kg for athletes like you), and read the
+**Vs. athletes like you** then compares your runs, each station and the Roxzone with athletes who share all of that but
+have typical fitness. They don't share your race times, so your running is compared too. It shows your biggest limiters
+and strengths. **Tap a row to see why** it differs (for example: fitness from your race times −10:00 on the runs; wall
+balls in sets of 12 +1:20; deadlift max ≈ 80 kg vs ≈ 115 kg for athletes like you), and read the
 **main reasons overall** above the bars. Then:
 - **Realistic gains in 8–12 weeks:** only for things you actually entered or rated, sized for your level and age (a
   well-trained runner in their 50s gets about 1% on the 5K, not "a minute faster"). Each one re-runs the whole prediction.
