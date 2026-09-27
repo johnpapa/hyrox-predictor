@@ -12,6 +12,8 @@ import { FoldState } from '../core/fold';
     <button type="button" class="fold" [attr.aria-expanded]="open()" [attr.aria-controls]="controls() || null"
       [title]="open() ? 'Collapse' : 'Expand'" (click)="fold.toggle(key())">
       <span class="chev" aria-hidden="true">▾</span><span class="t"><ng-content /></span>
+      <!-- Visible hint that the title toggles; aria-expanded already tells screen readers. -->
+      <span class="act" aria-hidden="true">{{ open() ? 'Collapse' : 'Expand' }}</span>
     </button>
   `,
   styles: `
@@ -26,6 +28,10 @@ import { FoldState } from '../core/fold';
       font-size: 0.8em; color: var(--accent); transition: transform 0.15s;
     }
     .fold[aria-expanded='false'] .chev { transform: rotate(-90deg); }
+    .act {
+      font-family: var(--font-body); font-weight: 400; font-size: 0.72rem; letter-spacing: 0; text-transform: none;
+      color: var(--accent); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap;
+    }
     .fold:hover .t { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 4px; }
     .fold:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   `,

@@ -8,6 +8,10 @@ summary {
   svg { width: 18px; height: 18px; color: var(--accent); transition: transform 0.2s; }
 }
 details[open] summary svg { transform: rotate(180deg); }
+.act { margin-left: auto; margin-right: 10px; font-size: 0.75rem; color: var(--accent); text-decoration: underline; }
+.when-open { display: none; }
+details[open] .when-open { display: inline; }
+details[open] .when-closed { display: none; }
 .body {
   padding: 0 18px 18px; color: var(--text-dim); font-size: 0.9rem;
   h3 { color: var(--text); font-size: 1.05rem; margin: 18px 0 6px; &:first-child { margin-top: 0; } }

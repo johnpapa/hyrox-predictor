@@ -57,16 +57,40 @@ test.describe('quick view', () => {
     await expect(page.locator('.conf-tip')).toContainText(/Switch to Detailed|well covered/);
   });
 
-  test('REGRESSION: the form always opens in Quick, even with saved detailed data (which still counts)', async ({ page }) => {
-    await page.addInitScript(() => {
+  const seed = (page: import('@playwright/test').Page, mode?: 'quick' | 'detailed') =>
+    page.addInitScript((m) => {
       const a = { sex: 'male', heightCm: 180, fiveKSec: 1400 };
-      const saved = { v: 1, divisionId: 'men-open', athletes: [a], units: 'kg', doublesShares: {}, relayOrder: null, overrides: {}, mode: 'detailed' };
+      const saved = { v: 1, divisionId: 'men-open', athletes: [a], units: 'kg', doublesShares: {}, relayOrder: null, overrides: {}, ...(m ? { mode: m } : {}) };
       localStorage.setItem('hyrox-predictor:saved', JSON.stringify(saved));
-    });
+    }, mode);
+  const view = (page: import('@playwright/test').Page, name: 'Quick' | 'Detailed') =>
+    expect(page.getByRole('group', { name: 'Form view' }).getByRole('button', { name })).toHaveAttribute('aria-pressed', 'true');
+
+  test('saved data reopens the view you left (Quick), and hidden details still count', async ({ page }) => {
+    await seed(page, 'quick');
     await page.reload();
-    await expect(page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Quick' })).toHaveAttribute('aria-pressed', 'true');
+    await view(page, 'Quick');
     await expect(page.locator('.quick-foot')).toContainText('Also using from Detailed: height');
-    await page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Detailed' }).click();
+  });
+
+  test('saved data reopens the view you left (Detailed)', async ({ page }) => {
+    await seed(page, 'detailed');
+    await page.reload();
+    await view(page, 'Detailed');
     await expect(page.getByLabel('Height (cm)')).toHaveValue('180');
+  });
+
+  test('older saves without a remembered view open in Detailed when they use detailed fields', async ({ page }) => {
+    await seed(page);
+    await page.reload();
+    await view(page, 'Detailed');
+  });
+
+  test('with saving on, the view you switch to is remembered across reloads', async ({ page }) => {
+    await page.locator('.privacy').getByText('Save my inputs on this device').click();
+    await page.getByRole('group', { name: 'Form view' }).getByRole('button', { name: 'Detailed' }).click();
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('hyrox-predictor:saved') ?? '{}').mode)).toBe('detailed');
+    await page.reload();
+    await view(page, 'Detailed');
   });
 });

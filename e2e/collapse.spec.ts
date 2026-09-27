@@ -55,4 +55,18 @@ test.describe('collapsible sections', () => {
     await expect(insights.locator('ul.tips').first()).toBeHidden();
     await expect(insights.getByRole('button', { name: 'Practical tips', exact: true })).toHaveAttribute('aria-expanded', 'false');
   });
+
+  test('every collapsible section says "Collapse" / "Expand" in text, not just the arrow', async ({ app, page }) => {
+    const legs = app.card('Leg strength');
+    const title = legs.getByRole('button', { name: 'Leg strength', exact: true });
+    await expect(title).toContainText('Collapse');
+    await title.click();
+    await expect(title).toContainText('Expand');
+    await expect(page.getByRole('button', { name: 'Profile', exact: true })).toContainText('Collapse');
+    const method = page.locator('app-methodology summary');
+    await expect(method).toContainText('Expand');
+    await method.click();
+    await expect(method).toContainText('Collapse');
+    await expect(page.locator('#disclaimer summary')).toContainText('Expand');
+  });
 });
