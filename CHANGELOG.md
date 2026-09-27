@@ -7,6 +7,15 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- **Disclaimer & privacy:**
+  - a notice under the headline (unofficial, estimates only, nothing leaves your device);
+  - a full "Disclaimer & privacy" section in the footer on every page, covering: unofficial and not affiliated,
+    estimates with no guarantees, not medical or training advice, provided "as is" with no liability, and exactly what
+    happens to your data (nothing leaves the browser; the optional save uses local storage).
+
+### Changed
+- **Header:** a plain "HYROX Predictor" title marked "Unofficial fan tool" replaces the yellow-X mark, which looked like
+  an official logo. New stopwatch favicon; the page title is "HYROX Predictor (unofficial)".
 - **Simulator explains itself:**
   - it says what it's simulating (e.g. "Singles · Men's Open" or "Doubles · Mixed Doubles · Sam & Alex · team times"),
     with a Change link;

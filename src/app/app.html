@@ -1,12 +1,9 @@
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32"><path d="M4 4h6l6 9 6-9h6l-9 12 9 12h-6l-6-9-6 9H4l9-12z" fill="currentColor" /></svg>
-      </span>
       <span class="brand-text">
-        <span class="brand-name">HYROX <em>//</em> Predictor</span>
-        <span class="brand-sub">Finish time simulator</span>
+        <span class="brand-name">HYROX <em>Predictor</em></span>
+        <span class="brand-sub">Unofficial fan tool</span>
       </span>
     </div>
     <nav class="views" aria-label="Views">
@@ -41,6 +38,10 @@
         Pick your division and enter your 5K plus whatever benchmarks you know. You get a station-by-station race plan with runs,
         stations and Roxzone, laid out like the official results page.
       </p>
+      <p class="notice">
+        Unofficial fan tool · Estimates only, no guarantees · Nothing you enter leaves your device ·
+        <button type="button" class="linkish" (click)="showDisclaimer()">Disclaimer &amp; privacy</button>
+      </p>
     </section>
     <app-division-picker />
     <app-athlete-form />
@@ -70,7 +71,11 @@
 }
 
 <footer class="foot">
-  Unofficial fan-made tool. Not affiliated with or endorsed by HYROX. Predictions are estimates. No accounts, no tracking, and no data leaves your device.
+  <p>
+    Unofficial fan-made tool, not affiliated with or endorsed by HYROX. Predictions are estimates with no guarantees and
+    are not medical or training advice. No accounts, no server, no tracking: nothing you enter leaves your device.
+  </p>
+  <app-disclaimer />
 </footer>
 
 @let pr = store.prediction();
