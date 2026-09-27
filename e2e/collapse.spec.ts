@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 
-/** User: "A lot of these sections are long… with a click could be minimized, like an arrow." */
+/** Long sections collapse from their title (arrow), and nothing entered is lost. */
 test.describe('collapsible sections', () => {
   test('an ability card collapses from its title, keeping its summary line', async ({ app, page }) => {
     const legs = app.card('Leg strength');

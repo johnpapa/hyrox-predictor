@@ -32,7 +32,7 @@ body:
     attributes:
       label: Inputs you entered
       description: Race times, bodyweight, age, lifts, self-ratings (leave out anything personal you'd rather not share)
-      placeholder: "5K 21:08, marathon 3:24, 162 lb, age 54, Roxzone: Strong"
+      placeholder: "5K 24:30, 170 lb, age 38, first race, Roxzone: Solid"
   - type: textarea
     id: what
     attributes:

@@ -89,7 +89,7 @@ describe('input robustness', () => {
     expect(t({ deadHangSec: 5000 })).toBe(t({ deadHangSec: null }));
     expect(t({ burpees1Min: 200 })).toBe(t({ burpees1Min: null }));
     expect(t({ lifts: { ...base.lifts, deadlift: { kg: 900, reps: 1, rir: 0 } } })).toBe(t({}));
-    expect(t({ age: 54 })).not.toBe(t({ age: null }));
+    expect(t({ age: 53 })).not.toBe(t({ age: null }));
   });
 
   it('a sled self-rating only adjusts technique, not strength', () => {

@@ -47,9 +47,8 @@ All notable changes to this project are documented here. The format follows
 ### Fixed
 - **Sex was asked even when the division decides it** (Men's / Women's / Mixed). The question now appears only for
   Adaptive and Corporate Relay. Regression test added.
-- **Doubles field positions were too harsh.** They're recalibrated from a real S9 (2026) Washington DC mixed doubles result:
-  1:19:14 placed 670th of 2,814 (top 24%), where the app said top 34%. With plausible inputs, that pair's prediction
-  is within 7 s of their time; both are now regression tests.
+- **Doubles field positions were too harsh.** They're recalibrated from a large 2026 mixed doubles field (2,800+
+  teams), where about 24% of teams finished under 1:19 but the app said top ~34%. A regression test covers it.
 - **The always-visible finish time could be hidden by the iPhone keyboard.** On phones and tablets it now sits in the
   sticky top bar (the keyboard covers the bottom of the screen). Desktop keeps the floating pill. Regression test added.
 - **Doubles could predict slower than your singles time with a strong partner.** The doubles Roxzone took the slower
@@ -83,7 +82,7 @@ All notable changes to this project are documented here. The format follows
 - "Worth measuring" asks for a squat or deadlift working set instead of a heavy test.
 
 ### Fixed
-- **Strength standards were far too high** ("Solid" deadlift was 2× bodyweight, e.g. 147 kg / 330 lb for a 73.5 kg
+- **Strength standards were far too high** ("Solid" deadlift was 2× bodyweight, e.g. 150 kg / 331 lb for a 75 kg
   man). Now set for recreational HYROX athletes: Solid = 1.25× squat, 1.5× deadlift for men (0.9× / 1.1× for women).
   Level anchors also show the matching working set.
 - **Weights are shown in both kg and lb** everywhere (station loads, lift sources, 1RM estimates, anchors, Insights),

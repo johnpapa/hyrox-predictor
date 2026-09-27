@@ -113,7 +113,7 @@ describe('doubles', () => {
   });
 
   it('REGRESSION: defaults to 50/50 on every station; suggestions stay within 30–70%', () => {
-    // User: "it set some of the splits to 0% or 100%, which is not practical… by default split everything 50/50."
+    // The old optimiser could pick 0% or 100% for a station, which no pair does.
     const strong = man({ bodyweightKg: 105, levels: { ...man().levels, legs: 5, hinge: 5, sled: 5 } });
     const weak = man({ fiveKSec: 30 * 60, levels: { ...man().levels, legs: 1, hinge: 1, wallBalls: 1 } });
     const p = predict({ divisionId: 'men-doubles', athletes: [strong, weak] });
@@ -128,9 +128,9 @@ describe('doubles', () => {
   });
 
   it('REGRESSION: doubles with a strong partner beats your singles time (Roxzone no longer takes the slower partner in full)', () => {
-    // User: "given that my partner is strong, I expect we'd do better in doubles than I would in men's open."
-    const masters = man({ fiveKSec: 21 * 60 + 8, bodyweightKg: 73.5, age: 54, heightCm: 170, experience: 'first', levels: { ...man().levels, transitions: 4 } });
-    const partner = man({ fiveKSec: 24 * 60, heightCm: 201, bodyweightKg: 105, experience: 'first', levels: { ...man().levels, legs: 4, hinge: 4, sled: 4 } });
+    // A strong partner should make doubles faster than your own singles race.
+    const masters = man({ fiveKSec: 21 * 60 + 30, bodyweightKg: 76, age: 53, heightCm: 173, experience: 'first', levels: { ...man().levels, transitions: 4 } });
+    const partner = man({ fiveKSec: 24 * 60, heightCm: 198, bodyweightKg: 105, experience: 'first', levels: { ...man().levels, legs: 4, hinge: 4, sled: 4 } });
     const single = predict({ divisionId: 'men-open', athletes: [masters] });
     const dbl = predict({ divisionId: 'men-doubles', athletes: [masters, partner] });
     expect(dbl.total).toBeLessThan(single.total - 60);

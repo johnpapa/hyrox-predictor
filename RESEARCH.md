@@ -168,8 +168,8 @@ changes:
   - Durability is proposed as a separate determinant, built by volume (Maunder 2021; Jones 2024/2025).
   - One combined "hours" number mixes these, and it confused users.
 - **Weekly running (km or mi):**
-  - Above the 25 km reference, the lap factor drops by 0.03 × (1 − e^(−(km − 25)/40)). That is about −0.019 at 64 km
-    (40 mi) and −0.024 at 100 km.
+  - Above the 25 km reference, the lap factor drops by 0.03 × (1 − e^(−(km − 25)/40)). That is about −0.017 at 60 km
+    and −0.024 at 100 km.
   - Below 25 km there is a penalty of up to +0.02.
   - The effect is halved when a short and a long race already measure endurance.
   - Heavy volume also flattens lap-to-lap fade, by up to 30%. (Estimate.)
@@ -212,7 +212,7 @@ A fit, high-volume first-timer now pays about +0.02; a low-volume first-timer ab
 ## Athletes like you, and working-set lifts (Sept 2026)
 
 **Comparison baseline.** Insights used to compare each station with the median finisher at your lap pace. That mixed
-fixed traits (a light 54-year-old is slower on sleds than an 82 kg 35-year-old at the same pace) with trainable ones,
+fixed traits (a light 55-year-old is slower on sleds than an 82 kg 35-year-old at the same pace) with trainable ones,
 so almost every bar looked "slower" for a light, older runner. The comparison athlete (`peerProfile` in
 `core/athlete.ts`) now shares sex, age, height, bodyweight, body fat, experience, race times, VO₂max, resting HR,
 weekly running and other training, and is "Not sure" on every trainable ability (lifts, ergs, station tests,
@@ -222,7 +222,7 @@ fraction (body fat) and, when entered, lifts.
 
 **Strength standards (revised after user feedback).** An earlier version used 1.5× bodyweight squat and 2.0×
 deadlift as "Solid" for men. Those match StrengthLevel.com "intermediate", but that sample is people who log their
-lifts in a strength app. A user pointed out that a 147 kg (330 lb) deadlift as "Solid" for a 73.5 kg man is far above
+lifts in a strength app. A user pointed out that a 150 kg (331 lb) deadlift as "Solid" for a 75 kg man is far above
 what a normal gym's HYROX crowd lifts (typical working sets of 135–200 lb). The standards are now set for recreational
 HYROX / functional-fitness athletes, with Solid equal to a typical mid-pack athlete:
 
@@ -369,32 +369,21 @@ That's 10 inputs, counting the running rating. Just outside the cut:
 Lifts are rated in Quick because most people can't give a number quickly. The rating anchors show both a max and the
 matching working set. Quick and Detailed edit the same fields in the same units, and hidden values keep counting.
 
-## Real-result check: S9 Washington DC 2026 mixed doubles (Sept 2026)
+## Field calibration from 2026 results (Sept 2026)
 
-A user shared a friend pair's result from hyresult.com: both 45, second HYROX, regular gym and DECA athletes, good
-runners (the woman the stronger runner).
+In a large 2026 (S9) mixed doubles field of 2,800+ teams, about 24% of teams finished under 1:19. The model's older
+`FIELD` medians put 1:19 near the top third instead, so the 2026 field is slower than the data behind them. With the
+same spread (σ = 0.18), the mixed doubles median becomes ≈ 90 min, a factor of 1.055. The same factor is applied to
+men's and women's doubles so the three stay in their usual order. Singles are unchanged until there's a comparable
+anchor.
 
-| | Actual | Rank | Model |
-|---|---|---|---|
-| Total | 1:19:14 | 670 / 2,814 | 1:19:07 |
-| Runs | 44:12 | 827 | 44:17 |
-| Stations | 27:41 | 525 | 27:52 |
-| Roxzone | 7:21 | 795 | 6:59 |
+A related lesson on self-ratings: a pair can be strong at the stations compared with the whole field and still only
+typical for athletes who run as fast as they do. "Strong" in the app means stronger than athletes like you, so
+rating every station Strong can make a prediction several minutes too fast. The strength anchors (× bodyweight and
+working sets) help people rate themselves honestly.
 
-The model column uses a 22:55 / 23:25 5K pair, chosen so the runs match, with typical ("Solid") station ability for
-that running level. With those inputs the model lands within 7 s of the finish time.
-
-With every station rated "Strong" it predicts 1:16:01, 3 minutes fast. That's a useful check on self-ratings: they
-are strong at the stations compared with the whole field (top 19%), but about typical for athletes who run as fast
-as they do. The strength anchors (× bodyweight and working sets) help people rate themselves honestly.
-
-**Field position.** The model placed 1:19:14 in the top 34%; the actual rank is top 23.8%. The 2026 field is slower
-than the older data behind `FIELD`. With the same spread (σ = 0.18), the mixed doubles median becomes ≈ 90 min, a
-factor of 1.055. The same factor is applied to men's and women's doubles so the three stay in their usual order. Singles
-are unchanged until there's a comparable anchor.
-
-(hyresult's "top X%" labels don't match rank ÷ field size, e.g. Roxzone 795th of 2,814 is labelled top 56.6%, so
-ranks are used.)
+Only rank and field size are used for field positions: public results sites' "top X%" labels don't always equal rank
+÷ field size.
 
 ## Wall balls: usual set size (Sept 2026)
 

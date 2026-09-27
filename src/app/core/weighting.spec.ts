@@ -49,7 +49,7 @@ describe('experience is race craft, not fitness', () => {
 
 describe('inputs that were not worth entering are gone', () => {
   it('REGRESSION: resting HR and "runs straight after stations" were removed; old saves drop them', () => {
-    // User: "Let's not make people enter information that is not valuable." / "nobody's gonna know that".
+    // Inputs that are rarely known or barely matter shouldn't be asked for.
     const m = migrateAthlete({ sex: 'male', restingHr: 50, compromisedRuns: 'weekly', fiveKSec: 1500 }, 0) as unknown as Record<string, unknown>;
     expect('restingHr' in m).toBe(false);
     expect('compromisedRuns' in m).toBe(false);
@@ -59,7 +59,7 @@ describe('inputs that were not worth entering are gone', () => {
 
 describe('doubles hand-over tips', () => {
   it('give a switch pattern and each partner’s share for every station, in doubles only', () => {
-    const tall = { ...base, name: 'Jo', heightCm: 201, bodyweightKg: 100 };
+    const tall = { ...base, name: 'Jo', heightCm: 198, bodyweightKg: 100 };
     const input = { divisionId: 'men-doubles', athletes: [{ ...base, name: 'Sam' }, tall] };
     const i = computeInsights(input, predict(input));
     expect(i.doubles).toHaveLength(8);
