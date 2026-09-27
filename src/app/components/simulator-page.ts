@@ -66,21 +66,10 @@ export class SimulatorPage {
 
   /** User-dragged values by row key; missing = follow the prediction. */
   protected readonly edits = signal<Record<string, number>>({});
-  protected readonly runScale = signal(0);
-  protected readonly stationScale = signal(0);
-  protected readonly targetText = signal('');
-
-  protected value(row: SimRow): number {
-    const v = this.edits()[row.key] ?? row.base;
-    const scale = row.kind === 'run' ? this.runScale() : row.kind === 'station' ? this.stationScale() : 0;
-    return v * (1 + scale / 100);
-  }
 
   protected readonly values = computed(() => {
-    this.edits();
-    this.runScale();
-    this.stationScale();
-    return this.rows().map((r) => this.value(r));
+    const e = this.edits();
+    return this.rows().map((r) => e[r.key] ?? r.base);
   });
 
   protected readonly total = computed(() => this.values().reduce((a, b) => a + b, 0));
@@ -90,9 +79,7 @@ export class SimulatorPage {
   protected readonly workTotal = computed(() => this.sumKind('station'));
   protected readonly top = computed(() => topPercent(this.store.division().id, this.total()));
   protected readonly ageGroup = computed(() => ageGroupPosition(this.store.division(), this.store.athletes()[0], this.total()));
-  protected readonly changed = computed(
-    () => Object.keys(this.edits()).length > 0 || this.runScale() !== 0 || this.stationScale() !== 0,
-  );
+  protected readonly changed = computed(() => Object.keys(this.edits()).length > 0);
 
   /** Band labels only make sense for singles (station medians are singles data). */
   protected readonly showBands = computed(() => this.store.division().format === 'single');
@@ -110,14 +97,12 @@ export class SimulatorPage {
   }
 
   protected set(row: SimRow, raw: string): void {
-    const scale = row.kind === 'run' ? this.runScale() : row.kind === 'station' ? this.stationScale() : 0;
-    const v = Number(raw) / (1 + scale / 100);
-    this.edits.update((e) => ({ ...e, [row.key]: v }));
+    this.edits.update((e) => ({ ...e, [row.key]: Number(raw) }));
   }
 
   protected typeTime(row: SimRow, text: string): void {
     const sec = parseTime(text);
-    if (sec != null && sec > 0) this.set(row, String(sec * (1 + (row.kind === 'run' ? this.runScale() : row.kind === 'station' ? this.stationScale() : 0) / 100)));
+    if (sec != null && sec > 0) this.set(row, String(sec));
   }
 
   protected resetRow(row: SimRow): void {
@@ -129,22 +114,6 @@ export class SimulatorPage {
 
   protected resetAll(): void {
     this.edits.set({});
-    this.runScale.set(0);
-    this.stationScale.set(0);
-  }
-
-  /** Scale every split proportionally so the total hits the target time. */
-  protected hitTarget(): void {
-    const target = parseTime(this.targetText());
-    if (!target || target < 20 * 60) return;
-    const factor = target / this.total();
-    const rows = this.rows();
-    const v = this.values();
-    const next: Record<string, number> = {};
-    rows.forEach((r, i) => (next[r.key] = v[i] * factor));
-    this.runScale.set(0);
-    this.stationScale.set(0);
-    this.edits.set(next);
   }
 
   protected signed(sec: number): string {

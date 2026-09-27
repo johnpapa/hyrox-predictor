@@ -10,9 +10,7 @@ All notable changes to this project are documented here. The format follows
 - **Simulator explains itself:**
   - it says what it's simulating (e.g. "Singles · Men's Open" or "Doubles · Mixed Doubles · Sam & Alex · team times"),
     with a Change link;
-  - a collapsible "How to use the simulator" box covers the three ways to use it (change one split, shift everything,
-    work back from a target);
-  - controls are labelled "Quick changes" and "Your splits, in race order", with hints.
+  - a collapsible "How to use the simulator" box explains it: change any split and watch the finish update.
 - **Wall balls: "Usual set size for 100 reps"** (e.g. sets of 20) is now the main wall-ball input in Quick and Detailed.
   Most people know it, and it's closer to race behaviour than a max-unbroken test. It's converted at sets ≈ 60% of max
   unbroken; max unbroken and 100-for-time stay as alternatives. Gains and reasons are phrased in sets.
@@ -45,6 +43,8 @@ All notable changes to this project are documented here. The format follows
   100%. Team tactics shows which partner sets the running pace, and flags it if that pace is only assumed.
 
 ### Removed
+- **Simulator "All runs / All stations" percentage sliders and "Hit target":** nobody plans a race in percentages or
+  improves every split by the same amount. The per-split sliders stay.
 - **"Karen"** (a CrossFit benchmark): the app sticks to things an average athlete knows. Old saves drop it.
 - **Resting heart rate:** too rough to be worth entering (its VO₂max estimate is about ±10%, and it only mattered with
   no race time and no VO₂max).

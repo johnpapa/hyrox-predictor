@@ -43,20 +43,26 @@ test.describe('race simulator page', () => {
     await expect(page.locator('app-simulator-page .delta')).toContainText('±0:00');
   });
 
-  test('type a split, scale all runs, and hit a target time', async ({ page }) => {
+  test('type a split and reset to the prediction', async ({ page }) => {
     await page.goto('./#simulator');
     const sim = page.locator('app-simulator-page');
     const run1 = sim.locator('.row').filter({ hasText: 'Running 1' });
     await run1.getByRole('textbox').fill('4:30');
     await run1.getByRole('textbox').press('Enter');
     await expect(run1.getByRole('textbox')).toHaveValue('04:30');
-    await sim.getByLabel('Scale all runs, percent').fill('10');
-    await expect(sim.locator('.controls')).toContainText('+10%');
-    await sim.getByLabel('Target finish time').fill('1:20:00');
-    await sim.getByRole('button', { name: 'Hit target' }).click();
-    await expect(sim.locator('.clock')).toHaveText('01:20:00');
+    await expect(sim.locator('.delta')).not.toContainText('±0:00');
     await sim.getByRole('button', { name: 'Reset to prediction' }).click();
     await expect(sim.locator('.delta')).toContainText('±0:00');
+  });
+
+  test('REGRESSION: no percentage or uniform-scaling controls, only per-split sliders', async ({ page }) => {
+    // Nobody plans a race in percentages or improves every split by the same amount.
+    await page.goto('./#simulator');
+    const sim = page.locator('app-simulator-page');
+    await expect(sim.getByLabel('Scale all runs, percent')).toHaveCount(0);
+    await expect(sim.getByLabel('Target finish time')).toHaveCount(0);
+    await expect(sim.getByRole('button', { name: 'Hit target' })).toHaveCount(0);
+    await expect(sim.locator('input[type=range]')).toHaveCount(17); // 8 runs, 8 stations, Roxzone
   });
 
   test('works for team divisions and returns to the predictor', async ({ app, page }) => {
@@ -248,10 +254,10 @@ test.describe('simulator: what it simulates and how to use it', () => {
   test('explains how to use it, and the explanation can be collapsed', async ({ page }) => {
     await page.getByRole('link', { name: 'Simulator' }).click();
     const help = page.locator('app-simulator-page .help');
-    await expect(help).toContainText('Change one split');
-    await expect(help).toContainText('Work back from a goal');
+    await expect(help).toContainText('Change a split');
+    await expect(help).toContainText('Change as many as you like');
     const toggle = help.getByRole('button', { name: 'How to use the simulator' });
     await toggle.click();
-    await expect(help.getByText('Change one split')).toBeHidden();
+    await expect(help.getByText('Change a split')).toBeHidden();
   });
 });

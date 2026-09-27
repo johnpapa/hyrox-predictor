@@ -169,11 +169,9 @@ it to delete them. Nothing ever leaves your device.
 Open **Simulator** in the header, or go straight to `…/#simulator`. The top line says what it's simulating (e.g.
 **Singles · Men's Open**, or the doubles team and "team times"). It's a scratchpad for "what ifs" that never changes your
 prediction. It starts from your predicted splits, with a slider (and a time box) for every run, every station and the
-Roxzone. The **How to use** box explains the three ways to use it:
+Roxzone. The **How to use** box explains it:
 - The clock, the difference from your prediction and your estimated field position update as you drag.
 - Tags such as **80–90** show which finish band each split is typical of.
-- Use **All runs** / **All stations** to scale a whole group.
-- Enter a **Target finish** and press **Hit target** to scale everything to that time.
 - **Reset to prediction** starts over.
 
 ![Simulator](tutorial/17-simulator.png)
