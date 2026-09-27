@@ -83,6 +83,8 @@ npm run docs:screenshots   # regenerates docs/tutorial/*.png (Playwright "tutori
   They're the same components and units as Detailed. A new field goes in Detailed unless it outranks one of those;
   keep `QUICK_ABILITIES`, `detailOnlyInputs()` and `e2e/quick.spec.ts` in sync. E2E tests default to Detailed via the
   `formMode` fixture option.
+- **Everyday inputs only:** every field must be something an average HYROX entrant could know (no niche
+  benchmarks like CrossFit "Karen"). See RESEARCH.md "Only everyday inputs".
 - **Every model number is sourced** in `RESEARCH.md`. Estimates are labelled as estimates.
 - **The in-app "How the prediction works" section** (`components/methodology.html`) is user-facing documentation of the
   model. Update it in the same change whenever model behaviour changes.

@@ -6,11 +6,11 @@ test.describe('insights panel', () => {
     await expect(panel.locator('.bar-row')).toHaveCount(9);
     await expect(panel.locator('.hint')).toBeVisible(); // nothing entered yet
     await page.getByLabel('5K', { exact: true }).fill('22:30');
-    await page.getByLabel('Max unbroken wall balls').fill('12');
+    await page.getByLabel('Usual set size for 100 reps').fill('7');
     await expect(panel.locator('.headline')).toContainText('Wall Balls');
     await expect(panel.locator('.hint')).toBeHidden();
     await expect(panel.locator('.whatifs li').first()).toBeVisible();
-    await expect(panel.locator('.whatifs')).toContainText('12 → 17 unbroken');
+    await expect(panel.locator('.whatifs')).toContainText('Sets of 7 → 10 for 100 reps');
     await expect(panel.locator('.tips li').first()).toContainText('Wall balls');
     await expect(panel.locator('.pacing')).toContainText('Run 1');
   });
@@ -85,7 +85,7 @@ test.describe('live total & units', () => {
     await page.getByLabel('5K', { exact: true }).fill('24:00');
     await page.getByLabel('5K', { exact: true }).fill('22:00');
     await expect(page.locator('app-results-board app-change-chip .chip')).toContainText('faster');
-    await page.getByLabel('Max unbroken wall balls').fill('10');
+    await page.getByLabel('Usual set size for 100 reps').fill('6');
     await expect(page.locator('app-results-board app-change-chip .chip')).toContainText('slower');
   });
 
@@ -150,9 +150,10 @@ test.describe('training volume inputs', () => {
 });
 
 test.describe('insights: why each station differs', () => {
-  test('tap a station to see the reasons; overall reasons are summarised', async ({ page }) => {
+  test('tap a station to see the reasons; overall reasons are summarised', async ({ app, page }) => {
     await page.getByLabel('5K', { exact: true }).fill('21:08');
     await page.getByLabel('Bodyweight (kg)').fill('73.5');
+    await app.openAlternatives('Wall balls');
     await page.getByLabel('Max unbroken wall balls').fill('20');
     const panel = page.locator('app-insights-panel');
     await expect(panel.locator('.why-all')).toContainText('Wall-ball capacity (20 unbroken');
