@@ -1,6 +1,6 @@
 import { LB_PER_KG } from './units';
 import { Injectable, computed, effect, signal, untracked } from '@angular/core';
-import { AbilityId, AthleteProfile, Level, Lift, LiftId, defaultAthlete, detailOnlyInputs, migrateAthlete } from './athlete';
+import { AbilityId, AthleteProfile, Level, Lift, LiftId, defaultAthlete, migrateAthlete } from './athlete';
 import { DIVISIONS, Sex, findDivision, sexIsChoosable } from './divisions';
 import { PredictInput, predict } from './predictor';
 import { computeInsights } from './insights';
@@ -18,7 +18,6 @@ interface Persisted {
   doublesShares: Partial<Record<StationId, number | null>>;
   relayOrder: number[] | null;
   overrides: Partial<Record<StationId, number | null>>;
-  mode?: FormMode;
 }
 
 /**
@@ -75,7 +74,6 @@ function sanitize(raw: unknown): Persisted | null {
     doublesShares,
     relayOrder,
     overrides,
-    mode: p.mode === 'quick' || p.mode === 'detailed' ? p.mode : undefined,
   };
 }
 
@@ -96,10 +94,11 @@ export class PredictorStore {
   readonly relayOrder = signal<number[] | null>(this.saved?.relayOrder ?? null);
   readonly overrides = signal<Partial<Record<StationId, number | null>>>(this.saved?.overrides ?? {});
   readonly activeAthlete = signal(0);
-  /** New visitors start in Quick; saved data with details opens in Detailed so nothing seems to vanish. */
-  readonly mode = signal<FormMode>(
-    this.saved?.mode ?? (this.saved?.athletes.some((a) => detailOnlyInputs(a).length) ? 'detailed' : 'quick'),
-  );
+  /**
+   * The form always opens in Quick. Saved details still count, and Quick lists them ("Also using from
+   * Detailed"). The mode isn't saved.
+   */
+  readonly mode = signal<FormMode>('quick');
 
   readonly division = computed(() => findDivision(this.divisionId()));
   readonly teamAthletes = computed(() => this.athletes().slice(0, this.division().teamSize));
@@ -148,7 +147,6 @@ export class PredictorStore {
         doublesShares: this.doublesShares(),
         relayOrder: this.relayOrder(),
         overrides: this.overrides(),
-        mode: this.mode(),
       };
       try {
         store.setItem(STORAGE_KEY, JSON.stringify(state));

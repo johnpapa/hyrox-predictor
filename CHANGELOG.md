@@ -27,7 +27,7 @@ All notable changes to this project are documented here. The format follows
   saved.
 - **Quick view** (the default for new visitors): only the 10 inputs that drive the prediction most. They're the same
   fields and units as the Detailed view, which shows everything. Values entered in Detailed keep counting and are
-  listed in Quick. Saved data with details opens in Detailed.
+  listed in Quick. The form always opens in Quick, even with saved details.
 - **− / + steppers on every number and time field.** Press and hold to repeat. Arrow keys step too (Shift × 10), and
   each field has a sensible step (e.g. 5K ±5 s, bodyweight ±0.5 kg / 1 lb, lifts ±2.5 kg / 5 lb) and starting value.
   Fields are spinbuttons for screen readers.
