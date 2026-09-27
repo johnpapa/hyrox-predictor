@@ -7,6 +7,22 @@
 h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-top: 4px; }
 .sub { margin: 6px 0 0; color: var(--text-dim); font-size: 0.88rem; max-width: 46ch; }
 .sb-clock { text-align: right; }
+.simulating {
+  grid-column: 1 / -1; margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  strong { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+  .who { font-size: 0.8rem; color: var(--text-dim); }
+  .change { margin-left: auto; font-size: 0.8rem; color: var(--accent); }
+}
+.help { padding: 12px 18px; font-size: 0.88rem; color: var(--text-dim);
+  h2 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+  ol { margin: 6px 0; padding-left: 20px; display: grid; gap: 4px; }
+  p { margin: 8px 0; } b { color: var(--text); } .dim { font-size: 0.8rem; color: var(--text-faint); }
+}
+.ctl-title, .rows-title { grid-column: 1 / -1; margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+.rows-title { padding: 8px 0 4px; }
+.hint { font-size: 0.74rem; color: var(--text-faint); }
+.t-hint { align-self: center; }
 .clock { font-size: clamp(2.4rem, 8vw, 4.2rem); font-weight: 700; color: var(--accent); line-height: 1; text-shadow: 0 0 24px rgba(255, 237, 0, 0.25); }
 .delta { margin-top: 6px; font-size: 0.85rem; color: var(--text-dim); }
 .faster { color: var(--good) !important; }
