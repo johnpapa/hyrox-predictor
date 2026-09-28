@@ -10,6 +10,7 @@ import { ResultsBoard } from './components/results-board';
 import { TeamTactics } from './components/team-tactics';
 import { PredictorStore } from './core/predictor.store';
 import { formatTime } from './core/time';
+import packageMetadata from '../../package.json';
 
 @Component({
   selector: 'app-root',
@@ -21,6 +22,7 @@ import { formatTime } from './core/time';
 export class App {
   protected readonly store = inject(PredictorStore);
   protected readonly fmt = formatTime;
+  protected readonly appVersion = packageMetadata.version;
   private readonly results = viewChild<ElementRef<HTMLElement>>('results');
 
   /** Two views, addressed by URL hash so links like …/#simulator work on static hosting. */

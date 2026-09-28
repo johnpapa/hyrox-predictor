@@ -32,6 +32,7 @@ test.describe('branding, disclaimer and privacy', () => {
     const foot = page.locator('footer.foot');
     await expect(foot).toContainText('no guarantees');
     await expect(foot).toContainText('nothing you enter leaves your device');
+    await expect(foot.locator('.app-version')).toHaveText(/^Version \d+\.\d+\.\d+$/);
     await expect(foot.locator('#disclaimer')).toHaveCount(1);
   });
 });
