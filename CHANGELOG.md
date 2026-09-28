@@ -7,6 +7,7 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Show the app version from `package.json` in the footer and document the manual SemVer release/tag process.
 - **Input checks with red errors on every field:** numbers must be numbers; reps, age and pull-ups must be whole
   numbers; values can't be negative, or zero where zero makes no sense; times must be mm:ss or h:mm:ss with minutes and
   seconds 0–59; weights are checked in the units you picked (kg or lb). Each message says how to fix it (e.g. "Enter

@@ -65,6 +65,24 @@ The app is hosted on GitHub Pages. `.github/workflows/deploy.yml` runs the tests
 `main`. The build uses a relative `<base href="./">`, so the same output also works on Netlify, Cloudflare Pages, Azure
 Static Web Apps, or any static file host.
 
+### Releases and version tags
+
+`package.json` is the canonical app version; the footer reads it directly. For a release, choose the next SemVer level
+and run `npm version patch --no-git-tag-version` (or `minor` / `major`) to update `package.json` and
+`package-lock.json` together. Move the corresponding changes from `[Unreleased]` into a dated version section in
+`CHANGELOG.md`, start a fresh `[Unreleased]` section, and update its comparison links. Run `npm ci`, `npm test`,
+`npm run build` and `npm run e2e`.
+
+After the release commit has landed on `main`, create an annotated tag on that commit and push it:
+
+```bash
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+Replace `X.Y.Z` with the version in `package.json`. The current workflow deploys from pushes to `main`; it does not
+create tags or releases automatically.
+
 ## Run it locally (optional)
 
 The app is live at https://johnpapa.github.io/hyrox-predictor/, so you only need this to work on the code
