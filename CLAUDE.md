@@ -6,6 +6,8 @@ Angular 21 (standalone components, signals, zoneless) static app deployed to Git
 
 ## Rules
 
+0. **Real people's data never goes in this repo.** Synthetic data only, everywhere (code, tests, fixtures, docs,
+   screenshots, commits, PRs). Full text: [AGENTS.md](AGENTS.md#boundaries-what-you-never-do-without-a-human).
 1. **Every bug fix ships with a regression test** that fails before the fix and passes after it.
    - Model and calculation bugs go in a Vitest spec under `src/app/core/`. Put realism and prediction-quality bugs in
      `realism.spec.ts` and review-driven fixes in `review-fixes.spec.ts`, or next to the code they cover.
