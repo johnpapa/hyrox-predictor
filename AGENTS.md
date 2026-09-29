@@ -3,6 +3,14 @@
 Guidance for AI coding agents (Claude Code, GitHub Copilot, Cursor, and others) working in this repo. Human contributors
 should read it too. Project rules also appear in [CLAUDE.md](CLAUDE.md); both must stay consistent.
 
+## Boundaries: what you never do without a human
+
+**Real people's data never goes in this repo.** No real athlete's race results, splits, ages, names or rankings,
+including the maintainers' own, in code, tests, fixtures, docs, screenshots, commit messages or PR descriptions.
+Use synthetic data only. If a task seems to need real data, stop and ask.
+
+Publishing, releasing, and deleting are decisions for a person. Prepare them; don't do them.
+
 ## Project Overview
 
 **HYROX Finish Time Predictor.** A responsive, static Angular web app that predicts HYROX race times split by split (8
